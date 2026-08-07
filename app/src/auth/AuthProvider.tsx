@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react'
@@ -32,7 +33,17 @@ interface AuthValue {
   /** True until the initial session lookup resolves — avoids a login flash. */
   loading: boolean
   signIn: (email: string, password: string) => Promise<void>
-  signUp: (email: string, password: string) => Promise<void>
+  /**
+   * Creates the account AND writes name/phone/role in one call. It has to be
+   * one call: the moment signUp succeeds the router sees a session and starts
+   * redirecting, so any work left to the screen after that point is running
+   * inside a component that is about to unmount.
+   */
+  signUp: (
+    email: string,
+    password: string,
+    details: { fullName: string; phone: string; role: 'planter' | 'sponsor' },
+  ) => Promise<void>
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
   saveProfile: (patch: Partial<Profile>) => Promise<void>
@@ -50,6 +61,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(DEMO ? demoSession : null)
   const [profile, setProfile] = useState<Profile | null>(DEMO ? demoProfile : null)
   const [loading, setLoading] = useState(!DEMO)
+
+  /**
+   * True while signUp is writing the profile. The instant the session appears,
+   * the userId effect below fires loadProfile — which would race the writes in
+   * signUp and could clobber the just-saved name/role with the trigger's empty
+   * row. While this is set, signUp owns the profile state.
+   */
+  const signingUp = useRef(false)
 
   const userId = session?.user.id ?? null
 
@@ -101,6 +120,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (DEMO) return
+    if (signingUp.current) return // signUp writes the profile itself
     if (userId) void loadProfile(userId)
     else setProfile(null)
   }, [userId, loadProfile])
@@ -136,24 +156,84 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const signUp = useCallback(async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signUp({
-      email: email.trim(),
-      password,
-    })
-    if (error) throw new Error(error.message)
+  const signUp = useCallback(
+    async (
+      email: string,
+      password: string,
+      details: { fullName: string; phone: string; role: 'planter' | 'sponsor' },
+    ) => {
+      if (DEMO) {
+        setProfile((p) =>
+          p
+            ? {
+                ...p,
+                full_name: details.fullName,
+                phone: details.phone || null,
+                role: details.role,
+              }
+            : p,
+        )
+        return
+      }
 
-    // With "Confirm email" switched off in Supabase, signUp returns a live
-    // session and the user is straight in. If that setting is ever turned back
-    // on, session is null and the user is left staring at a form that looks
-    // like it did nothing — so say what happened instead.
-    if (!data.session) {
-      throw new Error(
-        'Account created, but email confirmation is switched on in Supabase. ' +
-          'Turn it off under Authentication → Sign In / Providers → Email.',
-      )
-    }
-  }, [])
+      signingUp.current = true
+      let createdUid: string | null = null
+      try {
+        const { data, error } = await supabase.auth.signUp({
+          email: email.trim(),
+          password,
+        })
+        if (error) throw new Error(error.message)
+
+        // With "Confirm email" switched off in Supabase, signUp returns a
+        // live session and the user is straight in. If that setting is ever
+        // turned back on, session is null and the user is left staring at a
+        // form that looks like it did nothing — so say what happened instead.
+        if (!data.session) {
+          throw new Error(
+            'Account created, but email confirmation is switched on in Supabase. ' +
+              'Turn it off under Authentication → Sign In / Providers → Email.',
+          )
+        }
+
+        // The 0004 trigger creates the profile row in the same transaction
+        // as the auth user, so this normally takes the update path; upsert
+        // also covers the insert path if the trigger is ever removed. Uses
+        // data.session.user.id directly — the userId in React state has not
+        // re-rendered yet at this point.
+        const uid = data.session.user.id
+        createdUid = uid
+        const { data: prof, error: profErr } = await supabase
+          .from('profiles')
+          .upsert({
+            id: uid,
+            full_name: details.fullName.trim(),
+            phone: details.phone.trim() || null,
+          })
+          .select('*')
+          .maybeSingle()
+        if (profErr) throw new Error(profErr.message)
+        if (prof) setProfile(prof as Profile)
+
+        // Role goes through the SECURITY DEFINER doorway, same as setRole.
+        const { data: withRole, error: roleErr } = await supabase.rpc(
+          'set_my_role',
+          { p_role: details.role },
+        )
+        if (roleErr) throw new Error(roleErr.message)
+        if (withRole) setProfile(withRole as unknown as Profile)
+      } catch (e) {
+        // If the account exists but a later write failed, the user IS signed
+        // in — the userId effect was skipped, so load whatever profile the
+        // trigger created rather than leaving the app with none.
+        if (createdUid) void loadProfile(createdUid)
+        throw e
+      } finally {
+        signingUp.current = false
+      }
+    },
+    [loadProfile],
+  )
 
   const signOut = useCallback(async () => {
     await supabase.auth.signOut()

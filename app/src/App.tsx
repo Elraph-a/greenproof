@@ -8,6 +8,7 @@ import { DemoBanner } from "./components/DemoBanner";
 import { Spinner } from "./components/ui";
 import { Landing } from "./screens/Landing";
 import { SignIn } from "./screens/SignIn";
+import { CreateAccount } from "./screens/CreateAccount";
 import { ProfileSetup } from "./screens/ProfileSetup";
 import { MyGrove } from "./screens/MyGrove";
 import { Register } from "./screens/Register";
@@ -129,6 +130,13 @@ export function App() {
           path="/signin"
           element={session ? <Home /> : <SignIn />}
         />
+        {/*
+          Deliberately NOT `session ? <Home /> : …` like /signin. The session
+          appears midway through signUp — before the name and role are saved —
+          and gating on it would unmount the form at that exact moment. The
+          screen navigates itself when the whole sign-up has finished.
+        */}
+        <Route path="/signup" element={<CreateAccount />} />
 
         {/* Full-screen flows — no bottom tab bar competing for thumb space. */}
         <Route

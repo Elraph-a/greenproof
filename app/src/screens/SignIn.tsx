@@ -1,26 +1,23 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
 import { Icon } from '../components/Icon'
 import { ErrorNote, Spinner } from '../components/ui'
 
 /**
- * Email + password. See the comment on `signIn` in AuthProvider for why this
- * replaced the magic link: a mail client that opens links in its own WebView
- * signs you into a browser you are not using, and no amount of app-side code
- * changes that.
+ * Returning users only — new users go to /signup, where the role and details
+ * are collected. Email + password rather than a magic link: see the comment on
+ * `signIn` in AuthProvider for why the link could not be made reliable on
+ * Android mail clients.
  */
 export function SignIn() {
-  const { signIn, signUp } = useAuth()
-  const [mode, setMode] = useState<'in' | 'up'>('in')
+  const { signIn } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [show, setShow] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const creating = mode === 'up'
-  // Supabase's own floor is 6. Enforcing it here turns a round trip into an
-  // instantly disabled button.
   const ready = email.trim().length > 3 && password.length >= 6
 
   async function submit(e: React.FormEvent) {
@@ -29,8 +26,7 @@ export function SignIn() {
     setBusy(true)
     setError(null)
     try {
-      if (creating) await signUp(email, password)
-      else await signIn(email, password)
+      await signIn(email, password)
       // No navigation needed — onAuthStateChange fires and the router swaps
       // this screen out.
     } catch (err) {
@@ -38,11 +34,6 @@ export function SignIn() {
     } finally {
       setBusy(false)
     }
-  }
-
-  function swap() {
-    setMode(creating ? 'in' : 'up')
-    setError(null)
   }
 
   return (
@@ -57,13 +48,9 @@ export function SignIn() {
       </div>
 
       <h1 className="font-headline text-display-md font-bold text-on-surface">
-        {creating ? 'Create your account' : 'Welcome back'}
+        Welcome back
       </h1>
-      <p className="mt-2 text-on-surface-variant">
-        {creating
-          ? 'Pick a password you will remember in the field.'
-          : 'Sign in to your trees.'}
-      </p>
+      <p className="mt-2 text-on-surface-variant">Sign in to your trees.</p>
 
       <form onSubmit={submit} className="mt-stack-md">
         <label className="label" htmlFor="email">
@@ -91,14 +78,12 @@ export function SignIn() {
             id="password"
             className="field pr-20"
             type={show ? 'text' : 'password'}
-            // Tells the phone's password manager which of the two this is, so
-            // it offers to save on sign-up and to fill on sign-in.
-            autoComplete={creating ? 'new-password' : 'current-password'}
+            autoComplete="current-password"
             required
             minLength={6}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder={creating ? 'At least 6 characters' : '••••••••'}
+            placeholder="••••••••"
           />
           <button
             type="button"
@@ -115,23 +100,20 @@ export function SignIn() {
           className="btn btn-primary btn-block btn-cta mt-stack-md"
           disabled={busy || !ready}
         >
-          {busy ? <Spinner /> : creating ? 'Create account' : 'Sign in'}
+          {busy ? <Spinner /> : 'Sign in'}
         </button>
 
         {error && <ErrorNote>{error}</ErrorNote>}
       </form>
 
       <div className="mt-stack-md text-center">
-        <span className="text-on-surface-variant">
-          {creating ? 'Already registered?' : 'First time here?'}
-        </span>{' '}
-        <button
-          type="button"
-          onClick={swap}
+        <span className="text-on-surface-variant">First time here?</span>{' '}
+        <Link
+          to="/signup"
           className="font-semibold text-primary underline underline-offset-4"
         >
-          {creating ? 'Sign in' : 'Create an account'}
-        </button>
+          Create an account
+        </Link>
       </div>
     </div>
   )

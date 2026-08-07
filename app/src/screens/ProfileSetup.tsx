@@ -2,20 +2,18 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
 import { Icon } from '../components/Icon'
+import { RoleCard } from '../components/RoleCard'
 import { ErrorNote, Spinner } from '../components/ui'
 
 /**
- * Profile setup, now carrying the role choice.
+ * EDITING an existing profile. The first-time version of this form lives in
+ * CreateAccount, where role + details are collected at sign-up; this screen
+ * remains for changing them later (and adding the optional story).
  *
- * WHY THE ROLE IS PICKED HERE and not inferred: the two users want opposite
- * things from the first screen. A planter wants the camera; a sponsor wants
- * evidence. Guessing wrong costs the sponsor the entire point of the product,
- * and there is no signal at sign-up that would let us guess.
- *
- * The choice is written through `set_my_role`, a SECURITY DEFINER function that
- * accepts only 'planter' or 'sponsor'. `profiles.role` itself is not writable
- * by a client — otherwise anyone could promote themselves to 'reviewer' and
- * approve their own check-ins. See migration 0009.
+ * The role choice is written through `set_my_role`, a SECURITY DEFINER
+ * function that accepts only 'planter' or 'sponsor'. `profiles.role` itself is
+ * not writable by a client — otherwise anyone could promote themselves to
+ * 'reviewer' and approve their own check-ins. See migration 0009.
  */
 export function ProfileSetup() {
   const { profile, saveProfile, setRole } = useAuth()
@@ -158,52 +156,3 @@ export function ProfileSetup() {
   )
 }
 
-function RoleCard({
-  icon,
-  title,
-  body,
-  selected,
-  onSelect,
-}: {
-  icon: 'tree' | 'wallet'
-  title: string
-  body: string
-  selected: boolean
-  onSelect: () => void
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onSelect}
-      aria-pressed={selected}
-      className={`card flex gap-3 text-left transition-shadow ${
-        selected ? 'ring-2 ring-primary' : ''
-      }`}
-    >
-      <span
-        className={`flex size-10 shrink-0 items-center justify-center rounded-lg ${
-          selected
-            ? 'bg-primary text-on-primary'
-            : 'bg-surface-container text-on-surface-variant'
-        }`}
-      >
-        <Icon name={icon} size={20} />
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="block font-headline text-headline-md font-bold text-on-surface">
-          {title}
-        </span>
-        <span className="mt-0.5 block text-label-lg text-on-surface-variant">
-          {body}
-        </span>
-      </span>
-      <span
-        className={`mt-1 flex size-5 shrink-0 items-center justify-center rounded-full border-2 ${
-          selected ? 'border-primary bg-primary text-on-primary' : 'border-outline-variant'
-        }`}
-      >
-        {selected && <Icon name="check" size={11} />}
-      </span>
-    </button>
-  )
-}

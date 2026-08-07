@@ -90,7 +90,7 @@ export function Landing() {
           button has to be inverted by hand.
         */}
         <Link
-          to="/signin"
+          to="/signup"
           className="btn btn-block bg-white text-[#14432c] active:bg-white/90"
         >
           Get started
