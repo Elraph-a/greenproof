@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- viewport-fit=cover + safe-area padding in CSS: the bottom tab bar must
+         clear the iOS home indicator and Android gesture bar. -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <!-- --color-primary from the v2 tokens in src/index.css. Tints the Android
+         browser chrome and the PWA splash; a mismatch here is visible every
+         time the app is opened. Keep in sync with vite.config.ts. -->
+    <meta name="theme-color" content="#14432c" />
+    <meta name="description" content="Plant a tree. Prove it lives. Get paid." />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <!-- iOS ignores the web manifest for the home-screen icon and needs this. -->
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>GreenProof</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

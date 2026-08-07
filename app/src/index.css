@@ -1,0 +1,409 @@
+@import 'tailwindcss';
+
+/* Self-hosted, not the Google Fonts CDN. This app is used standing in a field on
+   poor signal, and a webfont fetched from a third party either blocks or reflows
+   the whole screen when it fails. Bundled fonts are precached by the service
+   worker and work offline.
+
+   SUBSETS: latin + latin-ext only. The bare `400.css` entry point also pulls the
+   VIETNAMESE subset — a third of the font payload for glyphs this app will never
+   render. latin-ext is deliberately kept rather than trimmed further: Twi is
+   written with ɛ (U+025B) and ɔ (U+0254), which live there, and dropping it
+   would silently substitute fallback glyphs the day anyone localises this. */
+@import '@fontsource/be-vietnam-pro/latin-400.css';
+@import '@fontsource/be-vietnam-pro/latin-ext-400.css';
+@import '@fontsource/be-vietnam-pro/latin-600.css';
+@import '@fontsource/be-vietnam-pro/latin-ext-600.css';
+@import '@fontsource/be-vietnam-pro/latin-700.css';
+@import '@fontsource/be-vietnam-pro/latin-ext-700.css';
+@import '@fontsource/work-sans/latin-400.css';
+@import '@fontsource/work-sans/latin-ext-400.css';
+@import '@fontsource/work-sans/latin-500.css';
+@import '@fontsource/work-sans/latin-ext-500.css';
+@import '@fontsource/work-sans/latin-600.css';
+@import '@fontsource/work-sans/latin-700.css';
+@import '@fontsource/work-sans/latin-ext-700.css';
+
+/* ===========================================================================
+   GREENPROOF v2 — design tokens
+   Source: docs/design/v2/ (12 screens) for structure and colour.
+           docs/design/v2/inspiration/ (i, j, u, z) for polish level.
+
+   What the reference screens establish:
+     · a warm off-white page with PURE WHITE cards — separation by fill, not
+       by borders. The previous system outlined every card, which is the single
+       biggest reason it read as a template.
+     · deep forest green for primary actions only
+     · AMBER IS MONEY. It is never decoration — an amber value on any screen is
+       an amount in cedis. Used for anything else it stops carrying meaning.
+     · status has three colours and a fixed vocabulary: Verified (green),
+       Needs review (amber), Flagged (red), plus Not checked (neutral).
+
+   What the inspiration set adds on top:
+     · larger corner radii and considerably more air
+     · big, tightly-tracked numerals with a small delta chip beside them
+     · segmented filters rather than dropdowns
+     · soft, wide shadows instead of hairlines
+
+   LIGHT THROUGHOUT. The previous version had a dark `.night` scope; the v2
+   designs are light on every screen, which also happens to be the right answer
+   for an app used outdoors at midday in Ghana.
+   =========================================================================== */
+@theme {
+  /* --- surfaces --- */
+  --color-surface: #f7f6f2;
+  --color-surface-dim: #ebe9e1;
+  --color-surface-bright: #ffffff;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #fbfaf7;
+  --color-surface-container: #f2f1ec;
+  --color-surface-container-high: #eae8e1;
+  --color-surface-container-highest: #e2e0d7;
+  --color-surface-variant: #eae8e1;
+  --color-background: #f7f6f2;
+
+  /* --- content ---
+     on-surface-variant is a DARK muted, 6.9:1 on white. The usual pale grey for
+     secondary text is unreadable in direct sun, which is the most common
+     mobile-in-sunlight failure and this app is used at midday in a field. */
+  --color-on-surface: #16211b;
+  --color-on-surface-variant: #63706a;
+  --color-on-background: #16211b;
+  --color-inverse-surface: #16211b;
+  --color-inverse-on-surface: #f7f6f2;
+  --color-outline: #8c968f;
+  --color-outline-variant: #e5e3db;
+
+  /* --- primary — deep forest. Buttons and active nav only. --- */
+  --color-primary: #14432c;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #e4f1e9;
+  --color-on-primary-container: #14432c;
+  --color-inverse-primary: #8ed3b0;
+  --color-primary-fixed: #e4f1e9;
+  --color-primary-fixed-dim: #c3e3d2;
+  --color-on-primary-fixed: #062416;
+  --color-on-primary-fixed-variant: #1b6b47;
+  --color-surface-tint: #1b6b47;
+
+  /* --- secondary --- */
+  --color-secondary: #3f6355;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #e4f1e9;
+  --color-on-secondary-container: #14432c;
+  --color-secondary-fixed: #e4f1e9;
+  --color-secondary-fixed-dim: #c3e3d2;
+  --color-on-secondary-fixed: #062416;
+  --color-on-secondary-fixed-variant: #1b6b47;
+
+  /* --- tertiary — "needs review". Amber, and it shares the money hue on
+     purpose: both mean "a human should look at this number". --- */
+  --color-tertiary: #96580f;
+  --color-on-tertiary: #ffffff;
+  --color-tertiary-container: #fcebd5;
+  --color-on-tertiary-container: #7a460b;
+  --color-tertiary-fixed: #fcebd5;
+  --color-tertiary-fixed-dim: #f7d6a8;
+  --color-on-tertiary-fixed: #5c3408;
+  --color-on-tertiary-fixed-variant: #96580f;
+
+  /* --- accent — MONEY. Cedi amounts, earnings, potential earnings. --- */
+  --color-accent: #e2680b;
+  --color-accent-dim: #c05808;
+  --color-accent-container: #fdecd9;
+  --color-on-accent: #ffffff;
+  --color-on-accent-container: #8f4106;
+
+  /* --- error — "flagged" --- */
+  --color-error: #a3271f;
+  --color-on-error: #ffffff;
+  --color-error-container: #fbe3e0;
+  --color-on-error-container: #7d1b15;
+
+  --color-verified: #1b6b47;
+  --color-verified-container: #e4f1e9;
+
+  /* --- radii — the reference cards are ~16px and the pills are fully round.
+     Note block buttons are 12px, NOT pills: only the floating action button
+     and chips are fully rounded in the designs. --- */
+  --radius-sm: 0.5rem;
+  --radius-DEFAULT: 0.625rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
+  --radius-3xl: 1.75rem;
+
+  /* --- spacing --- */
+  --spacing-base: 8px;
+  --spacing-gutter: 16px;
+  --spacing-stack-sm: 12px;
+  --spacing-stack-md: 20px;
+  --spacing-stack-lg: 32px;
+  --spacing-margin-mobile: 18px;
+  --spacing-tap: 56px;
+
+  /* --- type --- */
+  --font-headline: 'Be Vietnam Pro', ui-sans-serif, system-ui, sans-serif;
+  --font-body: 'Work Sans', ui-sans-serif, system-ui, sans-serif;
+
+  --text-display-lg: 40px;
+  --text-display-lg--line-height: 44px;
+  --text-display-lg--letter-spacing: -0.03em;
+  --text-display-md: 30px;
+  --text-display-md--line-height: 34px;
+  --text-display-md--letter-spacing: -0.025em;
+
+  --text-headline-xl: 26px;
+  --text-headline-xl--line-height: 32px;
+  --text-headline-xl--letter-spacing: -0.02em;
+  --text-headline-lg: 20px;
+  --text-headline-lg--line-height: 26px;
+  --text-headline-lg--letter-spacing: -0.015em;
+  --text-headline-md: 16px;
+  --text-headline-md--line-height: 22px;
+  --text-headline-md--letter-spacing: -0.01em;
+
+  --text-body-lg: 16px;
+  --text-body-lg--line-height: 24px;
+  --text-body-md: 14.5px;
+  --text-body-md--line-height: 21px;
+  --text-label-lg: 13px;
+  --text-label-lg--line-height: 18px;
+  --text-label-md: 11.5px;
+  --text-label-md--line-height: 15px;
+  --text-label-md--letter-spacing: 0.01em;
+  --text-micro: 10.5px;
+  --text-micro--line-height: 14px;
+  --text-micro--letter-spacing: 0.06em;
+}
+
+/* ===========================================================================
+   BASE
+   =========================================================================== */
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    touch-action: manipulation; /* no double-tap zoom mid-capture */
+    background: var(--color-background);
+  }
+
+  body {
+    background: var(--color-background);
+    color: var(--color-on-background);
+    font-family: var(--font-body);
+    font-size: var(--text-body-md);
+    line-height: 21px;
+    overscroll-behavior-y: none;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-headline);
+  }
+
+  /* Tabular figures wherever a number can change between renders. Without this,
+     "38" → "41" shifts the layout because the digits differ in width, and a
+     live GPS accuracy readout visibly jitters. */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
+  }
+
+  /* Used one-handed at a tree — a long-press selecting text is pure friction.
+     Inputs opt back in. */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+  input,
+  textarea,
+  select {
+    user-select: text;
+  }
+
+  :focus-visible {
+    outline: 2.5px solid var(--color-surface-tint);
+    outline-offset: 2px;
+  }
+}
+
+/* ===========================================================================
+   PRIMITIVES
+   Minimum tap target 56px — a thumb on a dusty screen at arm's length.
+   =========================================================================== */
+@layer components {
+  /* --- buttons — 12px radius, NOT pills. Pills are reserved for the floating
+     action button and for chips, which is what makes the FAB read as floating
+     rather than as one more button in the stack. --- */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-5
+           font-semibold transition-all select-none active:scale-[.98];
+    min-height: var(--spacing-tap);
+    font-family: var(--font-body);
+    font-size: 15px;
+    letter-spacing: -0.005em;
+  }
+  .btn:disabled {
+    @apply pointer-events-none opacity-40;
+  }
+  .btn-primary {
+    @apply bg-primary text-on-primary;
+  }
+  .btn-secondary {
+    @apply bg-surface-container-lowest text-on-surface;
+    box-shadow: inset 0 0 0 1.5px var(--color-outline-variant);
+  }
+  .btn-outline {
+    @apply bg-transparent text-primary;
+    box-shadow: inset 0 0 0 1.5px var(--color-outline-variant);
+  }
+  .btn-ghost {
+    @apply text-primary active:bg-surface-container;
+  }
+  .btn-danger {
+    @apply bg-error text-on-error;
+  }
+  .btn-block {
+    @apply w-full;
+  }
+  /* The floating action button — the one fully-round control. */
+  .btn-fab {
+    @apply rounded-full px-5;
+    box-shadow: 0 8px 24px -8px rgb(20 67 44 / 0.45);
+  }
+  .btn-cta {
+    letter-spacing: -0.005em;
+  }
+
+  /* --- cards — white on warm grey, no border. A soft wide shadow does the
+     separating; the reference screens use almost no hairlines. --- */
+  .card {
+    @apply rounded-xl bg-surface-container-lowest p-4;
+    box-shadow:
+      0 1px 2px rgb(22 33 27 / 0.04),
+      0 6px 18px -10px rgb(22 33 27 / 0.10);
+  }
+  /* Flat variant for cards inside an already-white container. */
+  .card-flat {
+    @apply rounded-xl bg-surface-container p-4;
+    box-shadow: none;
+  }
+
+  /* --- chips --- */
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-semibold;
+    font-size: var(--text-label-md);
+    line-height: 15px;
+  }
+  .chip-verified {
+    @apply bg-[var(--color-verified-container)] text-[var(--color-verified)];
+  }
+  .chip-review {
+    @apply bg-tertiary-container text-on-tertiary-container;
+  }
+  .chip-flagged {
+    @apply bg-error-container text-on-error-container;
+  }
+  .chip-pending {
+    @apply bg-surface-container-high text-on-surface-variant;
+  }
+  /* Money. Always amber, always a cedi amount. */
+  .chip-money {
+    @apply bg-accent-container text-on-accent-container;
+  }
+
+  /* --- filter pills — the segmented control on My Grove --- */
+  .pill {
+    @apply inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 font-semibold
+           transition-colors select-none;
+    min-height: 36px;
+    font-size: var(--text-label-lg);
+  }
+  .pill-on {
+    @apply bg-primary text-on-primary;
+  }
+  .pill-off {
+    @apply bg-surface-container-lowest text-on-surface-variant;
+    box-shadow: inset 0 0 0 1px var(--color-outline-variant);
+  }
+
+  /* --- the micro-label above a number --- */
+  .micro {
+    @apply block font-semibold uppercase text-on-surface-variant;
+    font-size: var(--text-micro);
+    line-height: 14px;
+    letter-spacing: 0.06em;
+  }
+
+  /* --- inputs --- */
+  .field {
+    @apply w-full rounded-lg bg-surface-container-lowest px-4
+           text-on-surface placeholder:text-on-surface-variant/55
+           focus:outline-none;
+    box-shadow: inset 0 0 0 1.5px var(--color-outline-variant);
+    min-height: var(--spacing-tap);
+    font-size: var(--text-body-lg);
+  }
+  .field:focus {
+    box-shadow: inset 0 0 0 2px var(--color-surface-tint);
+  }
+  /* The designs use an underlined field for species and tag number. */
+  .field-underline {
+    @apply w-full bg-transparent px-0 text-on-surface
+           placeholder:text-on-surface-variant/55 focus:outline-none;
+    border-bottom: 1.5px solid var(--color-outline-variant);
+    border-radius: 0;
+    min-height: 48px;
+    font-size: var(--text-body-lg);
+  }
+  .field-underline:focus {
+    border-bottom-color: var(--color-surface-tint);
+  }
+
+  .label {
+    @apply mb-1.5 block font-semibold text-on-surface;
+    font-size: var(--text-label-lg);
+  }
+
+  /* --- stepper: the segmented progress bar across the register flow --- */
+  .stepbar {
+    @apply flex gap-1.5;
+  }
+  .stepbar > span {
+    @apply h-1 flex-1 rounded-full bg-surface-container-high;
+  }
+  .stepbar > span[data-on='1'] {
+    @apply bg-primary;
+  }
+
+  /* --- an info panel: icon, title, explanation. Used all over the flows. --- */
+  .note {
+    @apply rounded-xl bg-surface-container p-3.5;
+  }
+  .note-warn {
+    @apply rounded-xl bg-tertiary-container p-3.5 text-on-tertiary-container;
+  }
+  .note-good {
+    @apply rounded-xl bg-[var(--color-verified-container)] p-3.5 text-[var(--color-verified)];
+  }
+
+  .safe-bottom {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

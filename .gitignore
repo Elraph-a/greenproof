@@ -1,0 +1,67 @@
+# ---------------------------------------------------------------------------
+# Secrets — never commit, at any level of the tree
+# ---------------------------------------------------------------------------
+# The anon key is public by design, but the SUPABASE_SERVICE_KEY used by the ML
+# service is not, and both live in .env files. Committing one to a public repo
+# would hand over write access to verdicts and confidence — the exact thing the
+# column grants exist to prevent.
+.env
+.env.*
+!.env.example
+credentials.json
+token.json
+*.pem
+*.key
+
+# ---------------------------------------------------------------------------
+# Dependencies and build output
+# ---------------------------------------------------------------------------
+node_modules/
+dist/
+dist-ssr/
+*.local
+.vercel/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+*.tsbuildinfo
+
+# ---------------------------------------------------------------------------
+# ML artefacts — regenerated, and far too large for git
+# ---------------------------------------------------------------------------
+*.onnx
+*.pt
+*.pth
+ml/models/
+ml/.cache/
+
+# ---------------------------------------------------------------------------
+# Scratch
+# ---------------------------------------------------------------------------
+.tmp/
+.DS_Store
+Thumbs.db
+*.log
+
+# ---------------------------------------------------------------------------
+# Large binaries — excluded to keep the repo to what is needed to RUN the app
+# ---------------------------------------------------------------------------
+# NOTE, and it matters: these are NOT backed up anywhere else once excluded.
+#
+#   data/**                 20 MB. The 59 spike photos behind the 54% rank-1
+#                           figure in spike/FINDINGS.md, plus pilot photos to
+#                           come. Keep a copy in Drive — a measured claim whose
+#                           evidence has been lost is no longer defensible, and
+#                           this project's whole argument is "we can show you".
+#   docs/design/New folder  9 MB. The superseded Stitch export. docs/design/v2
+#                           replaced it and IS committed, being the spec the UI
+#                           was built to.
+data/
+docs/design/New folder/
+
+# Word copies of the markdown originals — regenerate with tools/md_to_docx.py
+*.docx

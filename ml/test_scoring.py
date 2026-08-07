@@ -1,0 +1,214 @@
+"""Regression tests for the verdict logic.
+
+    python -m pytest ml/test_scoring.py -q
+    python ml/test_scoring.py            # runs without pytest too
+
+WHY THESE EXIST
+Testing found the system AUTO-APPROVING attack #4 — "a different tree
+photographed at the correct GPS" — at 75/100, because a plain weighted sum let
+location, liveness and growth compensate for a scene_match of zero. That is the
+one attack the AI is actually responsible for, and the one error class that is
+fatal rather than annoying.
+
+The fix was CRITICAL_FLOORS. These tests pin it down, because the weights are
+going to be refitted by calibrate.py after every check-in round and a refit must
+never quietly reintroduce the hole.
+
+The floors are placed between two MEASURED cases:
+    genuine, dense same-species stand -> scene_match ~0.19  must stay verified
+    a different tree entirely         -> scene_match  0.00  must not
+"""
+
+from __future__ import annotations
+
+import sys
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from greenproof_ml.scoring import (  # noqa: E402
+    assess,
+    gate_duplicate,
+    gate_gps,
+    gate_travel,
+    score_growth,
+    score_liveness,
+    score_location,
+    score_scene,
+)
+from greenproof_ml.signals import liveness_score  # noqa: E402
+
+NOW = datetime(2026, 8, 8, 10, 0, tzinfo=timezone.utc)
+LAT, LNG = 5.65050, -0.19620
+
+CLEAN = "0" * 16
+FAR = "f" * 16  # 64 bits different — nothing like any stored photo
+
+
+def build(
+    *,
+    dist_m=4.0,
+    green=0.42,
+    cos_w=0.68,
+    cos_c=0.60,
+    duplicate_of=FAR,
+    accuracy=6.0,
+    prev_travel=None,
+    first_visit=False,
+    canopy=0.42,
+    canopy_prev=0.40,
+):
+    gates = {
+        "duplicate_image": gate_duplicate(CLEAN, [("other", duplicate_of)]),
+        "gps_radius": gate_gps(LAT, LNG, LAT + dist_m / 111_320, LNG, accuracy),
+        "travel_speed": gate_travel(LAT, LNG, NOW, prev_travel),
+    }
+    scores = {
+        "location": score_location(dist_m),
+        "liveness": score_liveness(green, liveness_score(green)),
+        "growth": score_growth(canopy, None if first_visit else canopy_prev),
+    }
+    if not first_visit:
+        scores["scene_match"] = score_scene(cos_w, cos_c, 0)
+    return assess(gates, scores)
+
+
+# ---------------------------------------------------------------------------
+# Genuine visits must never be auto-rejected
+# ---------------------------------------------------------------------------
+
+
+def test_healthy_tree_is_verified():
+    assert build().verdict == "verified"
+
+
+def test_first_visit_is_verified_despite_no_scene_match():
+    # A registration has nothing to compare against. Penalising it for being
+    # first would flag all 40 trees on T0.
+    r = build(first_visit=True)
+    assert r.verdict == "verified"
+
+
+def test_poor_but_usable_gps_still_verifies():
+    assert build(dist_m=18.0, accuracy=15.0).verdict == "verified"
+
+
+def test_dense_stand_weak_match_still_verifies():
+    """THE IMPORTANT ONE.
+
+    The spike measured image matching as near-zero inside a dense stand of one
+    species. If a weak-but-real match were vetoed, every tree in a plantation
+    would go to a human — destroying the scalability claim that we need ~5,000
+    reviews where Greenstand needs 100,000.
+    """
+    r = build(cos_w=0.44, cos_c=0.40)
+    assert r.verdict == "verified", r.signals
+
+
+def test_dry_season_leaf_drop_still_verifies():
+    assert build(green=0.22, canopy=0.22, canopy_prev=0.26).verdict == "verified"
+
+
+# ---------------------------------------------------------------------------
+# Fraud must never be auto-approved
+# ---------------------------------------------------------------------------
+
+
+def test_duplicate_photo_is_flagged():
+    r = build(duplicate_of=CLEAN)
+    assert r.verdict == "flagged"
+    assert r.confidence == 0
+    assert "duplicate_image" in r.signals["failed_gates"]
+
+
+def test_wrong_location_is_flagged():
+    r = build(dist_m=200.0)
+    assert r.verdict == "flagged"
+    assert "gps_radius" in r.signals["failed_gates"]
+
+
+def test_impossible_travel_is_flagged():
+    r = build(prev_travel=("prev", 8.0, -1.0, NOW - timedelta(minutes=5)))
+    assert r.verdict == "flagged"
+    assert "travel_speed" in r.signals["failed_gates"]
+
+
+def test_dead_plant_is_not_auto_approved():
+    r = build(green=0.01, canopy=0.01)
+    assert r.verdict != "verified", r.signals
+
+
+def test_different_tree_at_correct_gps_is_not_auto_approved():
+    """THE REGRESSION THIS FILE EXISTS FOR.
+
+    Every gate passes. Location, liveness and growth are perfect. Only the
+    scene match fails. Before CRITICAL_FLOORS this scored 75/100 and was
+    auto-approved — a false accept on the single attack that needs the AI.
+    """
+    r = build(cos_w=0.30, cos_c=0.28)
+    assert r.verdict != "verified", r.signals
+    assert "scene_match" in r.signals.get("auto_approval_vetoed_by", [])
+
+
+# ---------------------------------------------------------------------------
+# Degrade, don't break
+# ---------------------------------------------------------------------------
+
+
+def _gates_all_pass():
+    return {
+        "duplicate_image": gate_duplicate(CLEAN, [("o", FAR)]),
+        "gps_radius": gate_gps(LAT, LNG, LAT, LNG, 8.0),
+        "travel_speed": gate_travel(LAT, LNG, NOW, None),
+    }
+
+
+def test_confidence_falls_as_signals_disappear():
+    g = _gates_all_pass()
+    full = {
+        "location": score_location(3),
+        "liveness": score_liveness(0.45, liveness_score(0.45)),
+        "scene_match": score_scene(0.70, 0.65, 0),
+        "growth": score_growth(0.45, 0.43),
+    }
+    a = assess(g, full).confidence
+    b = assess(g, {k: full[k] for k in ("location", "liveness")}).confidence
+    c = assess(g, {"location": full["location"]}).confidence
+    assert a > b > c, (a, b, c)
+
+
+def test_single_signal_cannot_auto_approve():
+    r = assess(_gates_all_pass(), {"location": score_location(2)})
+    assert r.verdict != "verified"
+    assert "coverage" in r.signals.get("auto_approval_vetoed_by", [])
+
+
+def test_gate_failure_overrides_perfect_scores():
+    g = _gates_all_pass()
+    g["duplicate_image"] = gate_duplicate(CLEAN, [("o", CLEAN)])
+    r = assess(
+        g,
+        {
+            "location": score_location(1),
+            "liveness": score_liveness(0.6, liveness_score(0.6)),
+            "scene_match": score_scene(0.9, 0.9, 0),
+            "growth": score_growth(0.5, 0.5),
+        },
+    )
+    assert r.verdict == "flagged"
+    assert r.confidence == 0
+
+
+if __name__ == "__main__":
+    fns = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
+    failed = 0
+    for fn in fns:
+        try:
+            fn()
+            print(f"  PASS  {fn.__name__}")
+        except AssertionError as e:
+            failed += 1
+            print(f"  FAIL  {fn.__name__}: {e}")
+    print(f"\n{len(fns) - failed}/{len(fns)} passed")
+    sys.exit(1 if failed else 0)

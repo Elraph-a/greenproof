@@ -1,0 +1,21 @@
+# Pinned loosely — Hugging Face Spaces rebuilds on push and a surprise major
+# version on pitch week is not a risk worth taking for a few KB of convenience.
+
+fastapi>=0.115,<1
+uvicorn[standard]>=0.32,<1
+pydantic>=2.9,<3
+
+# onnxruntime, NOT torch. Torch pulls ~2 GB and would make cold starts on the
+# free Spaces tier unusable. Torch stays a dev-only dependency for the spike.
+onnxruntime>=1.19,<2
+huggingface_hub>=0.26,<1
+
+numpy>=1.26,<3
+pillow>=10.4,<12
+
+# contrib, not plain opencv — cv2.aruco lives in contrib and the ArUco marker is
+# how a photo becomes a measurement in millimetres.
+opencv-contrib-python-headless>=4.10,<5
+
+supabase>=2.9,<3
+httpx>=0.27,<1
