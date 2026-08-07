@@ -37,7 +37,7 @@ export function SignIn() {
   }
 
   return (
-    <div className="safe-top safe-bottom flex min-h-dvh flex-col justify-center px-margin-mobile">
+    <div className="screen-in safe-top safe-bottom flex min-h-dvh flex-col justify-center px-margin-mobile">
       <div className="mb-stack-md flex items-center gap-2.5">
         <span className="flex size-9 items-center justify-center rounded-lg bg-primary text-on-primary">
           <Icon name="tree" size={20} />

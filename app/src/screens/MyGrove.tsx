@@ -86,20 +86,30 @@ export function MyGrove() {
   const survival = trees && trees.length ? Math.round((alive / trees.length) * 100) : 0
 
   const today = new Date()
+  /*
+   * The hero used to be the weekday — the biggest text on the home screen said
+   * "Friday", which reads as a template. It now greets the person, matching
+   * SponsorHome; the full date stays as the eyebrow because "did I already do
+   * these today?" is still the most common check-in-round question.
+   */
+  const hour = today.getHours()
+  const greeting =
+    hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
+  const firstName = profile?.full_name?.trim().split(/\s+/)[0]
 
   return (
     <div className="px-margin-mobile pt-1 pb-2">
       {/* Dated greeting */}
-      <h1 className="font-headline text-headline-xl font-bold text-on-surface">
-        {today.toLocaleDateString('en-GB', { weekday: 'long' })}
-      </h1>
-      <p className="mt-0.5 text-label-lg text-on-surface-variant">
+      <p className="text-label-lg text-on-surface-variant">
         {today.toLocaleDateString('en-GB', {
+          weekday: 'long',
           day: 'numeric',
           month: 'long',
-          year: 'numeric',
         })}
       </p>
+      <h1 className="mt-0.5 font-headline text-headline-xl font-bold text-on-surface">
+        {firstName ? `${greeting}, ${firstName}` : greeting}
+      </h1>
 
       {error && <ErrorNote>{error}</ErrorNote>}
 

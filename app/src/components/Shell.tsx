@@ -1,4 +1,4 @@
-import { NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
 import { Icon, type IconName } from './Icon'
 
@@ -57,6 +57,7 @@ export function TopBar({ children }: { children?: React.ReactNode }) {
 
 export function Shell() {
   const { profile } = useAuth()
+  const { pathname } = useLocation()
   const isSponsor = profile?.role === 'sponsor'
   const tabs = isSponsor ? SPONSOR_TABS : PLANTER_TABS
 
@@ -71,7 +72,11 @@ export function Shell() {
         )}
       </TopBar>
 
-      <Outlet />
+      {/* key={pathname} remounts the wrapper on navigation, replaying the
+          entrance animation for each screen. */}
+      <div key={pathname} className="screen-in">
+        <Outlet />
+      </div>
 
       <nav className="safe-bottom fixed bottom-0 z-50 flex w-full items-stretch justify-around border-t border-outline-variant bg-surface-container-lowest px-1 pt-1.5">
         {tabs.map((t) => (

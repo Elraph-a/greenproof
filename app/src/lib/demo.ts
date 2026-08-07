@@ -107,6 +107,9 @@ export const demoEarnings = new Map(
   SEEDS.map((s, i) => [`demo-tree-${i + 1}`, s.earned]),
 )
 
+/* Sorted newest-first to match the real query's `.order('created_at',
+   { ascending: false })` — an unordered ledger is the fastest way for a demo
+   to read as fake. ISO timestamps compare correctly as strings. */
 export const demoLedger: LedgerEntry[] = SEEDS.flatMap((s, i) =>
   s.earned === 0
     ? []
@@ -122,7 +125,7 @@ export const demoLedger: LedgerEntry[] = SEEDS.flatMap((s, i) =>
           created_at: ago(s.lastDays),
         },
       ],
-)
+).sort((a, b) => b.created_at.localeCompare(a.created_at))
 
 /** Full visit history for one tree — the photo timeline on the detail screen. */
 export function demoCheckinsFor(treeId: string): Checkin[] {

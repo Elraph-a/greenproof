@@ -153,6 +153,9 @@ function demoPortfolio(): SponsorPortfolio {
     ],
     recent: demoTrees
       .filter((t) => t.latest)
+      // Newest first, matching the real query — the photo wall showing
+      // 6 Aug, 3 Aug, 5 Aug in that order reads as broken.
+      .sort((a, b) => b.latest!.captured_at.localeCompare(a.latest!.captured_at))
       .slice(0, 8)
       .map((t) => ({
         id: t.latest!.id,

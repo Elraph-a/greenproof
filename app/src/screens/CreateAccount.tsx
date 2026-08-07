@@ -58,7 +58,7 @@ export function CreateAccount() {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col bg-background">
+    <div className="screen-in flex min-h-dvh flex-col bg-background">
       <header className="safe-top px-margin-mobile pt-4">
         <div className="flex items-center gap-2.5">
           <span className="flex size-9 items-center justify-center rounded-lg bg-primary text-on-primary">

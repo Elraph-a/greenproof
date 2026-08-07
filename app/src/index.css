@@ -394,6 +394,40 @@
   .safe-top {
     padding-top: env(safe-area-inset-top);
   }
+
+  /* --- motion ---
+     One entrance for every screen: a short rise-and-fade on navigation. This is
+     the cheapest single thing separating "prototype" from "product" — a static
+     swap between screens reads as a page reload. 220ms, small distance: fast
+     enough never to be waited on, present enough to register. */
+  .screen-in {
+    animation: screen-in 220ms cubic-bezier(0.2, 0.8, 0.3, 1) both;
+  }
+  @keyframes screen-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* Tappable cards press like buttons. `.card` alone is also used for static
+     panels, so the feedback is scoped to cards that are actually interactive. */
+  a.card:active,
+  button.card:active {
+    transform: scale(0.985);
+    transition: transform 80ms ease-out;
+  }
+
+  /* Respect the OS-level setting — some people get motion sick. */
+  @media (prefers-reduced-motion: reduce) {
+    .screen-in {
+      animation: none;
+    }
+  }
 }
 
 .sr-only {
