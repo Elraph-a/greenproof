@@ -60,12 +60,18 @@ export function Wallet() {
 
       {error && <ErrorNote>{error}</ErrorNote>}
 
-      {/* Amber leads here — this is the one screen whose subject IS money. */}
+      {/* Amber leads here — this is the one screen whose subject IS money.
+          Skeleton while loading: rendering GH₵0.00 that then jumps to the real
+          balance reads as a glitch on the one number people care about. */}
       <div className="mt-stack-sm rounded-2xl bg-accent-container p-5">
         <span className="micro text-on-accent-container/75">Available balance</span>
-        <p className="tnum mt-1.5 font-headline text-display-lg font-bold text-on-accent-container">
-          GH₵{available.toFixed(2)}
-        </p>
+        {entries === null && !error ? (
+          <div className="skeleton mt-1.5 h-11 w-44 rounded-lg" />
+        ) : (
+          <p className="tnum mt-1.5 font-headline text-display-lg font-bold text-on-accent-container">
+            GH₵{available.toFixed(2)}
+          </p>
+        )}
       </div>
 
       <div className="mt-2.5 grid grid-cols-2 gap-2.5">
@@ -109,6 +115,20 @@ export function Wallet() {
       <h2 className="mt-stack-md mb-2.5 font-headline text-headline-md font-bold text-on-surface">
         Earnings
       </h2>
+
+      {entries === null && !error && (
+        <div className="flex flex-col gap-2.5">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="card flex items-center justify-between gap-3 py-3">
+              <div className="flex-1 space-y-2">
+                <div className="skeleton h-4 w-2/5 rounded" />
+                <div className="skeleton h-3 w-1/3 rounded" />
+              </div>
+              <div className="skeleton h-5 w-20 rounded" />
+            </div>
+          ))}
+        </div>
+      )}
 
       {entries?.length === 0 && (
         <EmptyState

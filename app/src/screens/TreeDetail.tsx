@@ -6,7 +6,7 @@ import { formatAge, getTree, listCheckins, treeLabel } from '../lib/trees'
 import { demoCommonName, demoEarnings } from '../lib/demo'
 import type { Checkin, Tree } from '../lib/types'
 import { Icon, type IconName } from '../components/Icon'
-import { ErrorNote, Spinner, StatusChip } from '../components/ui'
+import { ErrorNote, StatusChip } from '../components/ui'
 
 /**
  * One tree's whole history.
@@ -58,8 +58,24 @@ export function TreeDetail() {
     return (
       <Frame title="Tree" onBack={back}>
         {loading ? (
-          <div className="flex justify-center py-stack-lg text-primary">
-            <Spinner className="size-8" />
+          /* The shape of what is coming — chips, stat tiles, photo timeline —
+             rather than a spinner in a void. */
+          <div>
+            <div className="flex gap-2">
+              <div className="skeleton h-7 w-20 rounded-full" />
+              <div className="skeleton h-7 w-16 rounded-full" />
+              <div className="skeleton h-7 w-32 rounded-full" />
+            </div>
+            <div className="mt-stack-sm grid grid-cols-3 gap-2.5">
+              <div className="skeleton h-[104px] rounded-xl" />
+              <div className="skeleton h-[104px] rounded-xl" />
+              <div className="skeleton h-[104px] rounded-xl" />
+            </div>
+            <div className="skeleton mt-stack-md h-4 w-40 rounded" />
+            <div className="mt-3 flex gap-3 overflow-hidden">
+              <div className="skeleton h-56 w-44 shrink-0 rounded-xl" />
+              <div className="skeleton h-56 w-44 shrink-0 rounded-xl" />
+            </div>
           </div>
         ) : error ? (
           <ErrorNote>{error}</ErrorNote>

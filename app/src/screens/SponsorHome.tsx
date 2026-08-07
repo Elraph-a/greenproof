@@ -51,9 +51,12 @@ export function SponsorHome() {
 
       {!p ? (
         <div className="mt-stack-sm flex flex-col gap-2.5">
-          {[0, 1].map((i) => (
-            <div key={i} className="card h-24 animate-pulse" />
-          ))}
+          <div className="skeleton h-40 rounded-xl" />
+          <div className="grid grid-cols-2 gap-2.5">
+            <div className="skeleton h-24 rounded-xl" />
+            <div className="skeleton h-24 rounded-xl" />
+          </div>
+          <div className="skeleton h-16 rounded-xl" />
         </div>
       ) : (
         <>

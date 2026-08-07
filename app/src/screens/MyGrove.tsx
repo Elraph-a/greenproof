@@ -166,11 +166,12 @@ export function MyGrove() {
       {!trees && !error && (
         <div className="flex flex-col gap-2.5">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="card flex animate-pulse gap-3">
-              <div className="size-[68px] shrink-0 rounded-lg bg-surface-container-high" />
-              <div className="flex-1 space-y-2 py-1">
-                <div className="h-4 w-1/2 rounded bg-surface-container-high" />
-                <div className="h-3 w-1/3 rounded bg-surface-container-high" />
+            <div key={i} className="card flex min-h-[120px] gap-3 overflow-hidden p-0">
+              <div className="skeleton w-28 shrink-0 self-stretch" />
+              <div className="flex-1 space-y-2.5 py-4 pr-4">
+                <div className="skeleton h-4 w-1/2 rounded" />
+                <div className="skeleton h-3 w-2/3 rounded" />
+                <div className="skeleton h-3 w-1/3 rounded" />
               </div>
             </div>
           ))}
@@ -206,19 +207,25 @@ export function MyGrove() {
             <Link
               key={tree.id}
               to={`/tree/${tree.id}`}
-              className="card relative flex gap-3 active:bg-surface-container-low"
+              className="card relative flex gap-3 overflow-hidden p-0 active:bg-surface-container-low"
             >
-              <div className="size-[68px] shrink-0 overflow-hidden rounded-lg bg-surface-container-high">
+              {/*
+                The photo IS the product — this app exists to photograph trees,
+                so the evidence runs flush to the card edge and the full card
+                height instead of sitting as a thumbnail inside the padding.
+                The card's overflow-hidden provides the corner rounding.
+              */}
+              <div className="w-28 shrink-0 self-stretch bg-surface-container-high">
                 {thumb ? (
                   <img src={thumb} alt="" loading="lazy" className="size-full object-cover" />
                 ) : (
                   <div className="flex size-full items-center justify-center text-on-surface-variant">
-                    <Icon name="image" size={22} />
+                    <Icon name="image" size={24} />
                   </div>
                 )}
               </div>
 
-              <div className="min-w-0 flex-1">
+              <div className="min-w-0 flex-1 py-3.5 pr-3.5">
                 <div className="flex items-start justify-between gap-2">
                   <h3 className="truncate font-headline text-headline-md font-bold text-on-surface">
                     {name}

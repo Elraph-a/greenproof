@@ -422,9 +422,42 @@
     transition: transform 80ms ease-out;
   }
 
+  /* --- loading skeletons ---
+     A light sweep across a grey block, replacing both spinners and the old
+     animate-pulse. A spinner says "the app is busy"; a skeleton says "here is
+     the shape of what is coming" — the screen appears to assemble rather than
+     stall, which matters on Ghanaian mobile data where every list loads
+     slowly. */
+  .skeleton {
+    position: relative;
+    overflow: hidden;
+    background: var(--color-surface-container-high);
+  }
+  .skeleton::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgb(255 255 255 / 0.5),
+      transparent
+    );
+    animation: skeleton-sweep 1.4s ease-in-out infinite;
+  }
+  @keyframes skeleton-sweep {
+    to {
+      transform: translateX(100%);
+    }
+  }
+
   /* Respect the OS-level setting — some people get motion sick. */
   @media (prefers-reduced-motion: reduce) {
     .screen-in {
+      animation: none;
+    }
+    .skeleton::after {
       animation: none;
     }
   }
