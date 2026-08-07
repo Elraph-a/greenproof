@@ -10,9 +10,17 @@ import {
   type TreeWithLatest,
 } from '../lib/trees'
 import { supabase } from '../lib/supabase'
-import { DEMO, demoCommonName, demoEarnings, demoLedger } from '../lib/demo'
+import { DEMO, demoCommonName, demoLedger } from '../lib/demo'
 import { Icon } from '../components/Icon'
-import { EmptyState, ErrorNote, StatusChip } from '../components/ui'
+import {
+  EmptyState,
+  ErrorNote,
+  HeroBadge,
+  HeroCard,
+  StatCell,
+  StatStrip,
+  StatusChip,
+} from '../components/ui'
 
 /**
  * My Grove — built to docs/design/v2/01-my-grove.png.
@@ -85,6 +93,19 @@ export function MyGrove() {
   const alive = trees?.filter((t) => t.status === 'alive').length ?? 0
   const survival = trees && trees.length ? Math.round((alive / trees.length) * 100) : 0
 
+  /* Trees whose next check-in has come due. This is the only number on the
+     screen that is an instruction rather than a result, which is why it earns
+     a place in the strip over "trees registered" (already implied by the hero
+     reading "4 of 8"). */
+  const dueCount = useMemo(
+    () =>
+      (trees ?? []).filter((t) => {
+        const d = t.latest ? nextCheckinDue(t.latest.captured_at) : null
+        return d?.overdue ?? !t.latest
+      }).length,
+    [trees],
+  )
+
   const today = new Date()
   /*
    * The hero used to be the weekday — the biggest text on the home screen said
@@ -113,46 +134,63 @@ export function MyGrove() {
 
       {error && <ErrorNote>{error}</ErrorNote>}
 
-      {/* Three stat cards. Amber is money and only money. */}
-      <div className="mt-stack-sm grid grid-cols-3 gap-2.5">
-        <StatCard
-          icon="tree"
-          tone="green"
-          value={trees ? String(trees.length) : '—'}
-          label="Trees planted"
-        />
-        <StatCard
-          icon="check"
-          tone="green"
-          value={trees ? String(alive) : '—'}
-          label="Confirmed alive"
-        />
-        <StatCard
-          icon="wallet"
-          tone="amber"
-          value={balance === null ? '—' : `GH₵${balance.toFixed(0)}`}
-          label="Earned"
-        />
-      </div>
-
-      {/* Survival rate */}
-      <div className="card mt-2.5 flex items-center gap-3 py-3">
-        <Icon name="chart" size={18} className="shrink-0 text-on-surface-variant" />
-        <span className="shrink-0 font-semibold text-on-surface">Survival rate</span>
-        <span className="tnum ml-auto shrink-0 font-headline font-bold text-on-surface">
-          {trees ? `${survival}%` : '—'}
-        </span>
-        <div className="h-2 w-16 shrink-0 overflow-hidden rounded-full bg-surface-container-high">
+      {/*
+        ONE hero. Previously this was three stat cards of equal weight plus a
+        survival bar — four competing figures and no subject, which is the main
+        reason the screen read as a template. Survival is what this product
+        proves, so it is the only thing at display size; everything else is
+        demoted into the strip below.
+      */}
+      <HeroCard
+        label="Trees confirmed alive"
+        value={
+          trees ? (
+            <>
+              {alive}
+              <span className="text-headline-xl font-semibold text-on-primary/60">
+                {' '}
+                of {trees.length}
+              </span>
+            </>
+          ) : (
+            '—'
+          )
+        }
+        badge={
+          trees && trees.length > 0 ? (
+            <HeroBadge tone="good">{survival}% survival</HeroBadge>
+          ) : undefined
+        }
+      >
+        <div className="mt-3.5 h-1.5 overflow-hidden rounded-full bg-white/20">
           <div
-            className="h-full rounded-full bg-[var(--color-verified)]"
+            className="h-full rounded-full bg-inverse-primary transition-[width] duration-500"
             style={{ width: `${survival}%` }}
           />
         </div>
+      </HeroCard>
+
+      <div className="mt-2.5">
+        <StatStrip>
+          <StatCell
+            label="Earned"
+            tone="warn"
+            value={balance === null ? '—' : `GH₵${balance.toFixed(0)}`}
+          />
+          {/* Deliberately NOT red. Trees coming due is the normal state of a
+              working grove; red is reserved for flagged, so that when red
+              appears it means something. Amber is unavailable here — it means
+              money and nothing else. */}
+          <StatCell label="Due now" value={trees ? String(dueCount) : '—'} />
+          <StatCell
+            label="Flagged"
+            tone={counts.flagged > 0 ? 'bad' : 'default'}
+            value={trees ? String(counts.flagged) : '—'}
+          />
+        </StatStrip>
       </div>
 
-      <h2 className="mt-stack-md mb-2.5 font-headline text-headline-lg font-bold text-on-surface">
-        Your Trees
-      </h2>
+      <h2 className="section-h">Your trees</h2>
 
       {/* Filter pills — the counts are the point. A planter with one flagged
           tree needs to find it without scrolling forty cards. */}
@@ -201,21 +239,19 @@ export function MyGrove() {
         {shown.map((tree) => {
           const thumb = tree.latest ? thumbs.get(tree.latest.wide_photo) : undefined
           const due = tree.latest ? nextCheckinDue(tree.latest.captured_at) : null
-          const earned = demoEarnings.get(tree.id)
           const name = demoCommonName.get(tree.id) ?? treeLabel(tree)
           return (
+            <div key={tree.id} className="relative">
             <Link
-              key={tree.id}
               to={`/tree/${tree.id}`}
-              className="card relative flex gap-3 overflow-hidden p-0 active:bg-surface-container-low"
+              className="card flex min-h-[96px] items-stretch overflow-hidden p-0 active:bg-surface-container-low"
             >
               {/*
                 The photo IS the product — this app exists to photograph trees,
-                so the evidence runs flush to the card edge and the full card
-                height instead of sitting as a thumbnail inside the padding.
-                The card's overflow-hidden provides the corner rounding.
+                so the evidence runs flush to the card edge at full height
+                rather than sitting as a thumbnail inside the padding.
               */}
-              <div className="w-28 shrink-0 self-stretch bg-surface-container-high">
+              <div className="w-24 shrink-0 bg-surface-container-high">
                 {thumb ? (
                   <img src={thumb} alt="" loading="lazy" className="size-full object-cover" />
                 ) : (
@@ -225,45 +261,52 @@ export function MyGrove() {
                 )}
               </div>
 
-              <div className="min-w-0 flex-1 py-3.5 pr-3.5">
-                <div className="flex items-start justify-between gap-2">
-                  <h3 className="truncate font-headline text-headline-md font-bold text-on-surface">
-                    {name}
-                  </h3>
+              {/*
+                THREE elements, down from seven. Species (a Latin binomial in
+                italics on every row), the tag code and the per-tree money chip
+                all moved to the tree page. On a list of forty they were noise,
+                and eight amber chips in a column destroyed the rule that amber
+                means money — it just meant "a card".
+              */}
+              <div className="flex min-w-0 flex-1 flex-col justify-center gap-1.5 py-3.5 pr-3 pl-3.5">
+                {/* The name carries the clearance for the check-in button in
+                    the top corner. It has the most slack of the three — a long
+                    name ellipsises harmlessly next to its own photograph,
+                    whereas a clipped status or date loses actual information. */}
+                <h3 className="truncate pr-11 font-headline text-headline-lg font-bold text-on-surface">
+                  {name}
+                </h3>
+                <div className="flex min-w-0 items-center gap-2">
                   <StatusChip status={tree.latest?.verdict ?? 'pending'} />
-                </div>
-
-                <p className="truncate text-label-lg text-on-surface-variant italic">
-                  {tree.species || 'Species not recorded'}
-                </p>
-
-                <div className="mt-1.5 flex items-center gap-1 text-on-surface-variant">
-                  <Icon name={due?.overdue ? 'warning' : 'calendar'} size={14} />
-                  <span className={`text-label-lg ${due?.overdue ? 'text-error' : ''}`}>
-                    {due ? due.label : `Registered ${formatAge(tree.created_at)} ago`}
+                  <span
+                    className={`truncate text-label-lg ${
+                      due?.overdue ? 'font-semibold text-error' : 'text-on-surface-variant'
+                    }`}
+                  >
+                    {due ? due.label : `Added ${formatAge(tree.created_at)} ago`}
                   </span>
                 </div>
-
-                {earned !== undefined && earned > 0 && (
-                  <span className="chip chip-money tnum mt-2">GH₵{earned}</span>
-                )}
-                {tree.tag_code && (
-                  <span className="ml-1.5 text-label-md text-on-surface-variant">
-                    {tree.tag_code}
-                  </span>
-                )}
               </div>
-
-              {/* Per-card check-in shortcut. During a round the user is walking
-                  tree to tree, and going home → check-in → pick the tree again
-                  is three taps for something they already have in front of them. */}
-              <span
-                className="absolute right-3 bottom-3 flex size-9 items-center justify-center rounded-lg bg-primary text-on-primary"
-                aria-hidden
-              >
-                <Icon name="camera" size={17} />
-              </span>
             </Link>
+
+            {/*
+              A SIBLING of the card link, not a child of it.
+
+              This was an aria-hidden <span> INSIDE the <Link>, so it looked
+              like a check-in shortcut and actually navigated to the tree page
+              like the rest of the card — a control that lied about what it did.
+              As a sibling it goes where it claims, and an anchor nested inside
+              an anchor (invalid HTML, unpredictable on mobile Safari) is
+              avoided. Absolutely positioned, so it costs the text rows nothing.
+            */}
+            <Link
+              to={`/checkin?tree=${tree.id}`}
+              aria-label={`Check in on ${name}`}
+              className="absolute top-3 right-3 flex size-9 items-center justify-center rounded-full bg-primary-container text-primary active:scale-95"
+            >
+              <Icon name="camera" size={17} />
+            </Link>
+            </div>
           )
         })}
       </div>
@@ -277,36 +320,6 @@ export function MyGrove() {
           Register Tree
         </Link>
       )}
-    </div>
-  )
-}
-
-function StatCard({
-  icon,
-  value,
-  label,
-  tone,
-}: {
-  icon: 'tree' | 'check' | 'wallet'
-  value: string
-  label: string
-  tone: 'green' | 'amber'
-}) {
-  return (
-    <div className="card p-3">
-      <Icon
-        name={icon}
-        size={17}
-        className={tone === 'amber' ? 'text-accent' : 'text-[var(--color-verified)]'}
-      />
-      <p className="tnum mt-1.5 font-headline text-headline-lg font-bold text-on-surface">
-        {value}
-      </p>
-      {/* 10px so "Confirmed alive" and "Trees planted" each hold one line at
-          390px — wrapping made the three cards different heights. */}
-      <p className="mt-0.5 text-[10px] leading-[13px] text-on-surface-variant">
-        {label}
-      </p>
     </div>
   )
 }

@@ -3,7 +3,7 @@ import { useAuth } from '../auth/AuthProvider'
 import { supabase } from '../lib/supabase'
 import { DEMO, demoLedger } from '../lib/demo'
 import { Icon } from '../components/Icon'
-import { EmptyState, ErrorNote } from '../components/ui'
+import { EmptyState, ErrorNote, HeroCard, StatCell, StatStrip } from '../components/ui'
 import type { LedgerEntry } from '../lib/types'
 
 /**
@@ -60,23 +60,24 @@ export function Wallet() {
 
       {error && <ErrorNote>{error}</ErrorNote>}
 
-      {/* Amber leads here — this is the one screen whose subject IS money.
-          Skeleton while loading: rendering GH₵0.00 that then jumps to the real
-          balance reads as a glitch on the one number people care about. */}
-      <div className="mt-stack-sm rounded-2xl bg-accent-container p-5">
-        <span className="micro text-on-accent-container/75">Available balance</span>
-        {entries === null && !error ? (
-          <div className="skeleton mt-1.5 h-11 w-44 rounded-lg" />
-        ) : (
-          <p className="tnum mt-1.5 font-headline text-display-lg font-bold text-on-accent-container">
-            GH₵{available.toFixed(2)}
-          </p>
-        )}
-      </div>
+      {/* Amber hero — this is the one screen whose subject IS money. Skeleton
+          while loading: rendering GH₵0.00 that then jumps to the real balance
+          reads as a glitch on the one number people care about. */}
+      {entries === null && !error ? (
+        <div className="skeleton mt-stack-sm h-[122px] rounded-2xl" />
+      ) : (
+        <HeroCard
+          accent
+          label="Available balance"
+          value={`GH₵${available.toFixed(2)}`}
+        />
+      )}
 
-      <div className="mt-2.5 grid grid-cols-2 gap-2.5">
-        <Figure label="Earned" value={`GH₵${total.toFixed(2)}`} />
-        <Figure label="Paid out" value={`GH₵${paid.toFixed(2)}`} />
+      <div className="mt-2.5">
+        <StatStrip>
+          <StatCell label="Earned" value={`GH₵${total.toFixed(2)}`} />
+          <StatCell label="Paid out" value={`GH₵${paid.toFixed(2)}`} />
+        </StatStrip>
       </div>
 
       <button
@@ -95,26 +96,28 @@ export function Wallet() {
       </button>
 
       {available < MIN_WITHDRAWAL_GHS && (
-        <div className="note mt-2.5">
-          <p className="text-label-lg text-on-surface-variant">
-            Minimum withdrawal is GH₵{MIN_WITHDRAWAL_GHS.toFixed(2)}. Batching
-            stops a per-transfer fee from eating a GH₵2 payment.
-          </p>
-        </div>
+        <p className="mt-2.5 text-center text-label-lg text-on-surface-variant">
+          Minimum withdrawal GH₵{MIN_WITHDRAWAL_GHS.toFixed(2)}
+        </p>
       )}
 
-      {/* The claim worth making on this screen, where the money is. */}
-      <div className="note-good mt-2.5 flex gap-2.5">
-        <Icon name="shield" size={16} className="mt-0.5 shrink-0" />
-        <p className="text-label-lg">
-          Money appears here only when a check-in passes verification. No client
-          can write to this ledger — not even yours.
-        </p>
-      </div>
+      {/* The claim worth making on this screen — one line on the surface, the
+          reasoning behind the tap. It was a five-line green box competing with
+          the balance it was explaining. */}
+      <details className="disclosure mt-2.5">
+        <summary>
+          <Icon name="shield" size={17} className="shrink-0 text-[var(--color-verified)]" />
+          You cannot pay yourself
+        </summary>
+        <div className="disclosure-body">
+          Money appears here only when a check-in passes verification, and no
+          client can write to this ledger — not even yours. Both locks live in
+          the database: the ledger is insert-only from a trigger, and the
+          verdict that fires it is writable only by the verification service.
+        </div>
+      </details>
 
-      <h2 className="mt-stack-md mb-2.5 font-headline text-headline-md font-bold text-on-surface">
-        Earnings
-      </h2>
+      <h2 className="section-h">Earnings</h2>
 
       {entries === null && !error && (
         <div className="flex flex-col gap-2.5">
@@ -164,13 +167,3 @@ export function Wallet() {
   )
 }
 
-function Figure({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="card p-3.5">
-      <span className="micro">{label}</span>
-      <p className="tnum mt-1.5 font-headline text-headline-lg font-bold text-on-surface">
-        {value}
-      </p>
-    </div>
-  )
-}

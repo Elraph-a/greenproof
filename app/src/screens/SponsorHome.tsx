@@ -4,7 +4,13 @@ import { useAuth } from '../auth/AuthProvider'
 import { loadPortfolio, type SponsorPortfolio } from '../lib/sponsor'
 import { Icon } from '../components/Icon'
 import { SurvivalCurve } from '../components/SurvivalCurve'
-import { ErrorNote } from '../components/ui'
+import {
+  ErrorNote,
+  HeroBadge,
+  HeroCard,
+  StatCell,
+  StatStrip,
+} from '../components/ui'
 
 /**
  * The sponsor's home — in the app, on a phone, not a desktop dashboard.
@@ -61,60 +67,53 @@ export function SponsorHome() {
       ) : (
         <>
           {/* Survival is the headline. Everything else supports it. */}
-          <div className="card mt-stack-sm">
-            <span className="micro">Trees still alive</span>
-            <div className="mt-1.5 flex items-end gap-2">
-              <p className="tnum font-headline text-display-lg font-bold text-on-surface">
+          <HeroCard
+            label="Trees still alive"
+            value={
+              <>
                 {p.alive}
-              </p>
-              <p className="tnum pb-2 text-headline-md text-on-surface-variant">
-                of {p.trees}
-              </p>
-              <span className="mb-2.5 ml-auto">
-                <span className="chip chip-verified tnum">
-                  {p.survivalPct.toFixed(0)}% survival
+                <span className="text-headline-xl font-semibold text-on-primary/60">
+                  {' '}
+                  of {p.trees}
                 </span>
-              </span>
-            </div>
-            <div className="mt-3 h-2 overflow-hidden rounded-full bg-surface-container-high">
+              </>
+            }
+            badge={
+              <HeroBadge tone="good">{p.survivalPct.toFixed(0)}% survival</HeroBadge>
+            }
+            foot={
+              p.flagged > 0 ? (
+                <span className="text-label-lg">
+                  {p.flagged} flagged and awaiting review
+                </span>
+              ) : undefined
+            }
+          >
+            <div className="mt-3.5 h-1.5 overflow-hidden rounded-full bg-white/20">
               <div
-                className="h-full rounded-full bg-[var(--color-verified)]"
+                className="h-full rounded-full bg-inverse-primary transition-[width] duration-500"
                 style={{ width: `${p.survivalPct}%` }}
               />
             </div>
-            {p.flagged > 0 && (
-              <p className="mt-2.5 flex items-center gap-1.5 text-label-lg text-on-surface-variant">
-                <Icon name="warning" size={14} className="text-tertiary" />
-                {p.flagged} flagged and awaiting review
-              </p>
-            )}
-          </div>
+          </HeroCard>
 
-          <div className="mt-2.5 grid grid-cols-2 gap-2.5">
-            <MoneyCard
-              label="Cost per surviving tree"
-              value={`GH₵${p.costPerSurvivingGhs.toFixed(2)}`}
-              note="paid out ÷ trees alive"
-            />
-            <MoneyCard
-              label="Paid to planters"
-              value={`GH₵${p.paidOutGhs.toFixed(2)}`}
-              note="only on verified visits"
-            />
-          </div>
-
-          {/* Pledged vs paid, deliberately not merged. */}
-          <div className="card mt-2.5 flex items-center gap-3 py-3">
-            <Icon name="wallet" size={17} className="shrink-0 text-accent" />
-            <div className="min-w-0 flex-1">
-              <p className="font-semibold text-on-surface">You have committed</p>
-              <p className="text-label-md text-on-surface-variant">
-                {p.committedTrees} trees · a pledge, not yet proof of survival
-              </p>
-            </div>
-            <p className="tnum shrink-0 font-headline text-headline-md font-bold text-accent">
-              GH₵{p.committedGhs.toFixed(0)}
-            </p>
+          {/* Cost per SURVIVING tree, committed and paid — three figures that
+              belong together and were three separate cards. Pledged and paid
+              stay distinct: collapsing them is the easiest place in this
+              product to mislead someone. */}
+          <div className="mt-2.5">
+            <StatStrip>
+              <StatCell
+                label="Per living tree"
+                value={`GH₵${p.costPerSurvivingGhs.toFixed(0)}`}
+              />
+              <StatCell label="Paid out" value={`GH₵${p.paidOutGhs.toFixed(0)}`} />
+              <StatCell
+                label="Pledged"
+                tone="warn"
+                value={`GH₵${p.committedGhs.toFixed(0)}`}
+              />
+            </StatStrip>
           </div>
 
           <Link to="/sponsor/fund" className="btn btn-primary btn-block mt-2.5">
@@ -122,7 +121,22 @@ export function SponsorHome() {
             Fund more trees
           </Link>
 
-          <section className="card mt-stack-md">
+          <details className="disclosure mt-2.5">
+            <summary>What these figures mean</summary>
+            <div className="disclosure-body">
+              <strong className="text-on-surface">Per living tree</strong> is
+              paid out ÷ trees still alive. Cost per tree <em>planted</em> is
+              the number reforestation programmes usually quote, and it is the
+              one that hides the failures.{' '}
+              <strong className="text-on-surface">Paid out</strong> is money
+              released against verified visits only.{' '}
+              <strong className="text-on-surface">Pledged</strong> is what you
+              committed — a pledge is not evidence a tree survived, which is why
+              it is never added to the other two.
+            </div>
+          </details>
+
+          <section className="card mt-stack-lg">
             <h2 className="font-headline text-headline-md font-bold text-on-surface">
               Survival over time
             </h2>
@@ -132,14 +146,8 @@ export function SponsorHome() {
             <SurvivalCurve points={p.curve} />
           </section>
 
-          <section className="mt-stack-md">
-            <h2 className="font-headline text-headline-md font-bold text-on-surface">
-              Recently verified
-            </h2>
-            <p className="mt-0.5 mb-2.5 text-label-lg text-on-surface-variant">
-              Every photo here passed the checks. Nothing on this wall was
-              approved by the person who submitted it.
-            </p>
+          <section>
+            <h2 className="section-h">Recently verified</h2>
 
             {p.recent.length === 0 ? (
               <div className="card">
@@ -179,24 +187,3 @@ export function SponsorHome() {
   )
 }
 
-function MoneyCard({
-  label,
-  value,
-  note,
-}: {
-  label: string
-  value: string
-  note: string
-}) {
-  return (
-    <div className="card p-3.5">
-      <span className="micro">{label}</span>
-      <p className="tnum mt-1.5 font-headline text-headline-lg font-bold text-on-surface">
-        {value}
-      </p>
-      <p className="mt-0.5 text-label-md leading-tight text-on-surface-variant">
-        {note}
-      </p>
-    </div>
-  )
-}

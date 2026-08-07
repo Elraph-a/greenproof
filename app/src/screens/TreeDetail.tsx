@@ -6,7 +6,7 @@ import { formatAge, getTree, listCheckins, treeLabel } from '../lib/trees'
 import { demoCommonName, demoEarnings } from '../lib/demo'
 import type { Checkin, Tree } from '../lib/types'
 import { Icon, type IconName } from '../components/Icon'
-import { ErrorNote, StatusChip } from '../components/ui'
+import { ErrorNote, HeroCard, StatusChip } from '../components/ui'
 
 /**
  * One tree's whole history.
@@ -102,41 +102,37 @@ export function TreeDetail() {
         </Link>
       }
     >
-      {/* ---- identity strip ------------------------------------------- */}
-      <div className="flex flex-wrap items-center gap-2">
-        <StatusChip status={latest?.verdict ?? 'pending'} />
-        {earned !== undefined && earned > 0 && (
-          <span className="chip chip-money tnum">GH₵{earned}</span>
-        )}
-        <span className="text-label-lg text-on-surface-variant italic">
-          {tree.species || 'Species not recorded'}
-        </span>
-      </div>
-
-      {/* ---- three figures, same cards as My Grove --------------------- */}
-      <div className="mt-stack-sm grid grid-cols-3 gap-2.5">
-        <Stat
-          icon="camera"
-          value={String(checkins.length)}
-          label={checkins.length === 1 ? 'Visit' : 'Visits'}
-        />
-        <Stat
-          icon="check"
-          value={latest?.confidence != null ? `${latest.confidence}%` : '—'}
-          label="Confidence"
-          tone="green"
-        />
-        <Stat icon="clock" value={formatAge(tree.created_at)} label="Registered" />
-      </div>
+      {/*
+        ONE hero: the confidence score. Previously the top of this page was a
+        chip row plus three equal stat cards, so the number the whole product
+        exists to produce was one of five things at the same size.
+      */}
+      <HeroCard
+        label="Confidence"
+        value={
+          latest?.confidence != null ? (
+            <>
+              {latest.confidence}
+              <span className="text-headline-xl font-semibold text-on-primary/60">
+                /100
+              </span>
+            </>
+          ) : (
+            'Not scored'
+          )
+        }
+        badge={<StatusChip status={latest?.verdict ?? 'pending'} />}
+        foot={
+          <span className="text-label-lg">
+            {checkins.length} {checkins.length === 1 ? 'visit' : 'visits'} ·
+            registered {formatAge(tree.created_at)} ago
+            {earned !== undefined && earned > 0 && ` · GH₵${earned} earned`}
+          </span>
+        }
+      />
 
       {/* ---- photo timeline: the most important element on the page ---- */}
-      <h2 className="mt-stack-md mb-2 font-headline text-headline-md font-bold text-on-surface">
-        Photo timeline
-      </h2>
-      <p className="mb-2.5 text-label-lg text-on-surface-variant">
-        Each visit, in order. Consistency across these photos is what the
-        identity claim rests on.
-      </p>
+      <h2 className="section-h">Photo timeline</h2>
 
       {checkins.length === 0 ? (
         <div className="card">
@@ -180,50 +176,52 @@ export function TreeDetail() {
       )}
 
       {/* ---- why this score ------------------------------------------- */}
-      <h2 className="mt-stack-md mb-2.5 font-headline text-headline-md font-bold text-on-surface">
-        Why this score
-      </h2>
+      <h2 className="section-h">Why this score</h2>
       {latest?.signals ? (
         <SignalBreakdown checkin={latest} />
       ) : (
         <div className="card">
           <p className="font-bold text-on-surface">Not scored yet</p>
           <p className="mt-1 text-label-lg text-on-surface-variant">
-            Photos are scored by the verification service after upload. Until
-            then this sits at <strong>pending</strong> — the safe default:
-            nothing counts as verified until it has been checked.
+            Scored by the verification service after upload. Until then this
+            stays <strong>pending</strong> — nothing counts as verified until it
+            has been checked.
           </p>
         </div>
       )}
 
-      {/* ---- registration facts --------------------------------------- */}
-      <h2 className="mt-stack-md mb-2.5 font-headline text-headline-md font-bold text-on-surface">
-        Registration
-      </h2>
-      <div className="card">
-        <dl className="space-y-2.5 text-label-lg">
-          <Row
-            icon="target"
-            label="Position"
-            value={`${tree.lat.toFixed(5)}, ${tree.lng.toFixed(5)}`}
-          />
-          <Row
-            icon="compass"
-            label="Facing"
-            value={
-              tree.heading_deg !== null
-                ? `${compassPoint(tree.heading_deg)}, ${Math.round(tree.heading_deg)}°`
-                : 'no compass reading'
-            }
-          />
-          <Row icon="list" label="Tag" value={tree.tag_code || 'none'} />
-        </dl>
-        {/* The honesty point, on the screen where the tag is shown. */}
-        <p className="mt-3 border-t border-outline-variant pt-3 text-label-md text-on-surface-variant">
-          A tag helps you find this tree again. It is not the tree's identity —
-          identity is the position, the framing and the photo history above.
-        </p>
-      </div>
+      {/*
+        Registration facts and the tag caveat are reference material, not
+        something a planter reads on every visit — so they sit one tap away
+        instead of adding a third card and a paragraph to the scroll.
+      */}
+      <details className="disclosure mt-2.5">
+        <summary>Registration details</summary>
+        <div className="disclosure-body">
+          <dl className="space-y-2.5">
+            <Row
+              icon="target"
+              label="Position"
+              value={`${tree.lat.toFixed(5)}, ${tree.lng.toFixed(5)}`}
+            />
+            <Row
+              icon="compass"
+              label="Facing"
+              value={
+                tree.heading_deg !== null
+                  ? `${compassPoint(tree.heading_deg)}, ${Math.round(tree.heading_deg)}°`
+                  : 'no compass reading'
+              }
+            />
+            <Row icon="list" label="Species" value={tree.species || 'not recorded'} />
+            <Row icon="list" label="Tag" value={tree.tag_code || 'none'} />
+          </dl>
+          <p className="mt-3 border-t border-outline-variant pt-3">
+            A tag helps you find this tree again. It is not the tree's identity —
+            identity is the position, the framing and the photo history above.
+          </p>
+        </div>
+      </details>
     </Frame>
   )
 }
@@ -275,32 +273,6 @@ function Frame({
   )
 }
 
-function Stat({
-  icon,
-  value,
-  label,
-  tone,
-}: {
-  icon: IconName
-  value: string
-  label: string
-  tone?: 'green'
-}) {
-  return (
-    <div className="card p-3">
-      <Icon
-        name={icon}
-        size={16}
-        className={tone === 'green' ? 'text-[var(--color-verified)]' : 'text-on-surface-variant'}
-      />
-      <p className="tnum mt-1.5 font-headline text-headline-lg font-bold text-on-surface">
-        {value}
-      </p>
-      <p className="mt-0.5 text-[10px] leading-[13px] text-on-surface-variant">{label}</p>
-    </div>
-  )
-}
-
 function Row({
   icon,
   label,
@@ -343,14 +315,9 @@ function SignalBreakdown({ checkin }: { checkin: Checkin }) {
 
   return (
     <div className="card">
-      <div className="flex items-baseline gap-1.5">
-        <span className="tnum font-headline text-display-md font-bold text-[var(--color-verified)]">
-          {checkin.confidence ?? '—'}
-        </span>
-        <span className="text-headline-md text-on-surface-variant">/100</span>
-      </div>
-
-      <ul className="mt-3 space-y-3">
+      {/* The score itself is the page hero now — repeating it here was the
+          same number twice within one screen height. */}
+      <ul className="space-y-3">
         {rows.map((r) => {
           // Signal scores are ALREADY 0–100 (see lib/types.ts Signals). An
           // earlier ×100 here rendered "9600%" on a score of 96.
@@ -391,9 +358,11 @@ function SignalBreakdown({ checkin }: { checkin: Checkin }) {
         })}
       </ul>
 
-      <p className="mt-3 border-t border-outline-variant pt-3 text-label-md text-on-surface-variant">
-        Five signals, never collapsed into one. Four of the five are
-        deterministic checks — only "matches previous photos" is the model.
+      {/* Kept — it is the honesty claim and the Q&A teaching aid — but as one
+          sentence rather than two, on the card it explains. */}
+      <p className="mt-3.5 border-t border-outline-variant pt-3 text-label-md text-on-surface-variant">
+        Four of these five are deterministic checks. Only "matches previous
+        photos" is the model.
       </p>
     </div>
   )

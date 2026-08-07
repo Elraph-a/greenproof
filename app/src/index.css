@@ -291,8 +291,12 @@
   }
 
   /* --- chips --- */
+  /* whitespace-nowrap because a status is a single token — "Needs review"
+     breaking across two lines inside a pill turns a scannable marker into a
+     paragraph, and it dragged the row's other text into a truncation. */
   .chip {
-    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-semibold;
+    @apply inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full
+           px-2.5 py-1 font-semibold;
     font-size: var(--text-label-md);
     line-height: 15px;
   }
@@ -420,6 +424,56 @@
   button.card:active {
     transform: scale(0.985);
     transition: transform 80ms ease-out;
+  }
+
+  /* --- disclosure ---
+     The explanations this product needs — why a score is what it is, what a tag
+     is and is not — were all rendered on the surface, and a screen carrying six
+     paragraphs of justification reads as documentation rather than an app. They
+     are still one tap away, which is where reference material belongs. */
+  .disclosure {
+    @apply overflow-hidden rounded-xl bg-surface-container-lowest;
+    box-shadow:
+      0 1px 2px rgb(22 33 27 / 0.04),
+      0 6px 18px -10px rgb(22 33 27 / 0.10);
+  }
+  .disclosure > summary {
+    @apply flex cursor-pointer list-none items-center gap-2 p-4 font-semibold
+           text-on-surface select-none;
+    min-height: var(--spacing-tap);
+  }
+  .disclosure > summary::-webkit-details-marker {
+    display: none;
+  }
+  /* Chevron, drawn rather than iconised so it can rotate on open. */
+  .disclosure > summary::after {
+    content: '';
+    margin-left: auto;
+    width: 7px;
+    height: 7px;
+    border-right: 2px solid var(--color-on-surface-variant);
+    border-bottom: 2px solid var(--color-on-surface-variant);
+    transform: rotate(45deg) translate(-2px, -2px);
+    transition: transform 200ms ease;
+  }
+  .disclosure[open] > summary::after {
+    transform: rotate(-135deg);
+  }
+  .disclosure-body {
+    @apply px-4 pb-4 text-on-surface-variant;
+    font-size: var(--text-label-lg);
+    line-height: 19px;
+  }
+
+  /* --- section heading ---
+     One consistent size for every "Your Trees" / "Photo timeline" heading, with
+     the air above it that separates a section from the thing before it. The old
+     screens used three different heading sizes and 10px gaps throughout, so
+     nothing grouped. */
+  .section-h {
+    @apply mt-stack-lg mb-2.5 font-headline font-bold text-on-surface;
+    font-size: var(--text-headline-lg);
+    letter-spacing: -0.015em;
   }
 
   /* --- loading skeletons ---

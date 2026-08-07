@@ -180,8 +180,15 @@ export function StatCell({
         : tone === 'bad'
           ? 'text-error'
           : 'text-on-surface'
+  /*
+   * justify-between, not a plain stack. The grid stretches every cell to the
+   * tallest, so a label that wraps to two lines ("Per living tree") used to
+   * push its own value down while its neighbours' values stayed up — three
+   * figures on two different baselines. Pinning labels to the top and values
+   * to the bottom keeps the numbers on one line whatever the labels do.
+   */
   return (
-    <div className="px-3.5 py-3 [&+&]:border-l [&+&]:border-outline-variant">
+    <div className="flex h-full flex-col justify-between px-3.5 py-3 [&+&]:border-l [&+&]:border-outline-variant">
       <span className="micro">{label}</span>
       <span
         className={`tnum mt-1 block font-headline text-headline-md font-bold ${cls}`}
