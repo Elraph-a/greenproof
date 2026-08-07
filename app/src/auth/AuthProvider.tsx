@@ -31,7 +31,8 @@ interface AuthValue {
   userId: string | null
   /** True until the initial session lookup resolves — avoids a login flash. */
   loading: boolean
-  signIn: (email: string) => Promise<void>
+  signIn: (email: string, password: string) => Promise<void>
+  signUp: (email: string, password: string) => Promise<void>
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
   saveProfile: (patch: Partial<Profile>) => Promise<void>
@@ -104,12 +105,54 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     else setProfile(null)
   }, [userId, loadProfile])
 
-  const signIn = useCallback(async (email: string) => {
-    const { error } = await supabase.auth.signInWithOtp({
+  /**
+   * Email + password, deliberately, after magic links failed in the field.
+   *
+   * A magic link is only as good as the browser that opens it. Gmail on Android
+   * opens links in its own WebView, which keeps its storage separate from
+   * Chrome and from the installed PWA — so the link signs you into a throwaway
+   * browser and the app you actually use stays signed out. There is no fix for
+   * that from inside our code; it is the mail client's decision. The built-in
+   * Supabase mailer also caps at roughly two messages an hour, which is below
+   * what a team of five signing in on pitch day needs.
+   *
+   * Passwords take the mail client out of the loop entirely. The cost is a
+   * password to remember; the benefit is that sign-in works the same way in
+   * every browser, offline-tolerant, with no rate limit and no round trip.
+   */
+  const signIn = useCallback(async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({
       email: email.trim(),
-      options: { emailRedirectTo: window.location.origin },
+      password,
+    })
+    if (error) {
+      // Supabase returns this for a wrong password AND for an email that has
+      // no password set (e.g. an account created by the old magic-link flow).
+      throw new Error(
+        error.message === 'Invalid login credentials'
+          ? 'Wrong email or password.'
+          : error.message,
+      )
+    }
+  }, [])
+
+  const signUp = useCallback(async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signUp({
+      email: email.trim(),
+      password,
     })
     if (error) throw new Error(error.message)
+
+    // With "Confirm email" switched off in Supabase, signUp returns a live
+    // session and the user is straight in. If that setting is ever turned back
+    // on, session is null and the user is left staring at a form that looks
+    // like it did nothing — so say what happened instead.
+    if (!data.session) {
+      throw new Error(
+        'Account created, but email confirmation is switched on in Supabase. ' +
+          'Turn it off under Authentication → Sign In / Providers → Email.',
+      )
+    }
   }, [])
 
   const signOut = useCallback(async () => {
@@ -157,6 +200,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       userId,
       loading,
       signIn,
+      signUp,
       signOut,
       refreshProfile,
       saveProfile,
@@ -168,6 +212,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       userId,
       loading,
       signIn,
+      signUp,
       signOut,
       refreshProfile,
       saveProfile,

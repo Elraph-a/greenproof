@@ -3,50 +3,46 @@ import { useAuth } from '../auth/AuthProvider'
 import { Icon } from '../components/Icon'
 import { ErrorNote, Spinner } from '../components/ui'
 
+/**
+ * Email + password. See the comment on `signIn` in AuthProvider for why this
+ * replaced the magic link: a mail client that opens links in its own WebView
+ * signs you into a browser you are not using, and no amount of app-side code
+ * changes that.
+ */
 export function SignIn() {
-  const { signIn } = useAuth()
+  const { signIn, signUp } = useAuth()
+  const [mode, setMode] = useState<'in' | 'up'>('in')
   const [email, setEmail] = useState('')
-  const [sent, setSent] = useState(false)
+  const [password, setPassword] = useState('')
+  const [show, setShow] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const creating = mode === 'up'
+  // Supabase's own floor is 6. Enforcing it here turns a round trip into an
+  // instantly disabled button.
+  const ready = email.trim().length > 3 && password.length >= 6
+
   async function submit(e: React.FormEvent) {
     e.preventDefault()
+    if (!ready) return
     setBusy(true)
     setError(null)
     try {
-      await signIn(email)
-      setSent(true)
+      if (creating) await signUp(email, password)
+      else await signIn(email, password)
+      // No navigation needed — onAuthStateChange fires and the router swaps
+      // this screen out.
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not send the link')
+      setError(err instanceof Error ? err.message : 'Could not sign in')
     } finally {
       setBusy(false)
     }
   }
 
-  if (sent) {
-    return (
-      <div className="safe-top safe-bottom flex min-h-dvh flex-col justify-center px-margin-mobile text-center">
-        <div className="mx-auto mb-stack-md flex size-20 items-center justify-center rounded-full bg-primary-container text-on-primary-container">
-          <Icon name="mail" size={36} />
-        </div>
-        <h1 className="font-headline text-headline-lg font-bold text-on-surface">
-          Check your email
-        </h1>
-        <p className="mt-2 text-on-surface-variant">
-          We sent a sign-in link to{' '}
-          <strong className="text-on-surface">{email}</strong>. Open it on this
-          phone.
-        </p>
-        <button
-          type="button"
-          className="btn btn-ghost mx-auto mt-stack-md"
-          onClick={() => setSent(false)}
-        >
-          Use a different email
-        </button>
-      </div>
-    )
+  function swap() {
+    setMode(creating ? 'in' : 'up')
+    setError(null)
   }
 
   return (
@@ -61,21 +57,13 @@ export function SignIn() {
       </div>
 
       <h1 className="font-headline text-display-md font-bold text-on-surface">
-        Welcome back
+        {creating ? 'Create your account' : 'Welcome back'}
       </h1>
       <p className="mt-2 text-on-surface-variant">
-        No password needed — we email you a link.
+        {creating
+          ? 'Pick a password you will remember in the field.'
+          : 'Sign in to your trees.'}
       </p>
-
-      {/* A magic link is unusual enough in Ghana that saying why is worth the
-          two lines: it removes the "I forgot my password" failure entirely,
-          which matters when the user is standing in a field. */}
-      <div className="note mt-stack-sm flex gap-2.5">
-        <Icon name="shield" size={16} className="mt-0.5 shrink-0 text-on-surface-variant" />
-        <p className="text-label-lg text-on-surface-variant">
-          No password to forget. Open the link on this phone and you are in.
-        </p>
-      </div>
 
       <form onSubmit={submit} className="mt-stack-md">
         <label className="label" htmlFor="email">
@@ -88,22 +76,63 @@ export function SignIn() {
           inputMode="email"
           autoComplete="email"
           autoCapitalize="none"
+          autoCorrect="off"
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="you@example.com"
         />
 
+        <label className="label mt-stack-sm" htmlFor="password">
+          Password
+        </label>
+        <div className="relative">
+          <input
+            id="password"
+            className="field pr-20"
+            type={show ? 'text' : 'password'}
+            // Tells the phone's password manager which of the two this is, so
+            // it offers to save on sign-up and to fill on sign-in.
+            autoComplete={creating ? 'new-password' : 'current-password'}
+            required
+            minLength={6}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder={creating ? 'At least 6 characters' : '••••••••'}
+          />
+          <button
+            type="button"
+            onClick={() => setShow((s) => !s)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-label-lg font-semibold text-on-surface-variant"
+            aria-label={show ? 'Hide password' : 'Show password'}
+          >
+            {show ? 'Hide' : 'Show'}
+          </button>
+        </div>
+
         <button
           type="submit"
-          className="btn btn-primary btn-block btn-cta mt-stack-sm"
-          disabled={busy || email.trim().length < 4}
+          className="btn btn-primary btn-block btn-cta mt-stack-md"
+          disabled={busy || !ready}
         >
-          {busy ? <Spinner /> : 'Send me a link'}
+          {busy ? <Spinner /> : creating ? 'Create account' : 'Sign in'}
         </button>
 
         {error && <ErrorNote>{error}</ErrorNote>}
       </form>
+
+      <div className="mt-stack-md text-center">
+        <span className="text-on-surface-variant">
+          {creating ? 'Already registered?' : 'First time here?'}
+        </span>{' '}
+        <button
+          type="button"
+          onClick={swap}
+          className="font-semibold text-primary underline underline-offset-4"
+        >
+          {creating ? 'Sign in' : 'Create an account'}
+        </button>
+      </div>
     </div>
   )
 }
