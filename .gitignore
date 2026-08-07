@@ -65,3 +65,7 @@ docs/design/New folder/
 
 # Word copies of the markdown originals — regenerate with tools/md_to_docx.py
 *.docx
+
+# Loose drop folders. The design PNGs live in docs/design/v2/ under real names;
+# a copy inside app/ would also sit in Vercel's root directory for no reason.
+**/New folder/
