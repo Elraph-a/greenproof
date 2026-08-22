@@ -11,9 +11,16 @@ import {
 import { revokePreview, type PreparedPhoto } from '../lib/image'
 import { submitRegistration } from '../lib/registrations'
 import { nextTag } from '../lib/tags'
+import {
+  PROXIMITY_WARN_M,
+  findTreesNear,
+  treeLabel,
+  type NearbyRegisteredTree,
+} from '../lib/trees'
 import { DEMO } from '../lib/demo'
 import { Icon } from '../components/Icon'
 import { PhotoCapture } from '../components/PhotoCapture'
+import { TrunkMeasure, type TrunkTaps } from '../components/TrunkMeasure'
 import { ErrorNote, Spinner } from '../components/ui'
 
 /**
@@ -51,11 +58,35 @@ export function Register() {
   const [tagCode, setTagCode] = useState('')
 
   /**
+   * T0 baseline trunk width, and null for most trees on purpose.
+   *
+   * Only a SAMPLE is physically measured — roughly 20 of 40 at T0, tape-measured
+   * alongside — so making this a required step would cost forty trees a pair of
+   * taps to serve twenty. It lives collapsed inside step 4 rather than as a
+   * sixth step for the same reason.
+   *
+   * It has to exist at T0 at all because the validation claim is "photo-derived
+   * width vs tape measurement on the same visit". Starting at round 1 would
+   * leave the T0 tape readings with nothing to compare against.
+   */
+  const [taps, setTaps] = useState<TrunkTaps | null>(null)
+
+  /**
    * Frozen when the WIDE shutter is TAPPED — see PhotoCapture.onCaptureStart.
    * Reading it at submit time would record the direction the user happened to
    * be facing while typing, and the next visit would send them the wrong way.
    */
   const [capturedHeading, setCapturedHeading] = useState<number | null>(null)
+
+  /**
+   * Trees already registered where the user is standing.
+   *
+   * null = not looked yet, [] = looked and found nothing. The distinction
+   * matters: we must not warn on an empty array we never populated.
+   */
+  const [collisions, setCollisions] = useState<NearbyRegisteredTree[] | null>(null)
+  /** The user has looked at the photos and says it is a different tree. */
+  const [collisionAck, setCollisionAck] = useState(false)
 
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -72,6 +103,29 @@ export function Register() {
   const accuracy = fix?.accuracy ?? null
   const gpsGood = accuracy !== null && accuracy <= GOOD_ACCURACY_M
   const gpsUsable = accuracy !== null && accuracy <= MAX_ACCURACY_M
+
+  /**
+   * Look for an existing tree at this spot, once per registration.
+   *
+   * Runs at STEP 1, before the two photos, because warning someone after they
+   * have framed and shot a tree wastes the trip. Guarded on `collisions ===
+   * null` because useGeolocation watches continuously — without that this
+   * would re-query on every GPS refinement.
+   *
+   * A failure here sets [] rather than surfacing an error: not being able to
+   * check must never block a registration. Degrade, don't break.
+   */
+  useEffect(() => {
+    if (!fix || !gpsUsable || collisions !== null) return
+    let cancelled = false
+    void findTreesNear(fix.lat, fix.lng)
+      .then((t) => !cancelled && setCollisions(t))
+      .catch(() => !cancelled && setCollisions([]))
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fix, gpsUsable, collisions])
 
   async function submit() {
     if (!userId) return
@@ -96,6 +150,7 @@ export function Register() {
           capturedAt: new Date(),
           wide: wide.blob,
           close: close.blob,
+          trunkTaps: taps,
         })
       }
       setCount((n) => n + 1)
@@ -112,6 +167,10 @@ export function Register() {
     if (close) revokePreview(close)
     setWide(null)
     setClose(null)
+    // Must reset, or tree N+1 silently inherits tree N's trunk edges — the same
+    // class of bug as the GPS fix below, and far harder to spot afterwards
+    // because a plausible-looking width would be attached to the wrong tree.
+    setTaps(null)
     // Species is deliberately KEPT and the tag advances by one. Most of a
     // forty-tree session is one species numbered in sequence, so clearing both
     // meant retyping the same word forty times with a phone in one hand. Both
@@ -119,14 +178,25 @@ export function Register() {
     setTagCode((t) => nextTag(t))
     setCapturedHeading(null)
     setError(null)
+    // Same reasoning as the GPS fix: a stale collision list would either warn
+    // about the wrong place or, worse, stay silent at a spot never checked.
+    setCollisions(null)
+    setCollisionAck(false)
     // Critical: without this every tree after the first inherits tree #1's fix.
     resetGeo()
     setStep(1)
   }
 
+  // An unresolved collision blocks step 1. Deliberately a speed bump and not a
+  // hard block: GPS cannot tell two trees 3 m apart from one tree measured
+  // twice, so refusing outright would make a dense grove unregisterable. The
+  // PERSON decides, against the previous photo — the same layered-identity rule
+  // the check-in flow uses.
+  const collisionBlocking = Boolean(collisions?.length) && !collisionAck
+
   const canAdvance =
     step === 1
-      ? gpsUsable || DEMO
+      ? (gpsUsable || DEMO) && !collisionBlocking
       : step === 2
         ? Boolean(wide)
         : step === 3
@@ -191,6 +261,15 @@ export function Register() {
             gpsGood={gpsGood}
             gpsUsable={gpsUsable}
             onRetry={resetGeo}
+          />
+        )}
+        {step === 1 && !!collisions?.length && (
+          <CollisionWarning
+            trees={collisions}
+            acked={collisionAck}
+            onAck={() => setCollisionAck(true)}
+            userId={userId}
+            onCheckIn={(id) => navigate(`/checkin?tree=${id}`)}
           />
         )}
 
@@ -336,6 +415,40 @@ export function Register() {
               </div>
             </div>
 
+            {/* Collapsed, and optional, on purpose. Only a SAMPLE of trees is
+                tape-measured at T0 — about twenty of forty — so making this a
+                required sixth step would cost every tree a pair of taps to
+                serve half of them. Closed by default it costs the other twenty
+                nothing; the surveyor carrying the tape opens it.
+
+                It has to exist at T0 rather than from round 1 because the
+                validation claim is "photo-derived width vs tape measurement on
+                the same visit". Without a T0 baseline the tape readings taken
+                that day have nothing to compare against. */}
+            {close && (
+              <details className="disclosure mt-stack-md">
+                <summary>
+                  Measure the trunk{' '}
+                  <span className="font-normal text-on-surface-variant">
+                    {taps ? '· marked' : '· optional'}
+                  </span>
+                </summary>
+                <div className="disclosure-body">
+                  <p className="mb-2.5 text-label-lg text-on-surface-variant">
+                    Only needed on trees you are also measuring with a tape.
+                    Tap the two edges of the trunk at about 1.3 m from the
+                    ground — chest height — which is where trunk diameter is
+                    measured everywhere in forestry.
+                  </p>
+                  <TrunkMeasure
+                    imageUrl={close.previewUrl}
+                    taps={taps}
+                    onChange={setTaps}
+                  />
+                </div>
+              </details>
+            )}
+
             {capturedHeading === null && !DEMO && (
               // Degrade, don't break: a missing signal lowers confidence later,
               // it does not stop the registration.
@@ -421,6 +534,121 @@ export function Register() {
 }
 
 /* -------------------------------------------------------------------------- */
+
+/**
+ * "There is already a tree registered here."
+ *
+ * THE BUG THIS FIXES: at the pilot one physical tree was photographed twice and
+ * became two tree rows. Nothing objected, because nothing looked. Two rows for
+ * one trunk means the tree is paid for twice, which is the double-payment case
+ * in the attack set — arrived at by honest accident rather than by fraud, which
+ * is how it will usually arrive.
+ *
+ * WHY IT SHOWS PHOTOS RATHER THAN JUST A DISTANCE. GPS at 5-10 m accuracy
+ * genuinely cannot separate "one tree measured twice" from "two trees 3 m
+ * apart". The previous WIDE SHOT can, instantly, because a person looking at it
+ * knows whether they are standing in front of that tree. Same rule as check-in:
+ * GPS narrows the candidates, the person decides.
+ */
+function CollisionWarning({
+  trees,
+  acked,
+  userId,
+  onAck,
+  onCheckIn,
+}: {
+  trees: NearbyRegisteredTree[]
+  acked: boolean
+  userId: string | null
+  onAck: () => void
+  onCheckIn: (id: string) => void
+}) {
+  return (
+    <div className="note-warn mt-3">
+      <p className="flex items-center gap-2 font-headline text-headline-md font-bold">
+        <Icon name="warning" size={17} />
+        {trees.length === 1
+          ? 'A tree is already registered here'
+          : `${trees.length} trees are already registered here`}
+      </p>
+      <p className="mt-1.5 text-label-lg">
+        Look at the last photo. If it is the tree in front of you, check it in
+        instead — registering it again would pay for one tree twice.
+      </p>
+
+      <ul className="mt-2.5 space-y-2">
+        {trees.map((t) => {
+          const mine = userId !== null && t.owner_id === userId
+          return (
+            <li
+              key={t.id}
+              className="flex items-center gap-3 rounded-lg bg-surface-container-lowest p-2.5"
+            >
+              {t.last_wide_url ? (
+                <img
+                  src={t.last_wide_url}
+                  alt=""
+                  className="size-14 shrink-0 rounded-md object-cover"
+                />
+              ) : (
+                <span className="flex size-14 shrink-0 items-center justify-center rounded-md bg-surface-container text-on-surface-variant">
+                  <Icon name="camera" size={18} />
+                </span>
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-semibold text-on-surface">
+                  {treeLabel(t)}
+                </p>
+                <p className="tnum text-label-lg text-on-surface-variant">
+                  {t.distance_m.toFixed(1)} m away
+                  {t.species ? ` · ${t.species}` : ''}
+                </p>
+              </div>
+              {mine ? (
+                <button
+                  type="button"
+                  className="btn btn-outline shrink-0 px-4"
+                  onClick={() => onCheckIn(t.id)}
+                >
+                  Check in
+                </button>
+              ) : (
+                // Someone else's tree. Checking in on their behalf is not
+                // offered — that would be submitting evidence for a tree that
+                // is not yours, which is the thing the ownership model exists
+                // to prevent. Registering anyway is allowed and gets reviewed.
+                <span className="shrink-0 text-label-md text-on-surface-variant">
+                  another
+                  <br />
+                  planter
+                </span>
+              )}
+            </li>
+          )
+        })}
+      </ul>
+
+      {!acked && (
+        <button
+          type="button"
+          className="btn btn-outline btn-block mt-2.5"
+          onClick={onAck}
+        >
+          This is a different tree
+        </button>
+      )}
+      {acked && (
+        <p className="mt-2.5 flex items-center gap-2 text-label-lg font-semibold text-on-surface">
+          <Icon name="check-circle" size={16} />
+          Marked as a different tree — this registration is flagged for review.
+        </p>
+      )}
+      <p className="mt-1.5 text-label-md text-on-surface-variant">
+        Within {PROXIMITY_WARN_M} m of this position.
+      </p>
+    </div>
+  )
+}
 
 function GpsStep({
   fix,

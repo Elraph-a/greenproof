@@ -20,6 +20,8 @@
  * of MB.
  */
 
+import type { TrunkTaps } from '../components/TrunkMeasure'
+
 const DB_NAME = 'greenproof'
 const DB_VERSION = 1
 const STORE = 'pending-registrations'
@@ -47,6 +49,12 @@ export interface PendingRegistration {
     gps_accuracy_m: number | null
     heading_deg: number | null
     blur_score: number | null
+    /**
+     * Optional, and optional on purpose — most T0 trees are not measured.
+     * Items queued before this field existed simply have it undefined, which
+     * inserts as null; no migration of the IndexedDB queue is needed.
+     */
+    trunk_taps?: TrunkTaps | null
   }
   photos: {
     wide: Blob

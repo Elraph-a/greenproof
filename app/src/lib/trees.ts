@@ -7,6 +7,8 @@
  */
 
 import { supabase } from './supabase'
+import { photoUrls } from './photos'
+import { haversine } from './geo'
 import { DEMO, demoCheckinsFor, demoTrees } from './demo'
 import type { Checkin, Tree } from './types'
 
@@ -114,4 +116,100 @@ export async function listCheckins(treeId: string): Promise<Checkin[]> {
     .order('captured_at', { ascending: true })
   if (error) throw new Error(error.message)
   return (data ?? []) as Checkin[]
+}
+
+// ---------------------------------------------------------------------------
+// Proximity — "is there already a tree here?"
+// ---------------------------------------------------------------------------
+
+/**
+ * How close an existing tree has to be before we warn.
+ *
+ * PROVISIONAL, and it must be calibrated against the pilot rather than guessed:
+ * compute the nearest-neighbour distance distribution across the 40 registered
+ * trees and set this below the 5th percentile. Too wide and every registration
+ * in a dense grove warns, users learn to tap through, and the check is worse
+ * than useless. Too narrow and a genuine double-registration slips past.
+ *
+ * 8 m is chosen as a starting point because phone GPS lands within ~5-10 m, so
+ * two fixes taken at the SAME trunk can legitimately sit that far apart.
+ */
+export const PROXIMITY_WARN_M = 8
+
+export interface NearbyRegisteredTree extends Tree {
+  distance_m: number
+  last_wide_url: string | null
+}
+
+/**
+ * Trees already registered near a point, closest first — ACROSS ALL OWNERS.
+ *
+ * Deliberately not scoped to the current user. One physical tree registered by
+ * two different people is the double-payment case, and scoping this query to
+ * `owner_id` would miss precisely that. `trees readable ... using (true)` in
+ * migration 0002 already permits the read, so this needs no new RPC.
+ *
+ * WHAT THIS IS AND IS NOT. It is a UX guard that stops an honest mistake — the
+ * surveyor who walks back to a tree they already did. It is NOT a security
+ * gate: it runs on the client and anyone can skip it. The gate that catches a
+ * DELIBERATE double-registration has to run server-side, next to the other
+ * gates, where the client cannot reach it.
+ */
+export async function findTreesNear(
+  lat: number,
+  lng: number,
+  radiusM = PROXIMITY_WARN_M,
+): Promise<NearbyRegisteredTree[]> {
+  // Nothing is really registered in demo mode, so there is nothing to collide
+  // with and a warning would be theatre.
+  if (DEMO) return []
+
+  // Bounding box first so the database does the elimination. At forty trees
+  // this is irrelevant; at forty thousand, pulling every row to the phone to
+  // measure it is the difference between instant and unusable.
+  const dLat = radiusM / 111_320
+  const dLng = radiusM / (111_320 * Math.cos((lat * Math.PI) / 180) || 1)
+
+  const { data, error } = await supabase
+    .from('trees')
+    .select(`*, checkins ( wide_photo, captured_at )`)
+    .gte('lat', lat - dLat)
+    .lte('lat', lat + dLat)
+    .gte('lng', lng - dLng)
+    .lte('lng', lng + dLng)
+  if (error) throw new Error(error.message)
+
+  type Row = Tree & { checkins: { wide_photo: string; captured_at: string }[] }
+
+  const rows = ((data ?? []) as unknown as Row[])
+    .map((row) => {
+      const latest = [...(row.checkins ?? [])].sort(
+        (a, b) => Date.parse(b.captured_at) - Date.parse(a.captured_at),
+      )[0]
+      const { checkins: _drop, ...tree } = row
+      return {
+        ...(tree as Tree),
+        distance_m: haversine(lat, lng, row.lat, row.lng),
+        last_wide_photo: latest?.wide_photo ?? null,
+        last_wide_url: null as string | null,
+      }
+    })
+    // The box is a square and the radius is a circle — the corners are further
+    // away than radiusM, so the real distance still has to be checked.
+    .filter((t) => t.distance_m <= radiusM)
+    .sort((a, b) => a.distance_m - b.distance_m)
+
+  // The PHOTO is what actually resolves this. GPS says "something is here";
+  // only looking at the previous photo tells the user whether it is this tree.
+  const paths = rows
+    .map((r) => r.last_wide_photo)
+    .filter((p): p is string => Boolean(p))
+  if (paths.length) {
+    const urls = await photoUrls(paths)
+    for (const r of rows) {
+      if (r.last_wide_photo) r.last_wide_url = urls.get(r.last_wide_photo) ?? null
+    }
+  }
+
+  return rows.map(({ last_wide_photo: _p, ...t }) => t)
 }

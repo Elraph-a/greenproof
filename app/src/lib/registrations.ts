@@ -21,6 +21,7 @@
 import { supabase } from './supabase'
 import { newCaptureId, uploadPhoto } from './photos'
 import { requestScoring } from './ml'
+import type { TrunkTaps } from '../components/TrunkMeasure'
 import {
   dequeue,
   enqueue,
@@ -42,6 +43,12 @@ export interface RegistrationInput {
   capturedAt: Date
   wide: Blob
   close: Blob
+  /**
+   * Optional. At T0 only a sample of trees is physically measured, so most
+   * registrations carry null — the tree still registers and the visit still
+   * counts, the growth check simply has no baseline for that tree.
+   */
+  trunkTaps: TrunkTaps | null
 }
 
 /**
@@ -75,6 +82,7 @@ export async function submitRegistration(
       gps_accuracy_m: input.accuracy,
       heading_deg: input.heading,
       blur_score: input.blurScore,
+      trunk_taps: input.trunkTaps,
     },
     photos: { wide: input.wide, close: input.close },
     uploaded: {},
@@ -141,6 +149,8 @@ async function send(item: PendingRegistration): Promise<void> {
     gps_accuracy_m: item.checkin.gps_accuracy_m,
     heading_deg: item.checkin.heading_deg,
     blur_score: item.checkin.blur_score,
+    // ?? null so items queued before this field existed insert cleanly.
+    trunk_taps: item.checkin.trunk_taps ?? null,
   }).select('id').single()
   if (error) throw new Error(`Could not save the first check-in: ${error.message}`)
 
