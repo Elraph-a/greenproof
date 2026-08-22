@@ -28,7 +28,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from greenproof_ml.scoring import (  # noqa: E402
+    PROXIMITY_REVIEW_M,
     assess,
+    check_proximity,
     gate_duplicate,
     gate_gps,
     gate_travel,
@@ -198,6 +200,96 @@ def test_gate_failure_overrides_perfect_scores():
     )
     assert r.verdict == "flagged"
     assert r.confidence == 0
+
+
+# ---------------------------------------------------------------------------
+# Proximity — one physical tree registered twice
+#
+# The pilot produced this for real: the same trunk was photographed twice and
+# became two tree rows, because nothing looked. These tests are the regression.
+# ---------------------------------------------------------------------------
+
+
+def _offset(metres):
+    """A latitude `metres` north of LAT."""
+    return LAT + metres / 111_320
+
+
+def test_proximity_no_earlier_trees_is_clean():
+    assert check_proximity(LAT, LNG, []).passed
+
+
+def test_proximity_distant_tree_is_clean():
+    assert check_proximity(LAT, LNG, [("t1", _offset(40), LNG)]).passed
+
+
+def test_proximity_same_spot_is_flagged_for_review():
+    r = check_proximity(LAT, LNG, [("t1", _offset(2), LNG)])
+    assert not r.passed
+    assert r.detail["nearest_tree"] == "t1"
+    assert r.detail["nearest_distance_m"] <= 3
+
+
+def test_proximity_reports_the_nearest_of_several():
+    r = check_proximity(
+        LAT, LNG, [("far", _offset(30), LNG), ("near", _offset(3), LNG)]
+    )
+    assert not r.passed
+    assert r.detail["nearest_tree"] == "near"
+
+
+def test_proximity_boundary_is_exclusive():
+    """Exactly at the radius passes; inside it does not. Pins the comparison so
+    a later > / >= slip cannot silently change what the pilot data means."""
+    assert check_proximity(LAT, LNG, [("t", _offset(PROXIMITY_REVIEW_M + 1), LNG)]).passed
+    assert not check_proximity(LAT, LNG, [("t", _offset(PROXIMITY_REVIEW_M - 1), LNG)]).passed
+
+
+def test_proximity_demotes_verified_to_review_not_flagged():
+    """The whole point: a suspected duplicate is a HUMAN LOOK, not an accusation.
+    Trees really do grow 3 m apart and GPS cannot tell the difference."""
+    good = dict(
+        gates={
+            "duplicate_image": gate_duplicate(CLEAN, [("o", FAR)]),
+            "gps_radius": gate_gps(LAT, LNG, LAT, LNG, 4.0),
+            "travel_speed": gate_travel(LAT, LNG, NOW, None),
+        },
+        scores={
+            "location": score_location(1.0),
+            "liveness": score_liveness(0.45, liveness_score(0.45)),
+            "scene_match": score_scene(0.9, 0.9, 0),
+            "growth": score_growth(0.5, 0.5),
+        },
+    )
+    clean = assess(**good)
+    assert clean.verdict == "verified", "fixture must verify without the flag"
+
+    flagged = assess(
+        **good,
+        review_flags={"tree_proximity": check_proximity(LAT, LNG, [("t1", _offset(2), LNG)])},
+    )
+    assert flagged.verdict == "review"
+    assert flagged.confidence > 0, "a review flag must not zero the confidence"
+    assert "tree_proximity" in flagged.signals["auto_approval_vetoed_by"]
+    assert flagged.signals["review_flags"]["tree_proximity"]["nearest_tree"] == "t1"
+
+
+def test_proximity_flag_absent_when_clear():
+    r = assess(
+        gates={
+            "duplicate_image": gate_duplicate(CLEAN, [("o", FAR)]),
+            "gps_radius": gate_gps(LAT, LNG, LAT, LNG, 4.0),
+            "travel_speed": gate_travel(LAT, LNG, NOW, None),
+        },
+        scores={
+            "location": score_location(1.0),
+            "liveness": score_liveness(0.45, liveness_score(0.45)),
+            "scene_match": score_scene(0.9, 0.9, 0),
+            "growth": score_growth(0.5, 0.5),
+        },
+        review_flags={"tree_proximity": check_proximity(LAT, LNG, [])},
+    )
+    assert r.verdict == "verified"
 
 
 if __name__ == "__main__":

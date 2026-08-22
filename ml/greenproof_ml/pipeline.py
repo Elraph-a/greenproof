@@ -19,6 +19,8 @@ from .embed import cosine, embed
 from .scoring import (
     Assessment,
     assess,
+    PROXIMITY_REVIEW_M,
+    check_proximity,
     gate_duplicate,
     gate_gps,
     gate_travel,
@@ -152,8 +154,29 @@ def score_checkin(checkin_id: str) -> Assessment:
     if measurement:
         scores["growth"]["measurement"] = measurement
 
+    # --- review flags ------------------------------------------------------
+    # Not gates: these must not auto-approve, but they are not accusations. See
+    # scoring.check_proximity for why proximity cannot be a gate.
+    review_flags = {}
+
+    # Only on the tree's FIRST check-in, i.e. its registration. On every later
+    # visit the tree already exists and standing near a neighbour is not news —
+    # re-flagging it every round would bury the reviewer in the same alert.
+    if not prev_visits:
+        review_flags["tree_proximity"] = check_proximity(
+            tree["lat"],
+            tree["lng"],
+            store.trees_near_registered_before(
+                tree["id"],
+                tree["lat"],
+                tree["lng"],
+                tree["created_at"],
+                PROXIMITY_REVIEW_M,
+            ),
+        )
+
     # --- combine and persist ----------------------------------------------
-    result = assess(gates, scores)
+    result = assess(gates, scores, review_flags=review_flags)
 
     audit = result.verdict == "verified" and random.random() < AUDIT_RATE
 

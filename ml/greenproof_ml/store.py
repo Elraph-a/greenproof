@@ -12,6 +12,7 @@ Space's secrets.
 from __future__ import annotations
 
 import io
+import math
 import os
 from datetime import datetime, timezone
 
@@ -104,6 +105,44 @@ def other_phashes(exclude_checkin_id: str) -> list[tuple[str, str]]:
         .execute()
     )
     return [(row["id"], row["phash"]) for row in (r.data or []) if row.get("phash")]
+
+
+def trees_near_registered_before(
+    tree_id: str,
+    lat: float,
+    lng: float,
+    before_iso: str,
+    radius_m: float,
+) -> list[tuple[str, float, float]]:
+    """Trees within `radius_m` that were registered BEFORE this one.
+
+    Across all owners: one physical tree registered by two different people is
+    the double-payment case, and scoping this to the owner would miss exactly
+    that.
+
+    A bounding box does the elimination in Postgres and the true distance is
+    measured here. PostGIS is available and `trees.location` is indexed, but
+    reaching it needs a SQL function; the box uses the plain lat/lng columns and
+    is correct because the caller re-measures. At pilot scale the difference is
+    unmeasurable — the box is there so this does not become a full table scan
+    when the grove is 40,000 trees rather than 40.
+    """
+    d_lat = radius_m / 111_320.0
+    d_lng = radius_m / max(111_320.0 * math.cos(math.radians(lat)), 1e-6)
+
+    r = (
+        db()
+        .table("trees")
+        .select("id, lat, lng")
+        .gte("lat", lat - d_lat)
+        .lte("lat", lat + d_lat)
+        .gte("lng", lng - d_lng)
+        .lte("lng", lng + d_lng)
+        .lt("created_at", before_iso)
+        .neq("id", tree_id)
+        .execute()
+    )
+    return [(row["id"], row["lat"], row["lng"]) for row in (r.data or [])]
 
 
 def previous_checkins(tree_id: str, before_iso: str) -> list[dict]:

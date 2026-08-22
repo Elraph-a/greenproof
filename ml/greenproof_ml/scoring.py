@@ -43,6 +43,21 @@ GPS_MAX_RADIUS_M = 60.0
 # check-ins from two places faster than a human could travel between them.
 MAX_TRAVEL_KMH = 120.0
 
+# Two TREES registered closer together than this are possibly one tree entered
+# twice — the double-payment case.
+#
+# NOT A GATE, DELIBERATELY. A failed gate means confidence 0 and 'flagged', and
+# trees genuinely do grow 3 m apart: flagging a dense grove as fraud would be
+# both wrong and ruinous to the pilot numbers. Phone GPS at 5-10 m simply cannot
+# tell "one tree measured twice" from "two neighbouring trees", so the honest
+# response is a human look, not an accusation. It routes to REVIEW instead.
+#
+# PROVISIONAL. Calibrate against the pilot's nearest-neighbour distance
+# distribution and set it below the 5th percentile — see tools/proximity_audit.py.
+# Must stay in step with PROXIMITY_WARN_M in app/src/lib/trees.ts, which is the
+# client-side warning for the same condition.
+PROXIMITY_REVIEW_M = 8.0
+
 # --- score shaping ---------------------------------------------------------
 
 LOCATION_FULL_M = 10.0  # at or under this, full marks
@@ -170,6 +185,36 @@ def gate_duplicate(this_phash: str, others: list[tuple[str, str]]) -> GateResult
             **({"matched_checkin": nearest_id} if not passed and nearest_id else {}),
         },
     )
+
+
+def check_proximity(
+    lat: float,
+    lng: float,
+    earlier: list[tuple[str, float, float]],
+) -> GateResult:
+    """Is there already a tree registered at this spot?
+
+    `earlier` is (tree_id, lat, lng) for trees registered STRICTLY BEFORE this
+    one. The ordering matters: when one trunk becomes two rows, only the second
+    row is the problem. Comparing against all trees would retroactively taint
+    the original — and the original is the one with the honest photo history.
+
+    Returns a GateResult for shape consistency with the real gates, but it is
+    passed to assess() as a REVIEW FLAG, not a gate. `passed=False` here means
+    "a person should look", never "this is fraud".
+    """
+    nearest_id, nearest = None, float("inf")
+    for tid, tlat, tlng in earlier:
+        d = haversine_m(lat, lng, tlat, tlng)
+        if d < nearest:
+            nearest, nearest_id = d, tid
+
+    passed = nearest > PROXIMITY_REVIEW_M
+    detail: dict = {"passed": passed, "radius_m": PROXIMITY_REVIEW_M}
+    if nearest_id is not None:
+        detail["nearest_tree"] = nearest_id
+        detail["nearest_distance_m"] = round(nearest, 1)
+    return GateResult(passed, detail)
 
 
 def gate_gps(
@@ -335,8 +380,15 @@ def assess(
     gates: dict[str, GateResult],
     scores: dict[str, dict],
     weights: dict[str, float] | None = None,
+    review_flags: dict[str, GateResult] | None = None,
 ) -> Assessment:
+    """`review_flags` are conditions that must not AUTO-APPROVE but are not
+    disqualifying — they demote 'verified' to 'review' and are recorded with a
+    reason. Separate from gates on purpose: a gate says "this is fraud", a review
+    flag says "a person should look at this", and collapsing the two would either
+    accuse honest planters or wave through the thing we wanted a human to see."""
     w = dict(weights or DEFAULT_WEIGHTS)
+    review_flags = review_flags or {}
 
     signals: dict = {
         "gates": {k: v.detail for k, v in gates.items()},
@@ -344,6 +396,8 @@ def assess(
         "weights": w,
         "model": {"name": MODEL_NAME, "version": MODEL_VERSION},
     }
+    if review_flags:
+        signals["review_flags"] = {k: v.detail for k, v in review_flags.items()}
 
     failed = [k for k, v in gates.items() if not v.passed]
     if failed:
@@ -386,6 +440,7 @@ def assess(
     ]
     if coverage < MIN_COVERAGE_TO_VERIFY:
         vetoes.append("coverage")
+    vetoes.extend(name for name, r in review_flags.items() if not r.passed)
 
     if vetoes and verdict == "verified":
         verdict = "review"
