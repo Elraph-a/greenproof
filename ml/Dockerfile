@@ -24,10 +24,14 @@ RUN pip install --no-cache-dir --upgrade pip \
 
 COPY --chown=user . .
 
-# Spaces routes to 7860.
 EXPOSE 7860
 
 # One worker deliberately: the ONNX session is per-process and ~90 MB of
 # weights, and check-in traffic is a handful of requests per round. Two workers
 # would double memory to serve a queue that is never deep.
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "7860", "--workers", "1"]
+#
+# SHELL FORM, so ${PORT} is expanded at runtime. Every container host injects
+# the port it wants on a different variable-or-default convention, and the
+# exec form ["uvicorn", ...] would pass the literal string "${PORT}" and the
+# container would die on boot with an unreadable error. 7860 is the fallback.
+CMD uvicorn app:app --host 0.0.0.0 --port ${PORT:-7860} --workers 1
