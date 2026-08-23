@@ -69,8 +69,13 @@ ATTACKS = [
         2,
         "Internet photo of the same species",
         "A stock photo of the same species, submitted at the correct GPS.",
-        "duplicate gate + liveness",
-        "flagged",
+        # Corrected after the first run. A stock photo is NOT in our database,
+        # so the duplicate gate cannot see it, and it is a living plant so
+        # liveness passes. Only scene match can object, which makes this an
+        # AI-dependent attack and one we may well fail. Reported either way.
+        "image matching",
+        "review",
+        uses_ai=True,
     ),
     Attack(
         3,
@@ -134,6 +139,46 @@ def dead_plant_image() -> Image.Image:
     # A darker vertical "trunk"
     a[:, 260:340] *= 0.55
     return Image.fromarray(np.clip(a, 0, 255).astype(np.uint8))
+
+
+# Photos the SYSTEM HAS NEVER SEEN: the July spike plants, which were never
+# uploaded to Supabase, so their perceptual hashes are not in the database.
+UNSEEN_DIR = Path(__file__).resolve().parent.parent / "data" / "spike"
+
+
+def unseen_pair(seed: int) -> tuple[bytes, bytes]:
+    """Two photos of real plants the database has never seen.
+
+    WHY THIS EXISTS, AND IT IS THE MOST IMPORTANT COMMENT IN THIS FILE.
+
+    An attack meant to test the AI must actually REACH the AI. The first
+    version of attacks 4 and 7 reused photos already stored in Supabase and
+    merely re-encoded them, assuming re-encoding would defeat the duplicate
+    gate. It does not: re-encoding moves a pHash by 0-2 bits against a
+    threshold of 6, which we had already measured. So the duplicate gate fired
+    first, both attacks reported "caught", and neither tested the detector it
+    existed to test.
+
+    A real fraudster photographing the wrong tree takes a NEW photo. These are
+    new photos, resized to the same 800px/q75 the app uploads so they are
+    comparable to genuine check-ins rather than distinguishable by size.
+    """
+    files = sorted(UNSEEN_DIR.glob("*.jpg"))
+    if len(files) < 2:
+        raise FileNotFoundError(
+            f"No unseen photos in {UNSEEN_DIR}. Attacks 2, 4 and 7 need images "
+            "that are NOT in the database, or they silently test the duplicate "
+            "gate instead of what they claim to test."
+        )
+    out = []
+    for idx in (2 * seed, 2 * seed + 1):
+        img = Image.open(files[idx % len(files)])
+        w, h = img.size
+        scale = 800 / max(w, h)
+        if scale < 1:
+            img = img.resize((round(w * scale), round(h * scale)), Image.LANCZOS)
+        out.append(to_jpeg(img, 75))
+    return out[0], out[1]
 
 
 def to_jpeg(img: Image.Image, quality: int = 75) -> bytes:
@@ -287,16 +332,17 @@ def cleanup() -> None:
         db.table("trees").delete().eq("id", t["id"]).execute()
     print(f"deleted {len(trees)} injected tree(s)")
 
-    rows = (
-        db.table("checkins")
-        .select("id, signals")
-        .not_.is_("signals", "null")
-        .execute()
-    ).data or []
+    # Match on the STORAGE PATH, not the self_test tag. Scoring used to
+    # overwrite `signals` and destroy that tag (fixed in pipeline.py, but rows
+    # scored before the fix have already lost it). The path is written at upload
+    # time and nothing rewrites it. Timestamps are not usable either: attack 6
+    # deliberately back-dates itself to fake impossible travel.
+    rows = (db.table("checkins").select("id, wide_photo, signals").execute()).data or []
     injected = [
         r["id"]
         for r in rows
-        if ((r.get("signals") or {}).get("self_test") or {}).get("injected")
+        if "/attack-" in (r.get("wide_photo") or "")
+        or ((r.get("signals") or {}).get("self_test") or {}).get("injected")
     ]
     for cid in injected:
         db.table("checkins").delete().eq("id", cid).execute()
@@ -322,13 +368,11 @@ def run() -> list[Attack]:
                 cid = submit(target["id"], owner, wide, close, target["lat"], target["lng"], now, attack)
 
             elif attack.number == 2:
-                # Stand-in for a stock photo: a genuine photo of a DIFFERENT
-                # tree, which is the same failure mode — an image that exists
-                # elsewhere in the system.
-                other = next(t for t in targets if t["id"] != target["id"])
-                op = sorted(other["checkins"], key=lambda c: c["captured_at"])[-1]
-                wide = store.db().storage.from_(store.BUCKET).download(op["wide_photo"])
-                close = store.db().storage.from_(store.BUCKET).download(op["close_photo"])
+                # A real photo of a real plant that is not this tree and is not
+                # in the database - which is what a stock internet photo
+                # actually is. The duplicate gate cannot see it, so this reaches
+                # the scene-match signal, as it should.
+                wide, close = unseen_pair(0)
                 cid = submit(target["id"], owner, wide, close, target["lat"], target["lng"], now, attack)
 
             elif attack.number == 3:
@@ -341,16 +385,12 @@ def run() -> list[Attack]:
                 )
 
             elif attack.number == 4:
-                other = next(t for t in targets if t["id"] != target["id"])
-                op = sorted(other["checkins"], key=lambda c: c["captured_at"])[-1]
-                # Re-encode so the duplicate gate does NOT catch it — this
-                # attack must be forced through to the AI, which is the whole
-                # point of including it.
-                w = Image.open(io.BytesIO(store.db().storage.from_(store.BUCKET).download(op["wide_photo"])))
-                c = Image.open(io.BytesIO(store.db().storage.from_(store.BUCKET).download(op["close_photo"])))
-                w = w.resize((int(w.width * 0.92), int(w.height * 0.92)))
-                c = c.resize((int(c.width * 0.92), int(c.height * 0.92)))
-                cid = submit(target["id"], owner, to_jpeg(w, 70), to_jpeg(c, 70),
+                # THE ONLY ATTACK THAT GENUINELY NEEDS THE AI, so it must not be
+                # intercepted by an earlier gate. Unseen photos of a different
+                # real plant, submitted at this tree's exact GPS: every
+                # deterministic check passes and only scene match can object.
+                wide, close = unseen_pair(1)
+                cid = submit(target["id"], owner, wide, close,
                              target["lat"], target["lng"], now, attack)
 
             elif attack.number == 5:
@@ -369,19 +409,14 @@ def run() -> list[Attack]:
                 )
 
             else:  # 7 — the same tree registered a second time
-                # Re-encoded, exactly as in attack 4: a person registering the
-                # same trunk twice takes a NEW photo, so the pixels genuinely
-                # differ. Reusing the bytes unchanged would trip the duplicate
-                # gate first and the proximity check would never be exercised —
-                # the attack would 'pass' while testing nothing.
-                w = Image.open(io.BytesIO(store.db().storage.from_(store.BUCKET).download(prev["wide_photo"])))
-                c = Image.open(io.BytesIO(store.db().storage.from_(store.BUCKET).download(prev["close_photo"])))
-                w = w.resize((int(w.width * 0.94), int(w.height * 0.94)))
-                c = c.resize((int(c.width * 0.94), int(c.height * 0.94)))
-
+                # Unseen photos, so the duplicate gate cannot fire and the
+                # PROXIMITY check is what has to catch this. Someone registering
+                # the same trunk a second time photographs it afresh, so new
+                # pixels are also the realistic case.
+                wide, close = unseen_pair(2)
                 dup_tree = register_duplicate_tree(target, owner, now)
                 cid = submit(
-                    dup_tree, owner, to_jpeg(w, 72), to_jpeg(c, 72),
+                    dup_tree, owner, wide, close,
                     target["lat"] + DUPLICATE_OFFSET_DEG, target["lng"], now, attack,
                 )
 

@@ -178,6 +178,16 @@ def score_checkin(checkin_id: str) -> Assessment:
     # --- combine and persist ----------------------------------------------
     result = assess(gates, scores, review_flags=review_flags)
 
+    # Carry provenance forward. write_result replaces `signals` WHOLESALE, so a
+    # self-test tag written at insert time is destroyed by the very act of
+    # scoring. That is not cosmetic: it made six injected attack rows
+    # indistinguishable from real pilot data, and the only thing that still
+    # identified them was the storage path. Provenance is a fact about where a
+    # row came from, not part of the score, and must survive being scored.
+    provenance = (row.get("signals") or {}).get("self_test")
+    if provenance:
+        result.signals["self_test"] = provenance
+
     audit = result.verdict == "verified" and random.random() < AUDIT_RATE
 
     store.write_result(

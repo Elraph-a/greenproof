@@ -1,0 +1,104 @@
+[
+  {
+    "number": 1,
+    "name": "Resubmit an identical photo",
+    "expected_catcher": "duplicate gate (pHash)",
+    "uses_ai": false,
+    "checkin_id": "570739ec-269e-4d15-81b6-832eb2cb0fcc",
+    "verdict": "flagged",
+    "confidence": 0,
+    "caught": true,
+    "auto_approved": false,
+    "failed_gates": [
+      "duplicate_image"
+    ],
+    "review_flags": []
+  },
+  {
+    "number": 2,
+    "name": "Internet photo of the same species",
+    "expected_catcher": "image matching",
+    "uses_ai": true,
+    "checkin_id": "cbbbc356-ae2b-4ced-9407-c897a7f7a96c",
+    "verdict": "review",
+    "confidence": 75,
+    "caught": true,
+    "auto_approved": false,
+    "failed_gates": [],
+    "review_flags": []
+  },
+  {
+    "number": 3,
+    "name": "Correct tree, wrong place",
+    "expected_catcher": "GPS gate",
+    "uses_ai": false,
+    "checkin_id": "285b3744-4af4-46dc-a3c2-f4b118e19da6",
+    "verdict": "flagged",
+    "confidence": 0,
+    "caught": true,
+    "auto_approved": false,
+    "failed_gates": [
+      "duplicate_image",
+      "gps_radius"
+    ],
+    "review_flags": []
+  },
+  {
+    "number": 4,
+    "name": "Different tree at the correct GPS",
+    "expected_catcher": "image matching",
+    "uses_ai": true,
+    "checkin_id": "4ce8463c-5450-42f5-9fb4-c52fdaa165ee",
+    "verdict": "review",
+    "confidence": 57,
+    "caught": true,
+    "auto_approved": false,
+    "failed_gates": [],
+    "review_flags": []
+  },
+  {
+    "number": 5,
+    "name": "Dead or brown plant",
+    "expected_catcher": "liveness (excess green)",
+    "uses_ai": false,
+    "checkin_id": "4f74c543-21c0-482b-b69c-cafb377c43a1",
+    "verdict": "flagged",
+    "confidence": 39,
+    "caught": true,
+    "auto_approved": false,
+    "failed_gates": [],
+    "review_flags": []
+  },
+  {
+    "number": 6,
+    "name": "Impossible travel",
+    "expected_catcher": "travel-speed gate",
+    "uses_ai": false,
+    "checkin_id": "df1f0412-b81d-4da3-ae7a-ec740aee7659",
+    "verdict": "flagged",
+    "confidence": 0,
+    "caught": true,
+    "auto_approved": false,
+    "failed_gates": [
+      "duplicate_image",
+      "gps_radius",
+      "travel_speed"
+    ],
+    "review_flags": []
+  },
+  {
+    "number": 7,
+    "name": "Same tree registered twice",
+    "expected_catcher": "proximity check",
+    "uses_ai": false,
+    "checkin_id": "ff4c61be-ac20-4699-8c05-7cc46583dc2a",
+    "verdict": "review",
+    "confidence": 48,
+    "caught": true,
+    "auto_approved": false,
+    "failed_gates": [],
+    "review_flags": [
+      "tree_proximity"
+    ]
+  }
+]
