@@ -7,6 +7,8 @@ the TeProD Ulysseus Innovation Challenge final (University of Ghana).
 - [docs/ROADMAP.md](docs/ROADMAP.md) — **the operating plan.** Week by week, what gets measured
 - [docs/APP_DESIGN.md](docs/APP_DESIGN.md) — every screen, with priorities
 - [spike/FINDINGS.md](spike/FINDINGS.md) — what we measured about image matching
+- [docs/DEMO_RUNBOOK.md](docs/DEMO_RUNBOOK.md) — **read before the pitch.** How the live
+  demo comes up, the pre-flight list, and what to say if the network fails
 
 **The schedule in the context doc is superseded by the roadmap.**
 
