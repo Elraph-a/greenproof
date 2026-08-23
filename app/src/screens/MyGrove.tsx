@@ -239,7 +239,7 @@ export function MyGrove() {
         </p>
       )}
 
-      <div className="flex flex-col gap-2.5 pb-[168px]">
+      <div className="rise-stagger flex flex-col gap-2.5 pb-[168px]">
         {shown.map((tree) => {
           const thumb = tree.latest ? thumbs.get(tree.latest.wide_photo) : undefined
           const due = tree.latest ? nextCheckinDue(tree.latest.captured_at) : null

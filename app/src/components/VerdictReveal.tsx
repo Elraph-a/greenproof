@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { Icon, type IconName } from './Icon'
 import { Spinner } from './ui'
 import type { Checkin, CheckinVerdict } from '../lib/types'
@@ -168,7 +169,10 @@ export function VerdictReveal({
         </span>
       </div>
 
-      <div className="flex flex-col gap-2">
+      {/* The checks arrive under the gauge rather than with it, so the eye
+          reads the verdict first and the reasons second - which is the order a
+          planter actually needs them in. */}
+      <div className="rise-stagger flex flex-col gap-2">
         {checks.map((c) => (
           <div key={c.title} className="card flex items-center gap-3 py-3">
             <span
@@ -253,6 +257,40 @@ function Frame({
   )
 }
 
+/**
+ * Interpolate 0 -> target so the arc draws and the number counts together.
+ *
+ * Driven in JS rather than by a CSS transition because the READOUT has to move
+ * too: a transition can animate the arc's stroke, but the digits are React
+ * state and would jump straight to the answer while the arc was still filling.
+ * Watching a number settle on 84 is the difference between a readout and a
+ * verdict, and this is the one screen in the app where that beat is earned.
+ *
+ * Cubic ease-out, matching --ease-out closely enough that the arc and every
+ * CSS entrance on this screen feel like one movement.
+ */
+function useCountUp(target: number, ms = 900): number {
+  const [value, setValue] = useState(0)
+
+  useEffect(() => {
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setValue(target)
+      return
+    }
+    let raf = 0
+    const start = performance.now()
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / ms)
+      setValue(target * (1 - Math.pow(1 - t, 3)))
+      if (t < 1) raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [target, ms])
+
+  return value
+}
+
 /** Circular confidence dial. An arc reads as "how close to full" at a glance. */
 function Gauge({ value, colour }: { value: number; colour: string }) {
   const R = 62
@@ -260,7 +298,24 @@ function Gauge({ value, colour }: { value: number; colour: string }) {
   // 270° sweep, opening at the bottom — a full ring has no visible start or
   // end, so the eye cannot judge how far along the value sits.
   const SWEEP = 0.75
-  const filled = C * SWEEP * (Math.max(0, Math.min(100, value)) / 100)
+  const target = Math.max(0, Math.min(100, value))
+
+  /**
+   * The arc sweeps up from zero, and the number counts with it.
+   *
+   * This is the only place in the app that spends a long beat, and it is
+   * earned: it is seen a handful of times a day, and it is the moment a
+   * planter finds out whether the visit they just walked to counted. A number
+   * that simply appears states a result; an arc that fills lets you watch it
+   * arrive, and a value settling at 84 rather than jumping there is the
+   * difference between a readout and a verdict.
+   *
+   * Two frames of delay before starting: mounting at the target value would
+   * make the browser skip the transition entirely.
+   */
+  const shown = useCountUp(target)
+
+  const shownFilled = C * SWEEP * (shown / 100)
 
   return (
     <div className="relative size-[152px]">
@@ -283,7 +338,7 @@ function Gauge({ value, colour }: { value: number; colour: string }) {
           stroke={colour}
           strokeWidth="11"
           strokeLinecap="round"
-          strokeDasharray={`${filled} ${C}`}
+          strokeDasharray={`${shownFilled} ${C}`}
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -291,7 +346,7 @@ function Gauge({ value, colour }: { value: number; colour: string }) {
           <Icon name="check-circle" size={20} />
         </span>
         <span className="tnum font-headline text-display-md font-bold text-on-surface">
-          {Math.round(value)}%
+          {Math.round(shown)}%
         </span>
         <span className="text-label-md text-on-surface-variant">confidence</span>
       </div>

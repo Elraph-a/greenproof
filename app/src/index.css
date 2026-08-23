@@ -157,9 +157,15 @@
      ease-out on everything driven by input: the response leaves immediately
      and settles, which is what "the UI answered me" feels like. `ease` and
      `ease-in` both start slow, which reads as lag on a touch. */
-  --ease-out: cubic-bezier(0.2, 0.8, 0.3, 1);
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
   --duration-press: 90ms;
   --duration-ui: 150ms;
+  /* NOTE: the verdict gauge's ~900ms reveal is NOT a token here. It is driven
+     in JS by useCountUp in VerdictReveal, because the digits have to move with
+     the arc and CSS cannot animate React state. One source of truth, in the
+     hook. It is also the only thing in this app allowed past 300ms, and it is
+     earned: it is the moment a planter finds out whether the visit counted. */
 
   --font-headline: 'Be Vietnam Pro', ui-sans-serif, system-ui, sans-serif;
   --font-body: 'Work Sans', ui-sans-serif, system-ui, sans-serif;
@@ -441,6 +447,37 @@
     @apply rounded-xl bg-[var(--color-verified-container)] p-3.5 text-[var(--color-verified)];
   }
 
+  /* --- entrances ---
+     One shape for everything that arrives: 8px of rise plus a fade. Never from
+     scale(0) - nothing in the real world appears from nothing, and the eye
+     reads it as a pop rather than an arrival.
+
+     `.rise` is for a single element. `.rise-stagger` cascades its own children
+     so a list does not land as one slab. 45ms apart and capped at eight: past
+     that the last row waits long enough to feel like the app is slow, and the
+     effect is decorative so it must never be something you wait for. */
+  .rise {
+    animation: rise 320ms var(--ease-out) backwards;
+  }
+  .rise-stagger > * {
+    animation: rise 320ms var(--ease-out) backwards;
+  }
+  .rise-stagger > *:nth-child(1) { animation-delay: 0ms; }
+  .rise-stagger > *:nth-child(2) { animation-delay: 45ms; }
+  .rise-stagger > *:nth-child(3) { animation-delay: 90ms; }
+  .rise-stagger > *:nth-child(4) { animation-delay: 135ms; }
+  .rise-stagger > *:nth-child(5) { animation-delay: 180ms; }
+  .rise-stagger > *:nth-child(6) { animation-delay: 225ms; }
+  .rise-stagger > *:nth-child(7) { animation-delay: 270ms; }
+  .rise-stagger > *:nth-child(n + 8) { animation-delay: 315ms; }
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+  }
+
   /* --- horizontal scrollers ---
      Measured on My Grove: the filter row is 414px of content in a 390px
      viewport. Twenty-four pixels over is the worst possible amount - the last
@@ -621,6 +658,13 @@
     button.card:active,
     .btn:active {
       transform: none;
+    }
+    /* Keep the fade, drop the travel and the cascade. The arrival is still
+       legible; nothing moves. */
+    .rise,
+    .rise-stagger > * {
+      animation: screen-fade 160ms linear backwards;
+      animation-delay: 0ms !important;
     }
     .skeleton::after {
       animation: none;
