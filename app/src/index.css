@@ -578,6 +578,13 @@
     }
   }
 
+  /* Group heading inside a list. Deliberately quieter than .section-h: it
+     separates two halves of one list rather than announcing a new section, and
+     at section weight the list would read as two screens stacked. */
+  .group-h {
+    @apply mt-stack-md mb-2 text-label-lg font-semibold text-on-surface-variant;
+  }
+
   .safe-bottom {
     padding-bottom: max(1rem, env(safe-area-inset-bottom));
   }

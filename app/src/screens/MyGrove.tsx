@@ -17,8 +17,6 @@ import {
   ErrorNote,
   HeroBadge,
   HeroCard,
-  StatCell,
-  StatStrip,
   StatusChip,
 } from '../components/ui'
 
@@ -90,6 +88,26 @@ export function MyGrove() {
     return list.filter((t) => t.latest?.verdict === filter)
   }, [trees, filter])
 
+  /**
+   * Two groups, because a grove list is a work list.
+   *
+   * A flat list of forty trees sorted by nothing forces the planter to read
+   * every row to find the three that need walking to. Splitting on "is this
+   * due?" puts the work at the top and turns the rest into a receipt. Only
+   * applied on the unfiltered view - once someone has picked "Flagged", the
+   * grouping would be answering a question they did not ask.
+   */
+  const grouped = useMemo(() => {
+    if (filter !== 'all') return null
+    const due: TreeWithLatest[] = []
+    const done: TreeWithLatest[] = []
+    for (const t of shown) {
+      const d = t.latest ? nextCheckinDue(t.latest.captured_at) : null
+      ;(d?.overdue ?? !t.latest ? due : done).push(t)
+    }
+    return { due, done }
+  }, [shown, filter])
+
   const alive = trees?.filter((t) => t.status === 'alive').length ?? 0
   const survival = trees && trees.length ? Math.round((alive / trees.length) * 100) : 0
 
@@ -141,27 +159,37 @@ export function MyGrove() {
         proves, so it is the only thing at display size; everything else is
         demoted into the strip below.
       */}
+      {/*
+        THE HERO IS AN INSTRUCTION, NOT A SCORE.
+
+        It used to open with "TREES CONFIRMED ALIVE / 4 of 8 / 50% survival".
+        Four of those eight were UNCHECKED, not dead - so the first number a
+        planter saw each morning counted their unfinished work as failure, and
+        the one figure that would actually change their next hour ("3 due now")
+        was the smallest, greyest cell on the screen.
+
+        A grove list is a work list. It answers "what do I do today?" first and
+        "how am I doing?" second. Survival and earnings are still here, because
+        they are what the product proves - they are just no longer the greeting.
+      */}
       <HeroCard
-        label="Trees confirmed alive"
-        value={
-          trees ? (
-            <>
-              {alive}
-              <span className="text-headline-xl font-semibold text-on-primary/60">
-                {' '}
-                of {trees.length}
-              </span>
-            </>
-          ) : (
-            '—'
-          )
-        }
+        label={dueCount === 1 ? 'Tree due now' : 'Trees due now'}
+        value={trees ? dueCount : '—'}
         badge={
           trees && trees.length > 0 ? (
             <HeroBadge tone="good">{survival}% survival</HeroBadge>
           ) : undefined
         }
       >
+        <p className="mt-1 text-body-md text-on-primary/75">
+          {trees && trees.length > 0
+            ? dueCount === 0
+              ? 'Every tree is up to date. Nothing to walk to.'
+              : `${alive} of ${trees.length} confirmed alive${
+                  balance === null ? '' : ` · GH₵${balance.toFixed(0)} earned`
+                }`
+            : 'Register a tree to begin.'}
+        </p>
         <div className="mt-3.5 h-1.5 overflow-hidden rounded-full bg-white/20">
           <div
             // scaleX, not width. Animating width runs layout on every frame;
@@ -172,27 +200,43 @@ export function MyGrove() {
             style={{ transform: `scaleX(${survival / 100})` }}
           />
         </div>
+        {dueCount > 0 && (
+          <Link
+            to="/checkin"
+            className="btn btn-block mt-3.5 bg-on-primary text-primary active:scale-[.98]"
+          >
+            <Icon name="camera" size={19} />
+            Start check-in round
+          </Link>
+        )}
       </HeroCard>
 
-      <div className="mt-2.5">
-        <StatStrip>
-          <StatCell
-            label="Earned"
-            tone="warn"
-            value={balance === null ? '—' : `GH₵${balance.toFixed(0)}`}
-          />
-          {/* Deliberately NOT red. Trees coming due is the normal state of a
-              working grove; red is reserved for flagged, so that when red
-              appears it means something. Amber is unavailable here — it means
-              money and nothing else. */}
-          <StatCell label="Due now" value={trees ? String(dueCount) : '—'} />
-          <StatCell
-            label="Flagged"
-            tone={counts.flagged > 0 ? 'bad' : 'default'}
-            value={trees ? String(counts.flagged) : '—'}
-          />
-        </StatStrip>
-      </div>
+      {/*
+        The three-equal-stat strip is gone. Three identical cards in a row is
+        the most recognisable generated-dashboard shape there is, and it gave
+        Earned, Due and Flagged the same visual weight when only one of them is
+        ever an instruction. Flagged now earns attention only when it is not
+        zero, as a single line rather than a permanent third of the screen.
+      */}
+      {trees && counts.flagged > 0 && (
+        <Link
+          to="/grove"
+          onClick={(e) => {
+            e.preventDefault()
+            setFilter('flagged')
+          }}
+          className="card mt-2.5 flex items-center gap-2.5 py-3 active:bg-surface-container-low"
+        >
+          <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-error-container text-on-error-container">
+            <Icon name="warning" size={15} />
+          </span>
+          <span className="flex-1 text-label-lg font-semibold text-on-surface">
+            {counts.flagged} {counts.flagged === 1 ? 'tree needs' : 'trees need'} your
+            attention
+          </span>
+          <Icon name="chevron-right" size={16} className="text-on-surface-variant" />
+        </Link>
+      )}
 
       <h2 className="section-h">Your trees</h2>
 
@@ -239,13 +283,69 @@ export function MyGrove() {
         </p>
       )}
 
-      <div className="rise-stagger flex flex-col gap-2.5 pb-[168px]">
-        {shown.map((tree) => {
-          const thumb = tree.latest ? thumbs.get(tree.latest.wide_photo) : undefined
-          const due = tree.latest ? nextCheckinDue(tree.latest.captured_at) : null
-          const name = demoCommonName.get(tree.id) ?? treeLabel(tree)
-          return (
-            <div key={tree.id} className="relative">
+      {grouped && grouped.due.length > 0 && grouped.done.length > 0 && (
+        <p className="group-h">Due now</p>
+      )}
+
+      <div className="rise-stagger flex flex-col gap-2.5">
+        {(grouped ? grouped.due : shown).map((tree) => (
+          <TreeRow
+            key={tree.id}
+            tree={tree}
+            thumb={tree.latest ? thumbs.get(tree.latest.wide_photo) : undefined}
+          />
+        ))}
+      </div>
+
+      {/* The rest of the grove. Present, because a planter wants to see their
+          whole grove - but visually settled, because there is nothing to do
+          here. The heading only appears when there is work above it to
+          separate from. */}
+      {grouped && grouped.done.length > 0 && (
+        <>
+          {grouped.due.length > 0 && <p className="group-h">Up to date</p>}
+          <div className="rise-stagger flex flex-col gap-2.5">
+            {grouped.done.map((tree) => (
+              <TreeRow
+                key={tree.id}
+                tree={tree}
+                thumb={tree.latest ? thumbs.get(tree.latest.wide_photo) : undefined}
+              />
+            ))}
+          </div>
+        </>
+      )}
+
+      <div className="pb-[168px]" />
+
+      {trees && trees.length > 0 && (
+        <Link
+          to="/register"
+          className="btn btn-primary btn-fab fixed right-margin-mobile bottom-[104px] z-40"
+        >
+          <Icon name="plus" size={20} />
+          Register Tree
+        </Link>
+      )}
+    </div>
+  )
+}
+
+
+/**
+ * One row of the grove.
+ *
+ * Extracted so the "due" and "up to date" groups cannot drift apart. Two
+ * copies of an eighty-line card is how a list ends up with one group showing a
+ * check-in shortcut and the other not.
+ */
+function TreeRow({ tree, thumb }: { tree: TreeWithLatest; thumb?: string }) {
+  const due = tree.latest ? nextCheckinDue(tree.latest.captured_at) : null
+  const name = demoCommonName.get(tree.id) ?? treeLabel(tree)
+
+  return (
+
+    <div className="relative">
             <Link
               to={`/tree/${tree.id}`}
               className="card flex min-h-[96px] items-stretch overflow-hidden p-0 active:bg-surface-container-low"
@@ -277,19 +377,31 @@ export function MyGrove() {
                     the top corner. It has the most slack of the three — a long
                     name ellipsises harmlessly next to its own photograph,
                     whereas a clipped status or date loses actual information. */}
-                <h3 className="truncate pr-11 font-headline text-headline-lg font-bold text-on-surface">
-                  {name}
-                </h3>
+                {/*
+                  HIERARCHY WAS INVERTED. The tree's NAME - the one thing the
+                  planter already knows, because they are standing in their own
+                  grove - was the biggest, blackest text on the row, while the
+                  only field that tells them what to do today was the smallest
+                  and the palest.
+
+                  So the row now leads with the state and demotes the name to
+                  an identifier. Weight and colour carry it rather than size:
+                  making the due label bigger would have cost the photograph
+                  its width, and the photograph is the evidence.
+                */}
                 <div className="flex min-w-0 items-center gap-2">
                   <StatusChip status={tree.latest?.verdict ?? 'pending'} />
                   <span
-                    className={`truncate text-label-lg ${
-                      due?.overdue ? 'font-semibold text-error' : 'text-on-surface-variant'
+                    className={`truncate text-label-lg font-semibold ${
+                      due?.overdue ? 'text-error' : 'text-on-surface-variant'
                     }`}
                   >
                     {due ? due.label : `Added ${formatAge(tree.created_at)} ago`}
                   </span>
                 </div>
+                <h3 className="truncate pr-11 font-headline text-headline-lg font-semibold text-on-surface">
+                  {name}
+                </h3>
               </div>
             </Link>
 
@@ -311,20 +423,6 @@ export function MyGrove() {
               <Icon name="camera" size={17} />
             </Link>
             </div>
-          )
-        })}
-      </div>
-
-      {trees && trees.length > 0 && (
-        <Link
-          to="/register"
-          className="btn btn-primary btn-fab fixed right-margin-mobile bottom-[104px] z-40"
-        >
-          <Icon name="plus" size={20} />
-          Register Tree
-        </Link>
-      )}
-    </div>
   )
 }
 
