@@ -152,7 +152,11 @@ function demoPortfolio(): SponsorPortfolio {
       { date: day(3), alive: 4, total: 8 },
     ],
     recent: demoTrees
-      .filter((t) => t.latest)
+      // VERIFIED ONLY. The heading promises "Recently verified", and the
+      // unfiltered list put a 21%-confidence photo of a hand-drawn number on
+      // notebook paper on the one screen whose entire job is earning a
+      // sponsor's trust.
+      .filter((t) => t.latest && t.latest.verdict === 'verified')
       // Newest first, matching the real query — the photo wall showing
       // 6 Aug, 3 Aug, 5 Aug in that order reads as broken.
       .sort((a, b) => b.latest!.captured_at.localeCompare(a.latest!.captured_at))

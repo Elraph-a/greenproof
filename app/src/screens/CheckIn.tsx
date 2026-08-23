@@ -129,6 +129,10 @@ export function CheckIn() {
         error={error}
         treeName={treeName}
         tagCode={tree?.tag_code ?? null}
+        // Re-runs the SAME submission. submit() reads wide/close/taps straight
+        // from state and never clears them, so the photos captured at the tree
+        // are reused rather than re-shot.
+        onRetry={() => void submit()}
         onAgain={() => {
           setStep(1)
           setNearby(null)

@@ -52,7 +52,10 @@ export function nextCheckinDue(lastIso: string): {
 } {
   const since = ageInDays(lastIso)
   const days = CHECKIN_INTERVAL_DAYS - since
-  if (days < 0) return { days, overdue: true, label: `${-days} days overdue` }
+  if (days < 0) {
+    const n = -days
+    return { days, overdue: true, label: `${n} ${n === 1 ? 'day' : 'days'} overdue` }
+  }
   if (days === 0) return { days, overdue: true, label: 'Due today' }
   if (days === 1) return { days, overdue: false, label: 'Due tomorrow' }
   return { days, overdue: false, label: `Due in ${days} days` }

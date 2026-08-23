@@ -67,7 +67,14 @@
      secondary text is unreadable in direct sun, which is the most common
      mobile-in-sunlight failure and this app is used at midday in a field. */
   --color-on-surface: #16211b;
-  --color-on-surface-variant: #63706a;
+  /* Measured, not assumed. #63706a was documented as 6.9:1 but actually gives
+     5.18:1 on white, 4.79:1 on the page background and 4.22:1 on a container -
+     and most secondary text sits on the background, not on a card. #55625c
+     measures 5.91:1 on the background - verified in the browser, not
+     estimated. That is short of the 6.9 originally claimed, and going darker
+     starts to compete with --color-on-surface for primary text, so this is the
+     honest ceiling for a distinct secondary tone. Costs nothing. */
+  --color-on-surface-variant: #55625c;
   --color-on-background: #16211b;
   --color-inverse-surface: #16211b;
   --color-inverse-on-surface: #f7f6f2;
@@ -143,6 +150,17 @@
   --spacing-tap: 56px;
 
   /* --- type --- */
+  /* --- motion ---
+     Named because the two press affordances had already drifted: .btn used
+     Tailwind's default 150ms while a.card:active used 80ms, so tapping a
+     button and tapping a card felt like different apps.
+     ease-out on everything driven by input: the response leaves immediately
+     and settles, which is what "the UI answered me" feels like. `ease` and
+     `ease-in` both start slow, which reads as lag on a touch. */
+  --ease-out: cubic-bezier(0.2, 0.8, 0.3, 1);
+  --duration-press: 90ms;
+  --duration-ui: 150ms;
+
   --font-headline: 'Be Vietnam Pro', ui-sans-serif, system-ui, sans-serif;
   --font-body: 'Work Sans', ui-sans-serif, system-ui, sans-serif;
 
@@ -248,16 +266,35 @@
   /* --- buttons — 12px radius, NOT pills. Pills are reserved for the floating
      action button and for chips, which is what makes the FAB read as floating
      rather than as one more button in the stack. --- */
+  /* Explicit properties, never `transition: all`. `all` animates every
+     animatable property including layout ones, so a width or padding change
+     anywhere in a button silently becomes an animation. */
   .btn {
     @apply inline-flex items-center justify-center gap-2 rounded-lg px-5
-           font-semibold transition-all select-none active:scale-[.98];
+           font-semibold select-none active:scale-[.98];
+    transition:
+      transform var(--duration-press) var(--ease-out),
+      background-color var(--duration-ui) var(--ease-out),
+      color var(--duration-ui) var(--ease-out),
+      box-shadow var(--duration-ui) var(--ease-out);
     min-height: var(--spacing-tap);
     font-family: var(--font-body);
     font-size: 15px;
     letter-spacing: -0.005em;
   }
+  /* NOT opacity. A filled primary at 40% opacity puts white text at 2.14:1 on
+     washed sage, and at arm's length in direct sun that is indistinguishable
+     from the live button next to it - so the largest, greenest thing on the
+     capture screens was the one that does nothing, and users tap it repeatedly.
+     A flat container fill with proper on-surface-variant text reads as a slot
+     waiting to be filled rather than as a dim button, and stays legible. */
   .btn:disabled {
-    @apply pointer-events-none opacity-40;
+    @apply pointer-events-none;
+    background: var(--color-surface-container-high);
+    color: var(--color-on-surface-variant);
+    border-color: transparent;
+    box-shadow: none;
+    opacity: 1;
   }
   .btn-primary {
     @apply bg-primary text-on-primary;
@@ -462,6 +499,14 @@
   .screen-in {
     animation: screen-in 220ms cubic-bezier(0.2, 0.8, 0.3, 1) backwards;
   }
+  @keyframes screen-fade {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
   @keyframes screen-in {
     from {
       opacity: 0;
@@ -478,7 +523,7 @@
   a.card:active,
   button.card:active {
     transform: scale(0.985);
-    transition: transform 80ms ease-out;
+    transition: transform var(--duration-press) var(--ease-out);
   }
 
   /* --- disclosure ---
@@ -509,7 +554,9 @@
     border-right: 2px solid var(--color-on-surface-variant);
     border-bottom: 2px solid var(--color-on-surface-variant);
     transform: rotate(45deg) translate(-2px, -2px);
-    transition: transform 200ms ease;
+    /* Was 200ms `ease`, which eases IN - a rotation that starts slowly after a
+       tap reads as lag. Input-driven motion leaves immediately. */
+    transition: transform var(--duration-ui) var(--ease-out);
   }
   .disclosure[open] > summary::after {
     transform: rotate(-135deg);
@@ -563,8 +610,17 @@
 
   /* Respect the OS-level setting — some people get motion sick. */
   @media (prefers-reduced-motion: reduce) {
+    /* REPLACE, don't remove. What triggers vestibular discomfort is the
+       translation, not the fade - and with the animation deleted outright a
+       new screen appears with no transition at all, so nothing signals that
+       the view changed. Keeping the opacity fade preserves that signal. */
     .screen-in {
-      animation: none;
+      animation: screen-fade 160ms linear backwards;
+    }
+    a.card:active,
+    button.card:active,
+    .btn:active {
+      transform: none;
     }
     .skeleton::after {
       animation: none;

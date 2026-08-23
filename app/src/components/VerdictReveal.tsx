@@ -20,6 +20,15 @@ interface Props {
   treeName?: string
   tagCode?: string | null
   onAgain?: () => void
+  /**
+   * Retry the SAME submission, reusing the photos already in memory.
+   *
+   * Without this a dropped connection on the tap that decides whether someone
+   * is paid discarded two photos, the trunk taps and the compass heading -
+   * ninety seconds of work at the tree, with the only control on screen being
+   * the close button. The planter had to walk back and do it again.
+   */
+  onRetry?: () => void
   onDone: () => void
 }
 
@@ -62,6 +71,7 @@ export function VerdictReveal({
   treeName,
   tagCode,
   onAgain,
+  onRetry,
   onDone,
 }: Props) {
   /* ---- still scoring, timed out, or failed -------------------------- */
@@ -77,7 +87,26 @@ export function VerdictReveal({
               <h2 className="mt-stack-md font-headline text-headline-xl font-bold text-on-surface">
                 Could not submit
               </h2>
-              <p className="mt-2 max-w-[280px] text-on-surface-variant">{error}</p>
+              <p className="mt-2 max-w-[290px] text-on-surface-variant">
+                Your photos are still here. Nothing has been lost.
+              </p>
+              {onRetry && (
+                <button
+                  type="button"
+                  className="btn btn-primary btn-block mt-stack-md"
+                  onClick={onRetry}
+                >
+                  <Icon name="refresh" size={19} />
+                  Try again
+                </button>
+              )}
+              {/* The technical reason is kept, but out of the way. A planter
+                  standing at a tree needs to know whether to retry, not to
+                  read a Postgres error. */}
+              <details className="disclosure mt-2.5 w-full text-left">
+                <summary>What went wrong</summary>
+                <div className="disclosure-body">{error}</div>
+              </details>
             </>
           ) : timedOut ? (
             <>

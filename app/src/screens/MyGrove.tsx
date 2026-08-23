@@ -164,8 +164,12 @@ export function MyGrove() {
       >
         <div className="mt-3.5 h-1.5 overflow-hidden rounded-full bg-white/20">
           <div
-            className="h-full rounded-full bg-inverse-primary transition-[width] duration-500"
-            style={{ width: `${survival}%` }}
+            // scaleX, not width. Animating width runs layout on every frame;
+            // transform is composited. This bar sits in the hero card that
+            // paints first on a low-end Android, which is exactly where a
+            // layout-thrashing animation is felt.
+            className="h-full w-full origin-left rounded-full bg-inverse-primary transition-transform duration-500 ease-out"
+            style={{ transform: `scaleX(${survival / 100})` }}
           />
         </div>
       </HeroCard>

@@ -381,7 +381,7 @@ export function Register() {
               <label className="label" htmlFor="species">Species</label>
               <input
                 id="species"
-                className="field-underline"
+                className="field"
                 list="species-list"
                 value={species}
                 onChange={(e) => setSpecies(e.target.value)}
@@ -407,7 +407,7 @@ export function Register() {
                 <Icon name="list" size={17} className="shrink-0 text-on-surface-variant" />
                 <input
                   id="tag"
-                  className="field-underline"
+                  className="field"
                   value={tagCode}
                   onChange={(e) => setTagCode(e.target.value)}
                   placeholder="e.g. GP-0041"

@@ -91,8 +91,9 @@ export function SponsorHome() {
           >
             <div className="mt-3.5 h-1.5 overflow-hidden rounded-full bg-white/20">
               <div
-                className="h-full rounded-full bg-inverse-primary transition-[width] duration-500"
-                style={{ width: `${p.survivalPct}%` }}
+                // scaleX, not width — see the same bar in MyGrove.
+                className="h-full w-full origin-left rounded-full bg-inverse-primary transition-transform duration-500 ease-out"
+                style={{ transform: `scaleX(${p.survivalPct / 100})` }}
               />
             </div>
           </HeroCard>

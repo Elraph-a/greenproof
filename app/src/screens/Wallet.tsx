@@ -25,6 +25,7 @@ export function Wallet() {
   const { userId } = useAuth()
   const [entries, setEntries] = useState<LedgerEntry[] | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [payoutNote, setPayoutNote] = useState(false)
 
   useEffect(() => {
     if (!userId) return
@@ -80,20 +81,32 @@ export function Wallet() {
         </StatStrip>
       </div>
 
+      {/* NO window.alert(). This is the most anticipated tap in the app, and
+          it used to produce an unstyled browser dialog quoting a file path in
+          the repository. An inline note answers the question in the app's own
+          voice, and stays on screen to be read. */}
       <button
         type="button"
         className="btn btn-primary btn-block mt-2.5"
         disabled={available < MIN_WITHDRAWAL_GHS}
-        onClick={() =>
-          alert(
-            'Mobile Money payout runs against the MTN sandbox behind a mock adapter, ' +
-              'and is not enabled for the pilot. See docs/DEFEND.md.',
-          )
-        }
+        onClick={() => setPayoutNote(true)}
       >
         <Icon name="wallet" size={19} />
         Withdraw to Mobile Money
       </button>
+
+      {payoutNote && (
+        <div className="note-warn mt-2.5">
+          <p className="flex items-center gap-2 font-semibold">
+            <Icon name="clock" size={16} />
+            Payouts open after the pilot
+          </p>
+          <p className="mt-1.5 text-label-lg">
+            Your balance keeps accruing and nothing is lost. Mobile Money runs
+            against the MTN sandbox for now, so no real transfer is made yet.
+          </p>
+        </div>
+      )}
 
       {available < MIN_WITHDRAWAL_GHS && (
         <p className="mt-2.5 text-center text-label-lg text-on-surface-variant">
