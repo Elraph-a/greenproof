@@ -1,4 +1,5 @@
-# Hugging Face Spaces, Docker SDK.
+# One container, no vendor lock-in. Runs on Cloud Run, Render, a Hugging Face
+# Space, or a laptop. Nothing in here is specific to a host.
 FROM python:3.11-slim
 
 # OpenCV needs these even in the headless build.
@@ -6,9 +7,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libglib2.0-0 libgl1 \
     && rm -rf /var/lib/apt/lists/*
 
-# Spaces runs the container as uid 1000 and only $HOME is writable. Without
-# this, huggingface_hub cannot write its model cache and the Space dies on
-# first request with a permission error that reads like a network failure.
+# Run as uid 1000 with a writable $HOME. Hugging Face Spaces requires exactly
+# this, and without a writable HOME huggingface_hub cannot write its model
+# cache and the container dies on first request with a permission error that
+# reads like a network failure.
 RUN useradd -m -u 1000 user
 USER user
 ENV HOME=/home/user \
@@ -23,6 +25,22 @@ RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir -r requirements.txt
 
 COPY --chown=user . .
+
+# BAKE THE MODEL INTO THE IMAGE. This is the difference between a live demo and
+# ninety seconds of dead air on stage.
+#
+# Cloud Run scales to zero, so the first request after idle starts a cold
+# container. If the weights are not already present, that request also waits on
+# a ~90 MB download from Hugging Face before it can score anything. Downloading
+# at BUILD time moves that cost to a machine nobody is watching, and cold start
+# becomes container boot plus ONNX session init.
+#
+# It also removes a runtime dependency on huggingface.co being reachable and
+# not rate-limiting, which is not a thing to discover during a pitch.
+#
+# Costs ~90 MB of image size. Artifact Registry's free tier is 0.5 GB, so this
+# may tip storage into a few cents a month. Worth it.
+RUN python -c "from greenproof_ml.embed import _model_path; print('baked:', _model_path())"
 
 EXPOSE 7860
 

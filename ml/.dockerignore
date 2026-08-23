@@ -1,0 +1,21 @@
+# Keep the build context and the image small.
+#
+# Cloud Build uploads the context before building, and Artifact Registry's free
+# tier is 0.5 GB, so anything shipped here is paid for twice: once in upload
+# time on a Ghanaian connection, once in storage.
+
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Tests and the attack harness are developer tools. They are run from a
+# checkout against the live database, never from inside the container, and
+# attack_set.py in particular must not be trivially runnable on the server.
+test_*.py
+attack_set.py
+calibrate.py
+
+.env
+.env.*
+*.md
