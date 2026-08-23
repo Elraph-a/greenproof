@@ -28,7 +28,7 @@ export function FaceThisWay({ target, current }: Props) {
         <p className="font-bold text-on-surface">No direction recorded</p>
         <p className="mt-1 text-on-surface-variant">
           This tree was registered without a compass reading. Match the previous
-          photo on the next screen instead — that still works.
+          photo on the next screen instead. That still works.
         </p>
       </div>
     )

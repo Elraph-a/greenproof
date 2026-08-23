@@ -48,7 +48,7 @@ const VERDICT: Record<
     chip: 'chip-review',
     ring: 'var(--color-accent)',
     blurb:
-      'One or more checks were uncertain. A reviewer will look at this photo — nothing is lost, and you do not need to walk back.',
+      'One or more checks were uncertain. A reviewer will look at this photo. Nothing is lost, and you do not need to walk back.',
   },
   flagged: {
     label: 'Flagged',
@@ -115,12 +115,12 @@ export function VerdictReveal({
                 <Icon name="clock" size={36} />
               </span>
               <h2 className="mt-stack-md font-headline text-headline-xl font-bold text-on-surface">
-                Saved — still scoring
+                Saved. Still scoring
               </h2>
               {/* Fail safe, not fail closed: the visit is recorded either way. */}
               <p className="mt-2 max-w-[290px] text-on-surface-variant">
                 Your check-in is saved and will be scored shortly. You can walk
-                on — nothing is lost, and the result appears on the tree's page.
+                on. Nothing is lost, and the result appears on the tree's page.
               </p>
             </>
           ) : (

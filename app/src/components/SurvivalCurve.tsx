@@ -45,7 +45,7 @@ export function SurvivalCurve({ points, height = 200 }: Props) {
   if (data.length === 0) {
     return (
       <p className="py-8 text-center text-on-surface-variant">
-        No check-in rounds yet — the curve appears after the first round.
+        No check-in rounds yet. The curve appears after the first round.
       </p>
     )
   }

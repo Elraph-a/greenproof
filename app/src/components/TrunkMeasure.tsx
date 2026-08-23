@@ -104,7 +104,7 @@ export function TrunkMeasure({ imageUrl, taps, onChange }: Props) {
         {taps && (
           <div className="flex items-center justify-between gap-3">
             <p className="font-bold text-primary">
-              ✓ Marked — {(widthFraction! * 100).toFixed(1)}% of frame width
+              ✓ Marked. {(widthFraction! * 100).toFixed(1)}% of frame width
             </p>
             <button
               type="button"
@@ -120,7 +120,7 @@ export function TrunkMeasure({ imageUrl, taps, onChange }: Props) {
         )}
         <p className="mt-1.5 text-label-lg text-on-surface-variant">
           The exact width in millimetres is worked out from your marker card
-          after upload — the app never calculates it on your phone.
+          after upload. The app never calculates it on your phone.
         </p>
       </div>
     </div>

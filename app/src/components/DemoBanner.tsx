@@ -24,7 +24,7 @@ export function DemoBanner() {
       role="status"
       className="fixed inset-x-0 top-0 z-[100] flex items-center justify-center gap-2 bg-[#b3261e] px-3 py-1 text-center text-[11px] font-bold tracking-wide text-white"
     >
-      DEMO DATA — nothing is saved. Set VITE_DEMO=0 for real use.
+      DEMO DATA. Nothing is saved. Set VITE_DEMO=0 for real use.
     </div>
   )
 }

@@ -211,7 +211,7 @@ export function CheckIn() {
             {fix && !gpsUsable && (
               <ErrorNote>
                 GPS accuracy is only ±{Math.round(fix.accuracy)} m. Move into the
-                open — at this accuracy we cannot tell neighbouring trees apart.
+                open. At this accuracy we cannot tell neighbouring trees apart.
               </ErrorNote>
             )}
 
@@ -287,7 +287,7 @@ export function CheckIn() {
               <p className="text-label-lg text-on-surface-variant">
                 Last photo was taken from about 8 m from the trunk, facing{' '}
                 {tree.heading_deg !== null ? compassPoint(tree.heading_deg) : 'the same way'}.
-                Stand in roughly the same spot — reproducing the framing is what
+                Stand in roughly the same spot. Reproducing the framing is what
                 makes the photo comparison work.
               </p>
             </div>
@@ -344,7 +344,7 @@ export function CheckIn() {
                 label="Wide photo"
                 instruction={
                   ghostUrl
-                    ? 'Ghost: previous photo — align your shot'
+                    ? 'Ghost: previous photo, align your shot'
                     : 'No previous photo to align against'
                 }
                 onCaptureStart={() => setCapturedHeading(heading)}
@@ -370,7 +370,7 @@ export function CheckIn() {
                   <div className="note-good mb-3 flex items-center gap-2 py-2.5">
                     <Icon name="check-circle" size={16} className="shrink-0" />
                     <span className="flex-1 text-label-lg font-semibold">
-                      Width recorded — confirm below
+                      Width recorded. Confirm below
                     </span>
                     <button
                       type="button"
@@ -400,7 +400,7 @@ export function CheckIn() {
                 {!taps && (
                   <div className="note mt-3">
                     <p className="text-label-lg text-on-surface-variant">
-                      You can submit without measuring — the visit still counts.
+                      You can submit without measuring. The visit still counts.
                       The growth check just won't have anything to compare.
                     </p>
                   </div>
