@@ -278,7 +278,12 @@ function Frame({
       <main className="flex-1 px-margin-mobile pb-3">{children}</main>
 
       {action && (
-        <footer className="safe-bottom sticky bottom-0 bg-background px-margin-mobile pt-2">
+        // Sits ABOVE the bottom nav, which is fixed at z-50. Without the
+        // offset and the z-index the nav painted straight over this button:
+        // elementFromPoint at its centre returned a nav link, so the primary
+        // action on the most important screen in the app was unclickable
+        // until the page was scrolled to its very bottom.
+        <footer className="safe-bottom sticky bottom-[76px] z-[55] bg-background px-margin-mobile pt-2">
           {action}
         </footer>
       )}

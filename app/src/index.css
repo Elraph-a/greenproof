@@ -418,6 +418,11 @@
     scroll-snap-type: x proximity;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
+    /* Without this the snap target is the container's padding EDGE, so the row
+       silently self-scrolls 18px on load to sit the first item flush against
+       the screen and the page gutter disappears - measured scrollLeft: 18 on
+       both scrollers. Snapping must respect the gutter, not eat it. */
+    scroll-padding-inline-start: var(--spacing-margin-mobile);
   }
   .hscroll::-webkit-scrollbar {
     display: none;
@@ -443,8 +448,19 @@
      the cheapest single thing separating "prototype" from "product" — a static
      swap between screens reads as a page reload. 220ms, small distance: fast
      enough never to be waited on, present enough to register. */
+  /* BACKWARDS, NOT BOTH, AND THIS IS LOAD-BEARING.
+     `both` keeps the final keyframe IN EFFECT after the animation ends. The
+     keyframe says `transform: none`, but an in-effect transform still resolves
+     to matrix(1,0,0,1,0,0) - and any transform other than `none` makes the
+     element a containing block for `position: fixed` descendants.
+     Every routed screen is wrapped in .screen-in, so this silently converted
+     every fixed element in the app into a document-positioned one. Measured:
+     My Grove's floating action button sat at y=1477 in an 844px viewport.
+     `backwards` applies the from-state before the animation and lets the
+     element return to its own styles after, where transform really is `none`.
+     Nothing changes visually: the end state was already the natural state. */
   .screen-in {
-    animation: screen-in 220ms cubic-bezier(0.2, 0.8, 0.3, 1) both;
+    animation: screen-in 220ms cubic-bezier(0.2, 0.8, 0.3, 1) backwards;
   }
   @keyframes screen-in {
     from {
