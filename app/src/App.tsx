@@ -5,7 +5,6 @@ import { startQueueWatcher } from "./lib/registrations";
 import { Shell } from "./components/Shell";
 import { PendingBanner } from "./components/PendingBanner";
 import { DemoBanner } from "./components/DemoBanner";
-import { MlOverrideBanner } from "./components/MlOverrideBanner";
 import { Spinner } from "./components/ui";
 import { Landing } from "./screens/Landing";
 import { SignIn } from "./screens/SignIn";
@@ -119,8 +118,6 @@ export function App() {
       */}
       {/* Renders nothing unless VITE_DEMO=1. See components/DemoBanner.tsx. */}
       <DemoBanner />
-      {/* Renders nothing unless this device has an ?ml= override stored. */}
-      <MlOverrideBanner />
 
       <PendingBanner />
 
