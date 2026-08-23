@@ -404,6 +404,33 @@
     @apply rounded-xl bg-[var(--color-verified-container)] p-3.5 text-[var(--color-verified)];
   }
 
+  /* --- horizontal scrollers ---
+     Measured on My Grove: the filter row is 414px of content in a 390px
+     viewport. Twenty-four pixels over is the worst possible amount - the last
+     pill looks CUT rather than continued, so it reads as a broken layout
+     instead of an invitation to scroll, and nobody swipes.
+
+     The fade says "there is more" without spending vertical space on a
+     scrollbar, and snapping stops a swipe leaving a pill half-off the edge.
+     The scrollbar is hidden because a touch device paints its own. */
+  .hscroll {
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .hscroll::-webkit-scrollbar {
+    display: none;
+  }
+  .hscroll > * {
+    scroll-snap-align: start;
+  }
+  /* Masked rather than a gradient overlay: an overlay would need a solid
+     background colour and these scrollers sit on two different surfaces. */
+  .hscroll-fade {
+    mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+  }
+
   .safe-bottom {
     padding-bottom: max(1rem, env(safe-area-inset-bottom));
   }

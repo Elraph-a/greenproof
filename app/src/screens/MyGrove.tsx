@@ -194,7 +194,7 @@ export function MyGrove() {
 
       {/* Filter pills — the counts are the point. A planter with one flagged
           tree needs to find it without scrolling forty cards. */}
-      <div className="-mx-margin-mobile mb-3 flex gap-2 overflow-x-auto px-margin-mobile pb-1">
+      <div className="hscroll hscroll-fade -mx-margin-mobile mb-3 flex gap-2 px-margin-mobile pb-1">
         <FilterPill f="all" cur={filter} set={setFilter} n={counts.all}>All</FilterPill>
         <FilterPill f="verified" cur={filter} set={setFilter} n={counts.verified}>Verified</FilterPill>
         <FilterPill f="review" cur={filter} set={setFilter} n={counts.review}>Review</FilterPill>
@@ -235,7 +235,7 @@ export function MyGrove() {
         </p>
       )}
 
-      <div className="flex flex-col gap-2.5">
+      <div className="flex flex-col gap-2.5 pb-[168px]">
         {shown.map((tree) => {
           const thumb = tree.latest ? thumbs.get(tree.latest.wide_photo) : undefined
           const due = tree.latest ? nextCheckinDue(tree.latest.captured_at) : null

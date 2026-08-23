@@ -80,7 +80,20 @@ export function TreeDetail() {
         ) : error ? (
           <ErrorNote>{error}</ErrorNote>
         ) : (
-          <p className="text-on-surface-variant">Tree not found.</p>
+          <div className="flex flex-col items-center pt-stack-lg text-center">
+            <span className="flex size-14 items-center justify-center rounded-full bg-surface-container text-on-surface-variant">
+              <Icon name="tree" size={26} />
+            </span>
+            <p className="mt-stack-sm font-headline text-headline-md font-bold text-on-surface">
+              This tree is not here
+            </p>
+            <p className="mt-1 max-w-[260px] text-on-surface-variant">
+              It may have been removed, or the link is out of date.
+            </p>
+            <Link to="/grove" className="btn btn-outline mt-stack-md px-6">
+              Back to My Grove
+            </Link>
+          </div>
         )}
       </Frame>
     )
@@ -142,7 +155,7 @@ export function TreeDetail() {
           </p>
         </div>
       ) : (
-        <div className="-mx-margin-mobile overflow-x-auto px-margin-mobile pb-2">
+        <div className="hscroll hscroll-fade -mx-margin-mobile px-margin-mobile pb-2">
           <ol className="flex gap-2.5">
             {checkins.map((c, i) => (
               <li key={c.id} className="w-[136px] shrink-0">
