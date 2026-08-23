@@ -112,7 +112,7 @@ export function HeroCard({
 }) {
   return (
     <section
-      className={`rounded-2xl p-5 ${
+      className={`hero-surface rounded-2xl p-5 ${
         accent
           ? 'bg-accent-container text-on-accent-container'
           : 'bg-primary text-on-primary'

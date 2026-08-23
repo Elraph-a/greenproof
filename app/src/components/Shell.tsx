@@ -78,7 +78,7 @@ export function Shell() {
         <Outlet />
       </div>
 
-      <nav className="safe-bottom fixed bottom-0 z-50 flex w-full items-stretch justify-around border-t border-outline-variant bg-surface-container-lowest px-1 pt-1.5">
+      <nav className="chrome-floating safe-bottom fixed bottom-0 z-50 flex w-full items-stretch justify-around px-1 pt-1.5">
         {tabs.map((t) => (
           <NavLink
             key={t.to}
