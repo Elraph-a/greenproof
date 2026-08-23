@@ -7,7 +7,9 @@ not by the neural network — and that is the honest reason the system works.
 
 from __future__ import annotations
 
+import functools
 import math
+from pathlib import Path
 
 import cv2
 import numpy as np
@@ -90,6 +92,46 @@ def liveness_score(frac: float) -> float:
     of falling off a cliff — the point is to flag decline, not to fail it.
     """
     return float(np.clip((frac - 0.05) / (0.30 - 0.05), 0.0, 1.0))
+
+
+# ---------------------------------------------------------------------------
+# Plant plausibility - "is this even a plant?"
+# ---------------------------------------------------------------------------
+#
+# WHY THIS IS NOT THE LIVENESS SIGNAL. excess_green measures how much of the
+# frame is vegetation-COLOURED. Measured against 250 COCO photographs, a green
+# painted wall and artificial turf both score 1.00, and the median ordinary
+# outdoor photo scores 0.47 because ordinary outdoor photos contain grass. No
+# threshold on green separates a tree from a chair; we tried, and raising the
+# floor rejects real trees faster than it rejects furniture.
+#
+# So this asks a different question of the embedding we already compute: does
+# this photo resemble anything in a reference set of known plants?
+
+_REFERENCE_FILE = Path(__file__).resolve().parent / "plant_reference.npy"
+
+
+@functools.lru_cache(maxsize=1)
+def plant_reference() -> "np.ndarray | None":
+    """Unit-normalised embeddings of known plants, or None if unavailable.
+
+    None is a supported state, not an error: a missing reference file must
+    lower confidence and route to a human, never reject a real planter's tree.
+
+    THE REFERENCE SET IS THE LIMIT OF THIS CHECK. It is 74 photos of 15 plants
+    at one Ghanaian campus in one season, so it recognises "a plant
+    photographed the way our reference photos were". Swapping in PlantNet-300K
+    scored a perfect AUC and then flagged 97% of our own photos, because
+    PlantNet is square cropped specimens and ours are wide shots with sky and
+    buildings in frame - it had learned the photo STYLE, not the subject. The
+    set must therefore grow from our own verified check-ins, which is also why
+    the check gets better the longer the system runs.
+    """
+    try:
+        v = np.load(_REFERENCE_FILE)
+        return v if v.ndim == 2 and v.shape[0] else None
+    except Exception:  # noqa: BLE001 - degrade, don't break
+        return None
 
 
 # ---------------------------------------------------------------------------

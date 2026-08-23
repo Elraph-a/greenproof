@@ -28,8 +28,10 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from greenproof_ml.scoring import (  # noqa: E402
+    PLANT_SIMILARITY_MIN,
     PROXIMITY_REVIEW_M,
     assess,
+    check_plant_plausibility,
     check_proximity,
     gate_duplicate,
     gate_gps,
@@ -290,6 +292,84 @@ def test_proximity_flag_absent_when_clear():
         review_flags={"tree_proximity": check_proximity(LAT, LNG, [])},
     )
     assert r.verdict == "verified"
+
+
+# ---------------------------------------------------------------------------
+# Plant plausibility - "is this even a plant?"
+# ---------------------------------------------------------------------------
+
+
+def _ref():
+    """Two unit vectors standing in for the reference set."""
+    import numpy as np
+
+    v = np.eye(2, 384, dtype=np.float32)
+    return v / np.linalg.norm(v, axis=1, keepdims=True)
+
+
+def _vec(sim):
+    """A unit vector whose similarity to reference row 0 is `sim`."""
+    import numpy as np
+
+    v = np.zeros(384, dtype=np.float32)
+    v[0] = sim
+    v[2] = (1 - sim**2) ** 0.5
+    return v
+
+
+def test_plant_check_passes_a_plant_like_photo():
+    r = check_plant_plausibility(_vec(0.9), _vec(0.9), _ref())
+    assert r.passed and r.detail["available"]
+
+
+def test_plant_check_flags_a_chair():
+    r = check_plant_plausibility(_vec(0.05), _vec(0.05), _ref())
+    assert not r.passed
+
+
+def test_plant_check_uses_the_worse_of_the_two_photos():
+    """A real tree wide shot with something else in the close-up must not pass:
+    otherwise half the evidence can be swapped out freely."""
+    r = check_plant_plausibility(_vec(0.95), _vec(0.05), _ref())
+    assert not r.passed
+    assert r.detail["close_similarity"] < r.detail["wide_similarity"]
+
+
+def test_plant_check_missing_reference_degrades_rather_than_rejecting():
+    """No reference file must never cost a real planter their tree."""
+    r = check_plant_plausibility(_vec(0.9), _vec(0.9), None)
+    assert r.passed and r.detail["available"] is False
+
+
+def test_plant_check_boundary_matches_the_documented_threshold():
+    assert check_plant_plausibility(_vec(PLANT_SIMILARITY_MIN + 0.02),
+                                    _vec(PLANT_SIMILARITY_MIN + 0.02), _ref()).passed
+    assert not check_plant_plausibility(_vec(PLANT_SIMILARITY_MIN - 0.02),
+                                        _vec(PLANT_SIMILARITY_MIN - 0.02), _ref()).passed
+
+
+def test_plant_check_demotes_to_review_not_flagged():
+    """A chair is a mistake or a fraud attempt, but a human decides - the same
+    reasoning as the proximity check."""
+    good = dict(
+        gates={
+            "duplicate_image": gate_duplicate(CLEAN, [("o", FAR)]),
+            "gps_radius": gate_gps(LAT, LNG, LAT, LNG, 4.0),
+            "travel_speed": gate_travel(LAT, LNG, NOW, None),
+        },
+        scores={
+            "location": score_location(1.0),
+            "liveness": score_liveness(0.45, liveness_score(0.45)),
+            "scene_match": score_scene(0.9, 0.9, 0),
+            "growth": score_growth(0.5, 0.5),
+        },
+    )
+    assert assess(**good).verdict == "verified"
+    r = assess(**good, review_flags={
+        "plant_plausibility": check_plant_plausibility(_vec(0.05), _vec(0.05), _ref())})
+    assert r.verdict == "review"
+    assert r.confidence > 0
+    assert "plant_plausibility" in r.signals["auto_approval_vetoed_by"]
 
 
 if __name__ == "__main__":

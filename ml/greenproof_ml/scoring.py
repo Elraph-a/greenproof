@@ -58,6 +58,37 @@ MAX_TRAVEL_KMH = 120.0
 # client-side warning for the same condition.
 PROXIMITY_REVIEW_M = 8.0
 
+# Cosine similarity to the nearest known plant, below which a photo does not
+# look like a plant at all.
+#
+# THE FIRST TWO NUMBERS HERE WERE WRONG AND THE STORY IS THE POINT.
+#
+# Held-out spike photos against 300 COCO photographs scored AUC 1.000 with a
+# threshold of 0.519 and an 8.1% false-reject rate. Applied to the 9 REAL pilot
+# check-ins - different plants, different site - that same threshold flagged
+# FIVE OF NINE. The holdout was other angles of the SAME 15 plants at the SAME
+# shoot, so it had been measuring "was this taken at that shoot", not "is this
+# a plant". An AUC of 1.000 is a warning, not a result.
+#
+# Re-measured against genuinely unseen trees:
+#
+#     AUC (real pilot photos vs 300 COCO)      0.966
+#
+#     threshold   check-ins flagged   non-plants accepted
+#       0.250        1/9  (11%)             1.3%
+#       0.300        1/9  (11%)             1.0%     <- chosen
+#       0.350        2/9  (22%)             0.3%
+#       0.519        5/9  (56%)             0.0%
+#
+# 0.30 buys 99% of non-plants for one check-in in nine going to a human. Pushing
+# higher trades real planters' time for a rounding error of extra safety, and a
+# non-plant that slips still faces GPS, duplicate and scene-match.
+#
+# STILL PROVISIONAL: measured on 18 photos from 6 trees at one site. The honest
+# fix is not a better threshold, it is a bigger reference set - every verified
+# check-in is a known-good plant photo, so this improves as the system runs.
+PLANT_SIMILARITY_MIN = 0.30
+
 # --- score shaping ---------------------------------------------------------
 
 LOCATION_FULL_M = 10.0  # at or under this, full marks
@@ -128,7 +159,19 @@ REVIEW_AT = 45
 #   dense same-species stand, genuine  -> scene_match ~0.19   (must still pass)
 #   different tree entirely            -> scene_match  0.00   (must be capped)
 CRITICAL_FLOORS: dict[str, float] = {
-    "liveness": 0.20,
+    # RAISED FROM 0.20 AFTER MEASUREMENT. A photograph of a brown wooden chair
+    # scored 0.218 and cleared the old floor by 0.018.
+    #
+    # On the 9 real pilot WIDE shots the distribution is bimodal - either 0.000
+    # or >= 0.557, with nothing in between - so 0.35 sits in an empty gap and
+    # rejects no real photo we have, while putting clear daylight above the
+    # chair.
+    #
+    # THIS DOES NOT SOLVE THE CHAIR PROBLEM and must not be described as if it
+    # does. It only catches BROWN fakes. A green wall still scores 1.00, which
+    # is what check_plant_plausibility exists for. Sample is 9 wide shots, so
+    # the "rejects nothing real" claim is thin - revisit with more rounds.
+    "liveness": 0.35,
     "scene_match": 0.12,
 }
 
@@ -183,6 +226,42 @@ def gate_duplicate(this_phash: str, others: list[tuple[str, str]]) -> GateResult
             "passed": passed,
             "nearest_phash_distance": nearest,
             **({"matched_checkin": nearest_id} if not passed and nearest_id else {}),
+        },
+    )
+
+
+def check_plant_plausibility(
+    wide_emb,
+    close_emb,
+    reference,
+) -> GateResult:
+    """Does either photo fail to look like a plant?
+
+    Stops a chair, a wall or a green bedsheet being registered as a tree -
+    which the liveness signal does not, because a green bedsheet is
+    vegetation-coloured and scores a perfect 1.00.
+
+    BOTH photos are checked and the WORSE one decides, so swapping a real
+    tree's wide shot in front of a close-up of something else does not pass.
+
+    Reference vectors are unit-normalised, so a dot product IS the cosine.
+    A missing reference set passes: degrade, don't break.
+    """
+    if reference is None or wide_emb is None or close_emb is None:
+        return GateResult(True, {"passed": True, "available": False})
+
+    sw = float(reference.dot(wide_emb).max())
+    sc = float(reference.dot(close_emb).max())
+    worst = min(sw, sc)
+    passed = worst >= PLANT_SIMILARITY_MIN
+    return GateResult(
+        passed,
+        {
+            "passed": passed,
+            "available": True,
+            "wide_similarity": round(sw, 3),
+            "close_similarity": round(sc, 3),
+            "threshold": PLANT_SIMILARITY_MIN,
         },
     )
 

@@ -20,6 +20,7 @@ from .scoring import (
     Assessment,
     assess,
     PROXIMITY_REVIEW_M,
+    check_plant_plausibility,
     check_proximity,
     gate_duplicate,
     gate_gps,
@@ -36,6 +37,7 @@ from .signals import (
     liveness_score,
     orb_inliers,
     phash,
+    plant_reference,
     trunk_width_mm,
 )
 
@@ -158,6 +160,13 @@ def score_checkin(checkin_id: str) -> Assessment:
     # Not gates: these must not auto-approve, but they are not accusations. See
     # scoring.check_proximity for why proximity cannot be a gate.
     review_flags = {}
+
+    # Runs on EVERY visit, not just the first. Registering a chair is the
+    # obvious case, but swapping one in at visit three is the case a
+    # first-visit-only check would wave through.
+    review_flags["plant_plausibility"] = check_plant_plausibility(
+        wide_emb, close_emb, plant_reference()
+    )
 
     # Only on the tree's FIRST check-in, i.e. its registration. On every later
     # visit the tree already exists and standing near a neighbour is not news —

@@ -1,0 +1,13 @@
+{
+  "reference": "ours",
+  "negative_dataset": "sayakpaul/coco-30-val-2014",
+  "n_reference": 37,
+  "n_held_out": 37,
+  "n_non_plants": 300,
+  "threshold": 0.5192264914512634,
+  "false_reject_rate": 0.08108108108108109,
+  "false_accept_rate": 0.0,
+  "auc": 0.9997297297297297,
+  "cross_domain_flag_rate": 0.9833333333333333,
+  "cross_domain_set": "PlantNet close-ups"
+}
