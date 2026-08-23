@@ -158,6 +158,20 @@ export type SponsorshipInsert = {
   amount_ghs: number
 }
 
+/**
+ * One row of runtime configuration. See migration 0010.
+ *
+ * A `type` and not an `interface`, like every other Row here. An interface has
+ * no implicit index signature, so it fails the Database generic's constraint
+ * and collapses EVERY table's types to `never` — an error that surfaces
+ * hundreds of lines away from the cause.
+ */
+export type AppConfigRow = {
+  key: string
+  value: string
+  updated_at: string
+}
+
 export type ReviewQueueRow = Checkin & {
   tag_code: string | null
   species: string | null
@@ -240,6 +254,15 @@ export type Database = {
         Insert: SponsorshipInsert
         // `status` and `momo_ref` are not granted — a client cannot mark its
         // own pledge paid. See migration 0009.
+        Update: Record<string, never>
+        Relationships: []
+      }
+      app_config: {
+        Row: AppConfigRow
+        // Read-only to clients. No insert/update/delete is granted at all, so
+        // the scoring URL can only be changed with the service key. See
+        // migration 0010.
+        Insert: Record<string, never>
         Update: Record<string, never>
         Relationships: []
       }

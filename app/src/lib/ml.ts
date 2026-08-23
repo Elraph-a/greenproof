@@ -14,7 +14,77 @@
  * pass over photos that are already saved.
  */
 
-const ML_URL = import.meta.env.VITE_ML_URL
+import { supabase } from './supabase'
+
+const BUILT_IN = import.meta.env.VITE_ML_URL as string | undefined
+const CACHE_KEY = 'greenproof.mlUrl'
+
+/**
+ * WHERE THE SERVICE URL COMES FROM, AND WHY NOT SIMPLY THE ENV VAR.
+ *
+ * Vite inlines env vars at BUILD time, so changing VITE_ML_URL in Vercel does
+ * nothing until the frontend is rebuilt and redeployed. Fine for a permanent
+ * host; unworkable for a tunnelled service whose hostname changes whenever the
+ * tunnel restarts.
+ *
+ * So the live value lives in one row of `app_config` and EVERY device reads the
+ * same one. Storing it per-device in localStorage was considered and rejected:
+ * it works on the phone you set it up on and silently fails on anyone else's,
+ * which is precisely wrong for something a judge might open.
+ *
+ * Order of precedence:
+ *   1. app_config.ml_url   - the live value, changed without any rebuild
+ *   2. VITE_ML_URL         - build-time fallback for a permanent deployment
+ *
+ * localStorage still appears here, but ONLY as a cache of what the database
+ * last said. It exists so the first scoring request after a cold app start does
+ * not have to wait on a config round-trip, never as a source of truth, and it
+ * is overwritten by the database on every load.
+ */
+let liveUrl: string | null | undefined
+
+function cachedUrl(): string | null {
+  try {
+    return localStorage.getItem(CACHE_KEY)
+  } catch {
+    // Private browsing and locked-down webviews throw on access.
+    return null
+  }
+}
+
+function mlUrl(): string | undefined {
+  if (liveUrl !== undefined) return liveUrl ?? BUILT_IN
+  return cachedUrl() ?? BUILT_IN
+}
+
+/**
+ * Read the configured URL once at startup. Never throws, never blocks render.
+ *
+ * A failure here leaves the cached or built-in value in place rather than
+ * clearing it: losing the config because the network blinked would turn a
+ * working demo into a dead one.
+ */
+export async function primeMlUrl(): Promise<void> {
+  try {
+    const { data, error } = await supabase
+      .from('app_config')
+      .select('value')
+      .eq('key', 'ml_url')
+      .maybeSingle()
+    if (error) return
+
+    const value = (data?.value ?? '').trim().replace(/\/$/, '')
+    liveUrl = value === '' ? null : value
+    try {
+      if (liveUrl) localStorage.setItem(CACHE_KEY, liveUrl)
+      else localStorage.removeItem(CACHE_KEY)
+    } catch {
+      /* cache is an optimisation, not a requirement */
+    }
+  } catch {
+    /* keep whatever we already had */
+  }
+}
 
 export interface ScoreResult {
   checkin_id: string
@@ -24,12 +94,12 @@ export interface ScoreResult {
 }
 
 export function mlConfigured(): boolean {
-  return Boolean(ML_URL)
+  return Boolean(mlUrl())
 }
 
 /** Request scoring without waiting for it. Never throws. */
 export function requestScoring(checkinId: string): void {
-  if (!ML_URL) return
+  if (!mlUrl()) return
   void scoreNow(checkinId).catch(() => {
     /* backfill will collect it */
   })
@@ -46,12 +116,13 @@ export async function scoreNow(
   checkinId: string,
   timeoutMs = 90_000,
 ): Promise<ScoreResult | null> {
-  if (!ML_URL) return null
+  const base = mlUrl()
+  if (!base) return null
 
   const ctrl = new AbortController()
   const timer = setTimeout(() => ctrl.abort(), timeoutMs)
   try {
-    const res = await fetch(`${ML_URL.replace(/\/$/, '')}/score`, {
+    const res = await fetch(`${base.replace(/\/$/, '')}/score`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ checkin_id: checkinId }),
