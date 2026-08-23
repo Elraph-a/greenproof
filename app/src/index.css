@@ -201,6 +201,18 @@
   h2,
   h3 {
     font-family: var(--font-headline);
+    /* Stops a heading dropping its last word onto a line of its own. On a
+       360px phone that happens constantly and it is the single most visible
+       thing separating a considered layout from a generated one. `balance` is
+       capped at a few lines by the spec, which is exactly the heading case. */
+    text-wrap: balance;
+  }
+
+  /* `pretty` is the paragraph equivalent: it only prevents the orphan, without
+     re-flowing the whole block the way `balance` would. Cheap, and unlike
+     `balance` it stays cheap on long text. */
+  p {
+    text-wrap: pretty;
   }
 
   /* Tabular figures wherever a number can change between renders. Without this,

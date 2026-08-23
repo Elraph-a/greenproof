@@ -156,7 +156,7 @@ export function MapScreen() {
                   {t.thumb && (
                     <img
                       src={t.thumb}
-                      alt=""
+                      alt={`Most recent photo of ${treeLabel(t)}`}
                       className="mb-2 h-24 w-full rounded object-cover"
                     />
                   )}

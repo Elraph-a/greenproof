@@ -232,7 +232,16 @@ export function CheckIn() {
                 >
                   <div className="size-[62px] shrink-0 overflow-hidden rounded-lg bg-surface-container-high">
                     {t.last_wide_url ? (
-                      <img src={t.last_wide_url} alt="" className="size-full object-cover" />
+                      <img
+                        src={t.last_wide_url}
+                        // NOT decorative. Confirming this tree against its
+                        // previous photo IS the identity step - see the
+                        // layered-identity note in lib/checkins.ts. A blank
+                        // alt hides the one piece of evidence the user is
+                        // being asked to judge.
+                        alt={`Last photo of ${treeLabel(t)}`}
+                        className="size-full object-cover"
+                      />
                     ) : (
                       <div className="flex size-full items-center justify-center text-on-surface-variant">
                         <Icon name="image" size={22} />
