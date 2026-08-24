@@ -69,6 +69,30 @@ const SEEDS: Seed[] = [
   { n: 3, tag: 'GP-0048', species: 'Milicia regia', common: "Kojo's Odum", verdict: null, confidence: null, status: 'pending', lastDays: 0, visits: 0, earned: 0 },
 ]
 
+/**
+ * Where the eight demo trees stand, as offsets from the campus centre.
+ *
+ * These were `lat + i * 0.0004, lng + i * 0.0003`, which put every tree on a
+ * perfect diagonal - eight pins in a dead straight line, which is the single
+ * most obvious way for a map to announce that its data is fake. A hand-picked
+ * scatter costs nothing and the map stops looking generated.
+ *
+ * Fixed values rather than a seeded random: the map is the screen most likely
+ * to end up in a screenshot or on a slide, and it should look identical every
+ * time it is opened. Closest pair is 21 m and the whole grove spans 130 m, so
+ * no two pins overlap at the zoom this screen opens at.
+ */
+const SPREAD: readonly (readonly [number, number])[] = [
+  [0.00042, -0.00031],
+  [-0.00018, 0.00055],
+  [0.00061, 0.00024],
+  [-0.00047, -0.00012],
+  [0.00009, 0.00038],
+  [-0.00035, 0.00047],
+  [0.00028, 0.00062],
+  [-0.00056, 0.00029],
+]
+
 export const demoTrees: TreeWithLatest[] = SEEDS.map((s, i) => ({
   id: `demo-tree-${i + 1}`,
   tag_code: s.tag,
@@ -77,8 +101,8 @@ export const demoTrees: TreeWithLatest[] = SEEDS.map((s, i) => ({
   plot_id: 'demo-plot',
   owner_id: demoUserId,
   registered_by: demoUserId,
-  lat: 5.6505 + i * 0.0004,
-  lng: -0.1962 + i * 0.0003,
+  lat: 5.6505 + (SPREAD[i]?.[0] ?? 0),
+  lng: -0.1962 + (SPREAD[i]?.[1] ?? 0),
   heading_deg: 23 + i * 17,
   status: s.status,
   current_confidence: s.confidence,

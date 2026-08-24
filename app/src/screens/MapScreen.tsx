@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { CircleMarker, MapContainer, Popup, TileLayer, useMap } from 'react-leaflet'
+import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet'
+import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { supabase } from '../lib/supabase'
+import { DEMO, demoTrees } from '../lib/demo'
 import { photoUrls } from '../lib/photos'
 import { treeLabel } from '../lib/trees'
 import type { Tree } from '../lib/types'
@@ -11,11 +13,12 @@ import { ErrorNote, StatusChip } from '../components/ui'
 /**
  * Live map of every registered tree.
  *
- * Uses CircleMarker rather than Leaflet's default pin deliberately: the default
- * icon is loaded from an image URL that Vite's bundler rewrites, which is the
- * single most common react-leaflet deployment bug — markers work in dev and
- * silently vanish in production. A vector circle has no asset to lose, and it
- * also colours by status for free, which a bitmap pin cannot.
+ * Markers are `L.divIcon` with inline SVG, NOT Leaflet's default pin. The
+ * default icon loads from an image URL that Vite's bundler rewrites, which is
+ * the single most common react-leaflet deployment bug — markers work in dev
+ * and silently vanish in production. Inline SVG has no asset to lose, colours
+ * by status for free, and unlike the CircleMarker this replaced it can carry a
+ * glyph, so a pin says "tree" rather than "dot".
  */
 
 interface MapTree extends Tree {
@@ -35,10 +38,80 @@ interface MapTree extends Tree {
  * as a dead pin rather than a healthy tree.
  */
 const STATUS_COLOUR: Record<string, string> = {
-  alive: '#00694e', // --color-verified
+  alive: '#1a5035', // --color-verified
   pending: '#6b7c73', // --color-outline
-  flagged: '#b3261e', // --color-error
-  dead: '#b3261e',
+  flagged: '#a3271f', // --color-error
+  dead: '#a3271f',
+}
+
+const PIN_W = 30
+const PIN_H = 36
+
+/**
+ * A teardrop pin with a sprout inside it.
+ *
+ * THE GLYPH IS FILLED, not stroked, and that is not a style choice. The rest
+ * of this app draws icons as 2px strokes on a 24px grid, which is right at
+ * button size and turns to mush at the 13px this glyph actually occupies on a
+ * pin. Solid shapes hold their silhouette at any size, which is the only thing
+ * that matters here — nobody reads a map pin, they recognise its outline.
+ *
+ * The white ring is load-bearing too: OSM tiles run from near-white roads to
+ * mid-green parks, and a dark green pin dropped straight onto a park disappears
+ * into it. The ring gives every pin the same edge regardless of what is under
+ * it.
+ */
+function pinSvg(fill: string): string {
+  // A near-circular head with a short tail, not the tall narrow teardrop of a
+  // classic map pin. The head is where the glyph lives, so the more of the
+  // shape it occupies the more legible the sprout is at this size. Drawn as
+  // ONE path - a circle plus a triangle would show a seam through the middle
+  // once the white ring is stroked around it.
+  //
+  // The arc runs the long way round (large-arc-flag 1) from the lower-left
+  // tangent point over the top to the lower-right, then straight down to the
+  // tip at (12, 29).
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${PIN_W}" height="${PIN_H}" viewBox="0 0 24 30">
+  <path d="M5.69 20.51A11 11 0 1 1 18.31 20.51L12 29Z"
+        fill="${fill}" stroke="#ffffff" stroke-width="1.7"
+        stroke-linejoin="round"/>
+  <g fill="#ffffff">
+    <path d="M12 12.3c-.15-3.1-2.2-5.25-5.5-5.8-.33 3.2 1.75 5.5 5.5 5.8Z"/>
+    <path d="M12 12.3c.15-3.1 2.2-5.25 5.5-5.8.33 3.2-1.75 5.5-5.5 5.8Z"/>
+    <rect x="11.3" y="10.4" width="1.4" height="6.4" rx=".7"/>
+  </g>
+</svg>`
+}
+
+/**
+ * Built once per status and reused across every marker. Leaflet keeps a
+ * reference to the icon rather than cloning it, so handing each of forty
+ * markers its own identical DivIcon would allocate forty DOM templates for
+ * four distinct pins.
+ */
+const PIN_CACHE = new Map<string, L.DivIcon>()
+
+function pinIcon(status: string): L.DivIcon {
+  const key = status in STATUS_COLOUR ? status : 'pending'
+  let icon = PIN_CACHE.get(key)
+  if (!icon) {
+    icon = L.divIcon({
+      html: pinSvg(STATUS_COLOUR[key]!),
+      // MUST be empty. Leaflet's default `leaflet-div-icon` class paints a
+      // white box with a blue border behind whatever you give it, so without
+      // this every pin sits in a little rectangle.
+      className: '',
+      iconSize: [PIN_W, PIN_H],
+      // The TIP is the coordinate, not the centre. Anchoring at the middle
+      // would place every tree half a pin north of where it actually stands,
+      // which at zoom 17 is several metres - and metres are the unit this
+      // whole product argues about.
+      iconAnchor: [PIN_W / 2, PIN_H],
+      popupAnchor: [0, -PIN_H + 8],
+    })
+    PIN_CACHE.set(key, icon)
+  }
+  return icon
 }
 
 // UG campus, Legon — where the pilot happens. Only used until trees load.
@@ -52,23 +125,37 @@ export function MapScreen() {
   useEffect(() => {
     ;(async () => {
       try {
-        const { data, error: e } = await supabase
-          .from('trees')
-          .select(`*, checkins ( wide_photo, captured_at )`)
-        if (e) throw new Error(e.message)
+        // This screen used to query Supabase even under VITE_DEMO=1, and the
+        // anon key cannot read `trees` - so demo mode showed "permission denied
+        // for table trees" and an empty map. Every other screen has a DEMO
+        // branch; this one was simply missed.
+        const rows: MapTree[] = DEMO
+          ? demoTrees.map((t) => ({
+              ...t,
+              last_wide_photo: t.latest?.wide_photo ?? null,
+              thumb: null,
+            }))
+          : await (async () => {
+              const { data, error: e } = await supabase
+                .from('trees')
+                .select(`*, checkins ( wide_photo, captured_at )`)
+              if (e) throw new Error(e.message)
 
-        type Row = Tree & { checkins: { wide_photo: string; captured_at: string }[] }
-        const rows = ((data ?? []) as unknown as Row[]).map((row): MapTree => {
-          const latest = [...(row.checkins ?? [])].sort(
-            (a, b) => Date.parse(b.captured_at) - Date.parse(a.captured_at),
-          )[0]
-          const { checkins: _drop, ...tree } = row
-          return {
-            ...(tree as Tree),
-            last_wide_photo: latest?.wide_photo ?? null,
-            thumb: null,
-          }
-        })
+              type Row = Tree & {
+                checkins: { wide_photo: string; captured_at: string }[]
+              }
+              return ((data ?? []) as unknown as Row[]).map((row): MapTree => {
+                const latest = [...(row.checkins ?? [])].sort(
+                  (a, b) => Date.parse(b.captured_at) - Date.parse(a.captured_at),
+                )[0]
+                const { checkins: _drop, ...tree } = row
+                return {
+                  ...(tree as Tree),
+                  last_wide_photo: latest?.wide_photo ?? null,
+                  thumb: null,
+                }
+              })
+            })()
 
         const paths = rows
           .map((r) => r.last_wide_photo)
@@ -140,16 +227,11 @@ export function MapScreen() {
           <Recentre centre={centre} hasTrees={(trees?.length ?? 0) > 0} />
 
           {shown.map((t) => (
-            <CircleMarker
+            <Marker
               key={t.id}
-              center={[t.lat, t.lng]}
-              radius={9}
-              pathOptions={{
-                color: '#ffffff',
-                weight: 2,
-                fillColor: STATUS_COLOUR[t.status] ?? STATUS_COLOUR['pending']!,
-                fillOpacity: 0.95,
-              }}
+              position={[t.lat, t.lng]}
+              icon={pinIcon(t.status)}
+              title={treeLabel(t)}
             >
               <Popup>
                 <div className="min-w-40">
@@ -170,7 +252,7 @@ export function MapScreen() {
                   </Link>
                 </div>
               </Popup>
-            </CircleMarker>
+            </Marker>
           ))}
         </MapContainer>
       </div>
