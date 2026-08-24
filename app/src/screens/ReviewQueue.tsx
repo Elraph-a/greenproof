@@ -16,12 +16,12 @@ import {
  *
  * Two kinds of item appear here, and the second is the interesting one:
  *
- *   1. verdict = 'review' - the model was not confident enough. Obvious.
- *   2. audit_sample       - a RANDOM 10% of AUTO-APPROVED check-ins.
+ *   1. verdict = 'review' — the model was not confident enough. Obvious.
+ *   2. audit_sample       — a RANDOM 10% of AUTO-APPROVED check-ins.
  *
  * Reviewing only the uncertain cases would tell us nothing about how often the
  * system was confidently WRONG. Sampling auto-approvals is the only way to
- * estimate the false-accept rate - the number the whole pitch rests on, because
+ * estimate the false-accept rate — the number the whole pitch rests on, because
  * a wrongly rejected genuine visit is annoying while a wrongly approved fraud is
  * fatal.
  *
@@ -134,7 +134,7 @@ export function ReviewQueue() {
           </div>
 
           {/* An audit item was ALREADY auto-approved. Saying so up front stops
-              the reviewer treating the machine's answer as the question - the
+              the reviewer treating the machine's answer as the question — the
               entire point is to catch it being wrong. */}
           {row.is_audit && (
             <div className="note-warn mb-3">

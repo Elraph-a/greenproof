@@ -1,12 +1,12 @@
 import { useId, useMemo, useState } from 'react'
 
 /**
- * Survival rate over time - the sponsor's actual question, which is not "how
+ * Survival rate over time — the sponsor's actual question, which is not "how
  * many trees did you plant" but "how many are still alive".
  *
  * ONE SERIES, so there is no legend: the title names it, and a legend box for a
  * single line is furniture. Colour therefore carries no identity here and needs
- * no categorical-palette validation - it only has to clear contrast against the
+ * no categorical-palette validation — it only has to clear contrast against the
  * surface, which --color-primary (#003527 on #f9f9ff) does by a wide margin.
  *
  * A table view is rendered alongside rather than instead: it is the
@@ -101,7 +101,7 @@ export function SurvivalCurve({ points, height = 200 }: Props) {
           </g>
         ))}
 
-        {/* 2px line, no fill - an area under a percentage implies a cumulative
+        {/* 2px line, no fill — an area under a percentage implies a cumulative
             total, which this is not. */}
         <path
           d={line}
@@ -147,7 +147,7 @@ export function SurvivalCurve({ points, height = 200 }: Props) {
           </g>
         ))}
 
-        {/* Direct-label the last point only - a number on every point is noise. */}
+        {/* Direct-label the last point only — a number on every point is noise. */}
         <text
           x={x(data.length - 1)}
           y={y(last.pct) - 12}
@@ -195,7 +195,7 @@ export function SurvivalCurve({ points, height = 200 }: Props) {
         Survival rate by check-in round.
       </figcaption>
 
-      {/* Table view - the accessibility fallback, and for a five-point pilot
+      {/* Table view — the accessibility fallback, and for a five-point pilot
           the exact counts matter more than the shape. */}
       <details className="mt-2">
         <summary className="cursor-pointer text-label-lg font-bold text-on-surface-variant">

@@ -13,13 +13,13 @@ import {
 } from '../components/ui'
 
 /**
- * The sponsor's home - in the app, on a phone, not a desktop dashboard.
+ * The sponsor's home — in the app, on a phone, not a desktop dashboard.
  *
  * The order of the screen is the argument. Survival first, because that is what
  * was bought. Cost per SURVIVING tree next, because cost per tree planted is
  * the number every reforestation programme quotes and it is the one that hides
  * the failure. Then the photo wall, because a sponsor does not want a
- * certificate - they want to see the specific trees their money kept alive.
+ * certificate — they want to see the specific trees their money kept alive.
  *
  * "Committed" and "paid out" are shown as separate figures on purpose. A pledge
  * is not evidence a tree survived, and collapsing them would be the single
@@ -91,14 +91,14 @@ export function SponsorHome() {
           >
             <div className="mt-3.5 h-1.5 overflow-hidden rounded-full bg-white/20">
               <div
-                // scaleX, not width - see the same bar in MyGrove.
+                // scaleX, not width — see the same bar in MyGrove.
                 className="h-full w-full origin-left rounded-full bg-inverse-primary transition-transform duration-500 ease-out"
                 style={{ transform: `scaleX(${p.survivalPct / 100})` }}
               />
             </div>
           </HeroCard>
 
-          {/* Cost per SURVIVING tree, committed and paid - three figures that
+          {/* Cost per SURVIVING tree, committed and paid — three figures that
               belong together and were three separate cards. Pledged and paid
               stay distinct: collapsing them is the easiest place in this
               product to mislead someone. */}

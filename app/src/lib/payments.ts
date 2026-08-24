@@ -1,7 +1,7 @@
 /**
  * Payments, behind an interface with a mock adapter.
  *
- * MTN Mobile Money is the real target - it is how money actually moves in
+ * MTN Mobile Money is the real target — it is how money actually moves in
  * Ghana. But the sandbox needs a merchant account and a callback URL, neither
  * of which exists during a pilot, and neither of which should block building
  * the screens that use it.
@@ -32,9 +32,9 @@ export interface PaymentResult {
 export interface PaymentProvider {
   readonly name: string
   readonly isMock: boolean
-  /** Charge a payer - a sponsor funding trees. */
+  /** Charge a payer — a sponsor funding trees. */
   collect(req: PaymentRequest): Promise<PaymentResult>
-  /** Pay out to a payee - a planter withdrawing earnings. */
+  /** Pay out to a payee — a planter withdrawing earnings. */
   disburse(req: PaymentRequest): Promise<PaymentResult>
 }
 
@@ -43,7 +43,7 @@ export interface PaymentProvider {
  * takes a realistic couple of seconds.
  *
  * A mock that always succeeds instantly produces a UI that has never rendered
- * its own failure state - and the first time anyone sees that state would be in
+ * its own failure state — and the first time anyone sees that state would be in
  * front of judges, or worse, in front of a user who has just lost money.
  */
 class MockMomoProvider implements PaymentProvider {
@@ -95,7 +95,7 @@ export const payments: PaymentProvider = new MockMomoProvider()
 
 /**
  * Pilot pricing. Establishment GH₵5 on the first verified check-in, then GH₵2
- * per later verified visit - mirrors `accrue_on_verified` in migration 0007.
+ * per later verified visit — mirrors `accrue_on_verified` in migration 0007.
  *
  * Deliberately back-loaded: paying most of the money on planting day is what
  * makes plant-and-abandon rational, and it is the failure mode of nearly every

@@ -1,8 +1,8 @@
--- GreenProof - close the anon side door
+-- GreenProof — close the anon side door
 --
 -- Found by probing the live project with the anon key before T0: the three
 -- views were readable WITHOUT SIGNING IN, including `review_queue`, which is
--- `select c.*` from checkins - photo URLs, GPS, confidence, signals, phash,
+-- `select c.*` from checkins — photo URLs, GPS, confidence, signals, phash,
 -- embeddings.
 --
 -- Two causes, and both are defaults rather than mistakes in 0002/0006/0007:
@@ -14,8 +14,8 @@
 --
 --   2. A Postgres view runs with its OWNER's rights unless told otherwise, so
 --      it bypasses the RLS on the tables underneath. That is why `checkins`
---      correctly refuses anon with 401 while `review_queue` - built from
---      checkins - happily returned 200.
+--      correctly refuses anon with 401 while `review_queue` — built from
+--      checkins — happily returned 200.
 --
 -- Nothing leaked: the database was still empty. From T0 it would not have been.
 
@@ -48,7 +48,7 @@ alter default privileges in schema public revoke all on functions from anon;
 revoke insert, update, delete on plots, sponsors, ndvi_readings, groups
   from authenticated;
 
--- profiles keeps its own-row insert/update - the policies in 0002 scope it to
+-- profiles keeps its own-row insert/update — the policies in 0002 scope it to
 -- auth.uid() = id, and profile setup needs it.
 
 -- ---------------------------------------------------------------------------
@@ -62,7 +62,7 @@ alter view review_queue  set (security_invoker = on);
 alter view plot_survival set (security_invoker = on);
 
 -- group_leaderboard is DELIBERATELY left running as owner. It aggregates
--- across profiles, and the profiles policy is own-row-only - under
+-- across profiles, and the profiles policy is own-row-only — under
 -- security_invoker a user would see one profile, so every group would report
 -- its own owner's trees and the leaderboard would be wrong for everyone. The
 -- view exposes no personal data: group name, tree count, survival percentage.

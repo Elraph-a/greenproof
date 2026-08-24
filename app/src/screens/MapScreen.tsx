@@ -13,7 +13,7 @@ import { ErrorNote, StatusChip } from '../components/ui'
  *
  * Uses CircleMarker rather than Leaflet's default pin deliberately: the default
  * icon is loaded from an image URL that Vite's bundler rewrites, which is the
- * single most common react-leaflet deployment bug - markers work in dev and
+ * single most common react-leaflet deployment bug — markers work in dev and
  * silently vanish in production. A vector circle has no asset to lose, and it
  * also colours by status for free, which a bitmap pin cannot.
  */
@@ -25,7 +25,7 @@ interface MapTree extends Tree {
 
 /**
  * Leaflet paints SVG via JS, not CSS classes, so these have to be literal
- * values rather than token references - a `var(--color-…)` string is not
+ * values rather than token references — a `var(--color-…)` string is not
  * resolved by Leaflet's path renderer.
  *
  * Kept in sync with index.css by hand. These are the LIGHT-theme values even
@@ -41,7 +41,7 @@ const STATUS_COLOUR: Record<string, string> = {
   dead: '#b3261e',
 }
 
-// UG campus, Legon - where the pilot happens. Only used until trees load.
+// UG campus, Legon — where the pilot happens. Only used until trees load.
 const FALLBACK_CENTRE: [number, number] = [5.6505, -0.1962]
 
 export function MapScreen() {

@@ -5,7 +5,7 @@
 # anyone opens the project on a Mac.
 * text=auto eol=lf
 
-# Binary - never touch these.
+# Binary — never touch these.
 *.png binary
 *.jpg binary
 *.jpeg binary

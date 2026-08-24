@@ -4,7 +4,7 @@
  * A sponsor sees the whole pilot rather than only trees explicitly assigned to
  * them. That is a PILOT SIMPLIFICATION and it is deliberate: trees registered
  * at T0 carry no plot, so a strictly-scoped view would open empty and prove
- * nothing. In production this becomes "trees in plots I have funded" - one
+ * nothing. In production this becomes "trees in plots I have funded" — one
  * `where` clause, already modelled by sponsorships.plot_id.
  *
  * Say that plainly if asked. The interesting claim is not which trees are
@@ -24,7 +24,7 @@ export interface SponsorPortfolio {
   alive: number
   flagged: number
   survivalPct: number
-  /** Actually paid out to planters - trigger-written, never client-written. */
+  /** Actually paid out to planters — trigger-written, never client-written. */
   paidOutGhs: number
   /** Pledged by this sponsor. A pledge is not evidence a tree survived. */
   committedGhs: number
@@ -157,7 +157,7 @@ function demoPortfolio(): SponsorPortfolio {
       // notebook paper on the one screen whose entire job is earning a
       // sponsor's trust.
       .filter((t) => t.latest && t.latest.verdict === 'verified')
-      // Newest first, matching the real query - the photo wall showing
+      // Newest first, matching the real query — the photo wall showing
       // 6 Aug, 3 Aug, 5 Aug in that order reads as broken.
       .sort((a, b) => b.latest!.captured_at.localeCompare(a.latest!.captured_at))
       .slice(0, 8)

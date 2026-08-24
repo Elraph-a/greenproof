@@ -1,9 +1,9 @@
 # ---------------------------------------------------------------------------
-# Secrets - never commit, at any level of the tree
+# Secrets — never commit, at any level of the tree
 # ---------------------------------------------------------------------------
 # The anon key is public by design, but the SUPABASE_SERVICE_KEY used by the ML
 # service is not, and both live in .env files. Committing one to a public repo
-# would hand over write access to verdicts and confidence - the exact thing the
+# would hand over write access to verdicts and confidence — the exact thing the
 # column grants exist to prevent.
 .env
 .env.*
@@ -31,7 +31,7 @@ __pycache__/
 *.tsbuildinfo
 
 # ---------------------------------------------------------------------------
-# ML artefacts - regenerated, and far too large for git
+# ML artefacts — regenerated, and far too large for git
 # ---------------------------------------------------------------------------
 *.onnx
 *.pt
@@ -48,13 +48,13 @@ Thumbs.db
 *.log
 
 # ---------------------------------------------------------------------------
-# Large binaries - excluded to keep the repo to what is needed to RUN the app
+# Large binaries — excluded to keep the repo to what is needed to RUN the app
 # ---------------------------------------------------------------------------
 # NOTE, and it matters: these are NOT backed up anywhere else once excluded.
 #
 #   data/**                 20 MB. The 59 spike photos behind the 54% rank-1
 #                           figure in spike/FINDINGS.md, plus pilot photos to
-#                           come. Keep a copy in Drive - a measured claim whose
+#                           come. Keep a copy in Drive — a measured claim whose
 #                           evidence has been lost is no longer defensible, and
 #                           this project's whole argument is "we can show you".
 #   docs/design/New folder  9 MB. The superseded Stitch export. docs/design/v2
@@ -63,7 +63,7 @@ Thumbs.db
 data/
 docs/design/New folder/
 
-# Word copies of the markdown originals - regenerate with tools/md_to_docx.py
+# Word copies of the markdown originals — regenerate with tools/md_to_docx.py
 *.docx
 
 # Loose drop folders. The design PNGs live in docs/design/v2/ under real names;

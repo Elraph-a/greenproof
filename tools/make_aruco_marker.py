@@ -1,7 +1,7 @@
 """Generate the printable ArUco reference marker.
 
 This is a PHYSICAL dependency for T0. One laminated card, carried in a pocket,
-reused for every tree - it is not a tag attached to a tree.
+reused for every tree — it is not a tag attached to a tree.
 
     python tools/make_aruco_marker.py
 
@@ -11,12 +11,12 @@ so that "print at 100%" produces exactly 80 mm.
 WHY ArUco AND NOT A COIN, A RULER OR A BANKNOTE
 A photo has no inherent scale: a thin trunk close up is pixel-for-pixel a thick
 trunk far away. Any object of known size fixes that. ArUco additionally solves
-the second problem - TILT. Its four corners form a known square, so when the
+the second problem — TILT. Its four corners form a known square, so when the
 card is photographed at an angle the detector sees the foreshortening and we can
 tell that the measurement is unreliable. A coin cannot tell you it was tilted;
 it just silently reports a smaller diameter.
 
-PRINTING - READ THIS, IT IS THE WHOLE POINT
+PRINTING — READ THIS, IT IS THE WHOLE POINT
 "Fit to page" and "Shrink oversized pages" silently rescale the marker, and a
 marker of the wrong physical size makes every measurement wrong by that ratio
 while looking completely normal.
@@ -112,7 +112,7 @@ def main() -> None:
 
     sheet = OUT / "greenproof_marker_A4.png"
     cv2.imwrite(str(sheet), a4)
-    print(f"wrote {sheet}  (A4 at {DPI} DPI - print this one)")
+    print(f"wrote {sheet}  (A4 at {DPI} DPI — print this one)")
 
     # Verify our own output actually decodes, at full size and at a realistic
     # photographed size. A marker that generates but does not detect would be

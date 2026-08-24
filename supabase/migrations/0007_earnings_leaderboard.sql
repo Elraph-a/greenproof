@@ -1,7 +1,7 @@
--- GreenProof - earnings and leaderboards
+-- GreenProof — earnings and leaderboards
 
 -- ---------------------------------------------------------------------------
--- Groups - schools, churches, communities
+-- Groups — schools, churches, communities
 -- ---------------------------------------------------------------------------
 -- The leaderboard was promised in the submitted description, and competition
 -- between institutions is the cheapest growth mechanism we have: one church
@@ -86,7 +86,7 @@ create trigger on_checkin_verified
 -- ---------------------------------------------------------------------------
 -- Survival rate, not just tree count. Counting trees alone rewards planting
 -- and ignores keeping alive, which is the entire problem the product exists to
--- fix - a leaderboard that rewarded volume would actively work against us.
+-- fix — a leaderboard that rewarded volume would actively work against us.
 
 create or replace view group_leaderboard as
   select g.id,

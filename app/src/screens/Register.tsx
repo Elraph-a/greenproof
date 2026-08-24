@@ -24,14 +24,14 @@ import { TrunkMeasure, type TrunkTaps } from '../components/TrunkMeasure'
 import { ErrorNote, Spinner } from '../components/ui'
 
 /**
- * Register a tree - built to docs/design/v2/02-08.
+ * Register a tree — built to docs/design/v2/02-08.
  *
- * Five steps, each with the same frame: a title bar carrying "Step N of 5 -
+ * Five steps, each with the same frame: a title bar carrying "Step N of 5 —
  * <name>", a segmented progress bar, and a single primary action pinned to the
  * bottom where a thumb reaches.
  */
 
-/** Speeds up T0 enormously - most of 40 trees will be a handful of species. */
+/** Speeds up T0 enormously — most of 40 trees will be a handful of species. */
 const COMMON_SPECIES = [
   'Mango', 'Neem', 'Teak', 'Moringa', 'Cashew', 'Coconut', 'Avocado',
   'Orange', 'Banana', 'Plantain', 'Cassia', 'Mahogany', 'Acacia',
@@ -41,7 +41,7 @@ const COMMON_SPECIES = [
 const TOTAL = 5
 const STEP_NAMES = ['GPS', 'Wide photo', 'Close-up', 'Details', 'Done']
 
-/** Establishment GH₵5 + GH₵2 per later verified visit - see migration 0007. */
+/** Establishment GH₵5 + GH₵2 per later verified visit — see migration 0007. */
 const POTENTIAL_FIRST_YEAR_GHS = 12
 
 export function Register() {
@@ -60,8 +60,8 @@ export function Register() {
   /**
    * T0 baseline trunk width, and null for most trees on purpose.
    *
-   * Only a SAMPLE is physically measured - roughly 20 of 40 at T0, tape-measured
-   * alongside - so making this a required step would cost forty trees a pair of
+   * Only a SAMPLE is physically measured — roughly 20 of 40 at T0, tape-measured
+   * alongside — so making this a required step would cost forty trees a pair of
    * taps to serve twenty. It lives collapsed inside step 4 rather than as a
    * sixth step for the same reason.
    *
@@ -72,7 +72,7 @@ export function Register() {
   const [taps, setTaps] = useState<TrunkTaps | null>(null)
 
   /**
-   * Frozen when the WIDE shutter is TAPPED - see PhotoCapture.onCaptureStart.
+   * Frozen when the WIDE shutter is TAPPED — see PhotoCapture.onCaptureStart.
    * Reading it at submit time would record the direction the user happened to
    * be facing while typing, and the next visit would send them the wrong way.
    */
@@ -109,7 +109,7 @@ export function Register() {
    *
    * Runs at STEP 1, before the two photos, because warning someone after they
    * have framed and shot a tree wastes the trip. Guarded on `collisions ===
-   * null` because useGeolocation watches continuously - without that this
+   * null` because useGeolocation watches continuously — without that this
    * would re-query on every GPS refinement.
    *
    * A failure here sets [] rather than surfacing an error: not being able to
@@ -167,7 +167,7 @@ export function Register() {
     if (close) revokePreview(close)
     setWide(null)
     setClose(null)
-    // Must reset, or tree N+1 silently inherits tree N's trunk edges - the same
+    // Must reset, or tree N+1 silently inherits tree N's trunk edges — the same
     // class of bug as the GPS fix below, and far harder to spot afterwards
     // because a plausible-looking width would be attached to the wrong tree.
     setTaps(null)
@@ -190,7 +190,7 @@ export function Register() {
   // An unresolved collision blocks step 1. Deliberately a speed bump and not a
   // hard block: GPS cannot tell two trees 3 m apart from one tree measured
   // twice, so refusing outright would make a dense grove unregisterable. The
-  // PERSON decides, against the previous photo - the same layered-identity rule
+  // PERSON decides, against the previous photo — the same layered-identity rule
   // the check-in flow uses.
   const collisionBlocking = Boolean(collisions?.length) && !collisionAck
 
@@ -416,7 +416,7 @@ export function Register() {
             </div>
 
             {/* Collapsed, and optional, on purpose. Only a SAMPLE of trees is
-                tape-measured at T0 - about twenty of forty - so making this a
+                tape-measured at T0 — about twenty of forty — so making this a
                 required sixth step would cost every tree a pair of taps to
                 serve half of them. Closed by default it costs the other twenty
                 nothing; the surveyor carrying the tape opens it.
@@ -541,7 +541,7 @@ export function Register() {
  * THE BUG THIS FIXES: at the pilot one physical tree was photographed twice and
  * became two tree rows. Nothing objected, because nothing looked. Two rows for
  * one trunk means the tree is paid for twice, which is the double-payment case
- * in the attack set - arrived at by honest accident rather than by fraud, which
+ * in the attack set — arrived at by honest accident rather than by fraud, which
  * is how it will usually arrive.
  *
  * WHY IT SHOWS PHOTOS RATHER THAN JUST A DISTANCE. GPS at 5-10 m accuracy
@@ -614,7 +614,7 @@ function CollisionWarning({
                 </button>
               ) : (
                 // Someone else's tree. Checking in on their behalf is not
-                // offered - that would be submitting evidence for a tree that
+                // offered — that would be submitting evidence for a tree that
                 // is not yours, which is the thing the ownership model exists
                 // to prevent. Registering anyway is allowed and gets reviewed.
                 <span className="shrink-0 text-label-md text-on-surface-variant">
@@ -664,7 +664,7 @@ function GpsStep({
   onRetry: () => void
 }) {
   // In demo mode there is no GPS on a desktop, so show a representative
-  // marginal fix - the state worth reviewing, since the good one is trivial.
+  // marginal fix — the state worth reviewing, since the good one is trivial.
   const shown = fix ?? (DEMO ? { lat: 5.6037, lng: -0.187, accuracy: 7 } : null)
   const good = fix ? gpsGood : DEMO ? false : false
   const usable = fix ? gpsUsable : DEMO ? true : false
@@ -771,7 +771,7 @@ function Legend({
   range: string
   text: string
 }) {
-  // Matches the ring above - the legend and the thing it explains have to be
+  // Matches the ring above — the legend and the thing it explains have to be
   // the same amber, and it is the status amber, not the money one.
   const dot =
     tone === 'good'

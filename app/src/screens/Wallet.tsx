@@ -9,7 +9,7 @@ import type { LedgerEntry } from '../lib/types'
 /**
  * Earnings.
  *
- * The balance is derived from ledger_entries, which NO client can write -
+ * The balance is derived from ledger_entries, which NO client can write —
  * `authenticated` has select only, and rows are inserted solely by the
  * `accrue_on_verified` trigger when a check-in reaches 'verified'.
  *
@@ -76,7 +76,7 @@ export function Wallet() {
 
       {error && <ErrorNote>{error}</ErrorNote>}
 
-      {/* Amber hero - this is the one screen whose subject IS money. Skeleton
+      {/* Amber hero — this is the one screen whose subject IS money. Skeleton
           while loading: rendering GH₵0.00 that then jumps to the real balance
           reads as a glitch on the one number people care about. */}
       {entries === null && !error ? (
@@ -147,7 +147,7 @@ export function Wallet() {
         </p>
       )}
 
-      {/* The claim worth making on this screen - one line on the surface, the
+      {/* The claim worth making on this screen — one line on the surface, the
           reasoning behind the tap. It was a five-line green box competing with
           the balance it was explaining. */}
       <details className="disclosure mt-2.5">

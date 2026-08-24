@@ -16,7 +16,7 @@ the ML service, holding the `service_role` key, can move them.
 
 **Why this over the alternatives.** Row Level Security controls *which rows* you
 touch; it cannot stop you writing a particular *column*. Hiding the endpoint
-would be security by obscurity - the anon key ships inside the browser and must
+would be security by obscurity — the anon key ships inside the browser and must
 be assumed public. Column grants are enforced by Postgres itself, so there is no
 application code to get wrong.
 
@@ -26,7 +26,7 @@ the Hugging Face Space's secrets and never in `app/`.
 **More time.** Rotate the key per round; sign each verdict so tampering is
 detectable after the fact.
 
-> *"The anon key is public - we assume the attacker has it. What stops them is
+> *"The anon key is public — we assume the attacker has it. What stops them is
 > that Postgres will not let that key write to those columns."*
 
 ---
@@ -53,7 +53,7 @@ a fire-and-forget call, and `POST /backfill` sweeps anything missed.
 
 **Why.** This is what made T0 safe to run before the ML service existed at all.
 It also means **every threshold change can be replayed over the entire pilot
-dataset without returning to the field** - the photos are the raw evidence, the
+dataset without returning to the field** — the photos are the raw evidence, the
 verdict is derived and disposable. Given the four check-in rounds are
 calendar-bound and unrepeatable, that property is worth more than any amount of
 inference speed.
@@ -71,7 +71,7 @@ run before any scoring. Only then do the four weighted signals run.
 
 **Why.** A duplicate photo is a duplicate photo; no amount of scene similarity
 should rescue it. Ordering also means five of the six attacks never reach the
-neural network - which is why overall accuracy is far better than the 54% rank-1
+neural network — which is why overall accuracy is far better than the 54% rank-1
 of image matching alone.
 
 **Where it fails.** A patient attacker who defeats all three gates gets a real
@@ -82,13 +82,13 @@ scoring decision, and that decision rests on a signal we know is weak.
 
 ---
 
-## 5 · Critical floors - the false accept we found and fixed
+## 5 · Critical floors — the false accept we found and fixed
 
 **What.** A signal that is present and near-zero **vetoes auto-approval** and
 routes to a human. It does not flag the visit.
 
-**Why.** Testing the verdict logic against ten designed scenarios - before any
-pilot photo existed - showed attack #4, *a different tree at the correct GPS*,
+**Why.** Testing the verdict logic against ten designed scenarios — before any
+pilot photo existed — showed attack #4, *a different tree at the correct GPS*,
 scoring **75/100 and being auto-approved**. Location, liveness and growth were
 all perfect and compensated for a `scene_match` of zero. Compensation is right
 for a quality score and wrong for a fraud decision.
@@ -120,7 +120,7 @@ See `spike/FINDINGS.md` for the full write-up.
 | Different tree | 75.0% | 1.1 | 6 |
 
 The distributions overlap almost entirely. It was adding up to +0.08 of
-essentially random confidence - which helps an impostor exactly as readily as a
+essentially random confidence — which helps an impostor exactly as readily as a
 genuine visit.
 
 **Where it might come back.** The spike had *no framing control*. The ghost
@@ -143,7 +143,7 @@ to a healthier tree would **steal that tree**. The app says this on the
 registration screen, not just in a slide.
 
 **Why not "AI re-identifies trees".** Because it does not. Measured: rank-1
-54.2% against 5% chance, AUC 0.77, and **bimodal** - near-perfect on distinctive
+54.2% against 5% chance, AUC 0.77, and **bimodal** — near-perfect on distinctive
 trees, near-zero inside a dense same-species stand.
 
 **Where it fails.** In a uniform plantation the image signal is close to
@@ -154,12 +154,12 @@ useless, so those check-ins lean on GPS, liveness and human confirmation.
 ## 8 · The offline queue
 
 **What.** Every registration is written to IndexedDB **before** any network call
-and deleted only once the database row exists. Three steps - upload, insert
-tree, insert check-in - each recording progress so a retry resumes rather than
+and deleted only once the database row exists. Three steps — upload, insert
+tree, insert check-in — each recording progress so a retry resumes rather than
 restarts.
 
 **Why.** T0 is 40 trees, outdoors, on mobile data, under canopy. Without a
-queue, a failure means the tree is simply gone - the photos existed only in a
+queue, a failure means the tree is simply gone — the photos existed only in a
 React state variable and the user has walked on. Losing four of forty is a 10%
 hole that cannot be patched, because T0 is a fixed moment in time.
 
@@ -167,7 +167,7 @@ hole that cannot be patched, because T0 is a fixed moment in time.
 JPEGs would need base64 (+33%) inside a 5 MB quota.
 
 **Why the tree id is recorded mid-flight.** Without it, a retry after step 2
-succeeded would insert the tree *twice* - giving one physical tree two rows at
+succeeded would insert the tree *twice* — giving one physical tree two rows at
 the same point, which is exactly what the "two people registered the same tree"
 check is meant to detect. We would have manufactured our own fraud signal.
 
@@ -179,7 +179,7 @@ check is meant to detect. We would have manufactured our own fraud signal.
 server detects the ArUco marker and converts to millimetres.
 
 **Why.** `mm = pixels × (marker_mm / marker_px)`. If the client computed the
-width, a forged request could claim any diameter - defeating the "a trunk cannot
+width, a forged request could claim any diameter — defeating the "a trunk cannot
 shrink" check. Taps are raw observation; millimetres are a derived verification
 result, and derived results are service-role only.
 
@@ -189,15 +189,15 @@ tell the measurement is unreliable. A coin photographed at an angle just
 silently reports a smaller diameter.
 
 **Verified.** Synthetic scene of known geometry: measured **60.3 mm against a
-true 60.0 mm** - 0.3 mm error, from the detector resolving the marker at 199px
+true 60.0 mm** — 0.3 mm error, from the detector resolving the marker at 199px
 instead of 200.
 
 **Where it fails.** No marker in frame → no measurement. The visit still counts;
-confidence drops via the coverage term. And **printers lie** - the marker must
+confidence drops via the coverage term. And **printers lie** — the marker must
 be measured with a ruler after printing and `DEFAULT_MARKER_MM` corrected.
 
 **Honest limit.** Trunk diameter barely moves in four weeks. This signal's job
-is catching the *impossible* - shrinkage, seedling→mature overnight, growth past
+is catching the *impossible* — shrinkage, seedling→mature overnight, growth past
 species maxima. **Canopy area** is the signal that moves, and it is the
 dying-tree detector.
 
@@ -208,7 +208,7 @@ dying-tree detector.
 **What.** Registration uses `<input capture>`; check-in uses `getUserMedia`.
 
 **Why both.** The native camera gives autofocus, exposure metering, HDR and full
-sensor resolution for free - and a soft close-up wrecks both the blur gate and
+sensor resolution for free — and a soft close-up wrecks both the blur gate and
 the trunk measurement. But it cannot draw on its viewfinder, and the ghost
 overlay is the whole point of the check-in screen. Registration has no previous
 photo to align against, so it takes the quality; check-in takes the overlay.
@@ -224,13 +224,13 @@ refused we fall back to the native camera and lose the overlay, not the visit.
 tree, repeat, pool.
 
 **Why not leave-one-check-in-out.** Check-ins of the same tree are not
-independent - four photos of tree 12 share a trunk, a background and a
+independent — four photos of tree 12 share a trunk, a background and a
 neighbourhood. Holding out one check-in leaves its siblings in training and the
 model memorises the tree, producing a number that looks excellent and means
 nothing.
 
 **The rule.** No threshold is ever tuned on the data used to report performance.
-Break it and the headline number is worthless - and a judge who knows statistics
+Break it and the headline number is worthless — and a judge who knows statistics
 will find it in thirty seconds.
 
 **Where it fails.** With ~40 trees the folds are small and the confidence
@@ -244,7 +244,7 @@ interval is wide. We report the interval, not just the point estimate.
 
 **Why.** Reviewing only the uncertain cases tells you nothing about how often
 you were confidently **wrong**. Sampling auto-approvals is the only way to
-estimate the **false-accept rate** - and that is the number that matters, since
+estimate the **false-accept rate** — and that is the number that matters, since
 a wrongly rejected genuine visit is annoying while a wrongly approved fraud is
 fatal.
 
@@ -262,11 +262,11 @@ estimate is loose. Say the sample size out loud.
 appear only via the `accrue_on_verified` trigger when a check-in reaches
 `verified`.
 
-**Why.** The only route to money is passing verification - and verification is
+**Why.** The only route to money is passing verification — and verification is
 the one thing the client also cannot touch. Two independent locks, both in the
 database.
 
-**Payment shape.** GH₵5 on establishment, GH₵2 per verified visit -
+**Payment shape.** GH₵5 on establishment, GH₵2 per verified visit —
 deliberately back-loaded. Paying most of the money on planting day is what makes
 plant-and-abandon rational, and it is the failure mode of nearly every
 reforestation grant.
@@ -277,7 +277,7 @@ reforestation grant.
 
 **What.** Default sort is survival rate. "Most trees" is the secondary toggle.
 
-**Why.** Ranking by trees planted rewards planting and ignores keeping alive -
+**Why.** Ranking by trees planted rewards planting and ignores keeping alive —
 the exact failure this project exists to fix. A volume leaderboard would push
 users toward the behaviour we are trying to price out.
 
@@ -297,7 +297,7 @@ at. Layout taken as designed; the words are ours.
 **Blur warning, buttons swapped.** The design made *"Use photo anyway"* the
 primary action and *"Retake"* secondary. Reversed. A blurry registration photo
 degrades every future comparison against that tree and cannot be retaken once
-you have walked away - the easy path should be the correct one.
+you have walked away — the easy path should be the correct one.
 
 **Material Symbols → inline SVG.** The design loads Google's icon webfont
 (~200 KB, over the network). On a phone at a tree with one bar, an icon font
@@ -309,8 +309,8 @@ bundled rather than fetched from Google Fonts.
 **Register step 1 has no live map.** The design shows a full-bleed map with an
 accuracy circle. Leaflet is ~157 KB and registration is the one screen that must
 load fast on Ghanaian mobile data at T0, so the map is deferred to its own tab
-and step 1 shows the same information - accuracy, verified state,
-coordinates - as a card. Revisit after T0 when bundle size stops being on the
+and step 1 shows the same information — accuracy, verified state,
+coordinates — as a card. Revisit after T0 when bundle size stops being on the
 critical path.
 
 One thing the design got right that we kept without argument: `on-surface-variant`
@@ -327,10 +327,10 @@ common mobile-in-sunlight failure, and this app is used at midday in a field.
 - Young bark is smooth; BarkNet's ~94% figures are on **mature** bark.
 - Wide-shot matching works partly off the **background**, not the tree.
 - A web app cannot fully prevent a gallery upload. The claim is that fraud costs
-  more than the payout is worth - not that fraud is impossible.
+  more than the payout is worth — not that fraud is impossible.
 - Sentinel-2 is 10 m/pixel; 40 young trees do not move NDVI. Grove-scale only,
   displayed separately, never folded into a per-tree score.
 - Thresholds are provisional until `calibrate.py` runs on real rounds.
 - **TIST already pays per living tree at 265,000 farmers. We are not first.**
-- Greenstand has an ML repo - research-stage, not deployed. They are not purely
+- Greenstand has an ML repo — research-stage, not deployed. They are not purely
   manual.

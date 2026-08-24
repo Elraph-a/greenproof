@@ -6,7 +6,7 @@
    worker and work offline.
 
    SUBSETS: latin + latin-ext only. The bare `400.css` entry point also pulls the
-   VIETNAMESE subset - a third of the font payload for glyphs this app will never
+   VIETNAMESE subset — a third of the font payload for glyphs this app will never
    render. latin-ext is deliberately kept rather than trimmed further: Twi is
    written with ɛ (U+025B) and ɔ (U+0254), which live there, and dropping it
    would silently substitute fallback glyphs the day anyone localises this. */
@@ -159,7 +159,7 @@
   --color-on-accent: #ffffff;
   --color-on-accent-container: #6e4a00;
 
-  /* --- error - "flagged" --- */
+  /* --- error — "flagged" --- */
   --color-error: #a3271f;
   --color-on-error: #ffffff;
   --color-error-container: #fbe3e0;
@@ -168,7 +168,7 @@
   --color-verified: #1a5035;
   --color-verified-container: #dcece3;
 
-  /* --- radii - the reference cards are ~16px and the pills are fully round.
+  /* --- radii — the reference cards are ~16px and the pills are fully round.
      Note block buttons are 12px, NOT pills: only the floating action button
      and chips are fully rounded in the designs. --- */
   --radius-sm: 0.5rem;
@@ -310,7 +310,7 @@
     font-feature-settings: 'tnum' 1;
   }
 
-  /* Used one-handed at a tree - a long-press selecting text is pure friction.
+  /* Used one-handed at a tree — a long-press selecting text is pure friction.
      Inputs opt back in. */
   * {
     -webkit-tap-highlight-color: transparent;
@@ -329,10 +329,10 @@
 
 /* ===========================================================================
    PRIMITIVES
-   Minimum tap target 56px - a thumb on a dusty screen at arm's length.
+   Minimum tap target 56px — a thumb on a dusty screen at arm's length.
    =========================================================================== */
 @layer components {
-  /* --- buttons - 12px radius, NOT pills. Pills are reserved for the floating
+  /* --- buttons — 12px radius, NOT pills. Pills are reserved for the floating
      action button and for chips, which is what makes the FAB read as floating
      rather than as one more button in the stack. --- */
   /* Explicit properties, never `transition: all`. `all` animates every
@@ -385,7 +385,7 @@
   .btn-block {
     @apply w-full;
   }
-  /* The floating action button - the one fully-round control. */
+  /* The floating action button — the one fully-round control. */
   .btn-fab {
     @apply rounded-full px-5;
     /* Tinted with the button's OWN fill rather than with neutral ink, so it
@@ -395,7 +395,7 @@
        The neutral line first is a real fallback, not a formality: an invalid
        colour makes the WHOLE declaration invalid, so a browser without
        color-mix would drop the shadow entirely and the FAB would stop looking
-       like it floats - which is the only thing making it read as the primary
+       like it floats — which is the only thing making it read as the primary
        action rather than one more button. */
     box-shadow: 0 8px 24px -8px rgb(var(--tint-ink) / 0.45);
     box-shadow: 0 8px 24px -8px
@@ -405,7 +405,7 @@
     letter-spacing: -0.005em;
   }
 
-  /* --- cards - white on warm grey, no border. A soft wide shadow does the
+  /* --- cards — white on warm grey, no border. A soft wide shadow does the
      separating; the reference screens use almost no hairlines. --- */
   .card {
     @apply rounded-xl bg-surface-container-lowest p-4;
@@ -422,7 +422,7 @@
   }
 
   /* --- chips --- */
-  /* whitespace-nowrap because a status is a single token - "Needs review"
+  /* whitespace-nowrap because a status is a single token — "Needs review"
      breaking across two lines inside a pill turns a scannable marker into a
      paragraph, and it dragged the row's other text into a truncation. */
   .chip {
@@ -448,7 +448,7 @@
     @apply bg-accent-container text-on-accent-container;
   }
 
-  /* --- filter pills - the segmented control on My Grove --- */
+  /* --- filter pills — the segmented control on My Grove --- */
   .pill {
     @apply inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 font-semibold
            transition-colors select-none;
@@ -649,7 +649,7 @@
 
   /* --- motion ---
      One entrance for every screen: a short rise-and-fade on navigation. This is
-     the cheapest single thing separating "prototype" from "product" - a static
+     the cheapest single thing separating "prototype" from "product" — a static
      swap between screens reads as a page reload. 220ms, small distance: fast
      enough never to be waited on, present enough to register. */
   /* BACKWARDS, NOT BOTH, AND THIS IS LOAD-BEARING.
@@ -694,8 +694,8 @@
   }
 
   /* --- disclosure ---
-     The explanations this product needs - why a score is what it is, what a tag
-     is and is not - were all rendered on the surface, and a screen carrying six
+     The explanations this product needs — why a score is what it is, what a tag
+     is and is not — were all rendered on the surface, and a screen carrying six
      paragraphs of justification reads as documentation rather than an app. They
      are still one tap away, which is where reference material belongs. */
   .disclosure {
@@ -746,7 +746,7 @@
   /* --- loading skeletons ---
      A light sweep across a grey block, replacing both spinners and the old
      animate-pulse. A spinner says "the app is busy"; a skeleton says "here is
-     the shape of what is coming" - the screen appears to assemble rather than
+     the shape of what is coming" — the screen appears to assemble rather than
      stall, which matters on Ghanaian mobile data where every list loads
      slowly. */
   .skeleton {
@@ -773,7 +773,7 @@
     }
   }
 
-  /* Respect the OS-level setting - some people get motion sick. */
+  /* Respect the OS-level setting — some people get motion sick. */
   @media (prefers-reduced-motion: reduce) {
     /* REPLACE, don't remove. What triggers vestibular discomfort is the
        translation, not the fade - and with the animation deleted outright a

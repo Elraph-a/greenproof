@@ -5,7 +5,7 @@ import { Icon } from '../components/Icon'
 import { ErrorNote, Spinner } from '../components/ui'
 
 /**
- * Returning users only - new users go to /signup, where the role and details
+ * Returning users only — new users go to /signup, where the role and details
  * are collected. Email + password rather than a magic link: see the comment on
  * `signIn` in AuthProvider for why the link could not be made reliable on
  * Android mail clients.
@@ -27,7 +27,7 @@ export function SignIn() {
     setError(null)
     try {
       await signIn(email, password)
-      // No navigation needed - onAuthStateChange fires and the router swaps
+      // No navigation needed — onAuthStateChange fires and the router swaps
       // this screen out.
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not sign in')

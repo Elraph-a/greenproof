@@ -1,4 +1,4 @@
--- GreenProof - the sponsor role, and a privilege-escalation fix
+-- GreenProof — the sponsor role, and a privilege-escalation fix
 --
 -- ===========================================================================
 -- 1 · profiles.role must not be client-writable   ** SECURITY FIX **
@@ -15,7 +15,7 @@
 --
 --     update profiles set role = 'reviewer' where id = auth.uid();
 --
--- ...and then decide verdicts - including on their own check-ins. That defeats
+-- ...and then decide verdicts — including on their own check-ins. That defeats
 -- the product's central claim that a client can never write its own
 -- verification result. RLS was never the hole; the column grant was.
 --
@@ -31,7 +31,7 @@ grant update (full_name, phone, story, photo_path, group_id)
   on profiles to authenticated;
 
 -- Sign-up still needs to CHOOSE between planting and sponsoring, so one narrow
--- doorway is opened for exactly that - and it can only ever produce the two
+-- doorway is opened for exactly that — and it can only ever produce the two
 -- self-service roles. 'reviewer' and 'institution' stay administrative, set by
 -- someone with database access.
 create or replace function public.set_my_role(p_role user_role)
@@ -70,9 +70,9 @@ grant execute on function public.set_my_role(user_role) to authenticated;
 -- A sponsorship is a COMMITMENT to fund n trees in a plot. It is deliberately
 -- not the same thing as money paid out:
 --
---   ledger_entries  - what a planter EARNED. Trigger-written only; no client
+--   ledger_entries  — what a planter EARNED. Trigger-written only; no client
 --                     can insert. You cannot pay yourself.
---   sponsorships    - what a sponsor PLEDGED. Client-written, because it is
+--   sponsorships    — what a sponsor PLEDGED. Client-written, because it is
 --                     the sponsor's own declaration about their own money.
 --
 -- Keeping them apart is what lets the sponsor screen show "committed" and

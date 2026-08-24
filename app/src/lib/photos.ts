@@ -46,7 +46,7 @@ export async function uploadPhoto(
   role: PhotoRole,
   blob: Blob,
 ): Promise<string> {
-  // Demo mode must never write to Storage - that allowance is reserved for
+  // Demo mode must never write to Storage — that allowance is reserved for
   // pilot photos, and a demo upload would be indistinguishable from real
   // evidence once it landed.
   if (DEMO) refuseWriteInDemo('photo upload')
@@ -56,7 +56,7 @@ export async function uploadPhoto(
     contentType: 'image/jpeg',
     // Retries after a dropped connection re-upload the same path. Without
     // upsert the second attempt fails with "already exists" and the whole
-    // registration is lost - on a Ghanaian mobile connection this is the
+    // registration is lost — on a Ghanaian mobile connection this is the
     // common case, not the edge case.
     upsert: true,
   })
@@ -70,7 +70,7 @@ export async function uploadPhoto(
 
 /**
  * The bucket is PRIVATE. Tree photos are evidence in a system that pays money,
- * and a public bucket would let anyone enumerate and download every photo -
+ * and a public bucket would let anyone enumerate and download every photo —
  * which also hands an attacker the exact images needed to replay a check-in.
  * So reads go through short-lived signed URLs.
  */
@@ -84,7 +84,7 @@ const urlCache = new Map<string, CachedUrl>()
 
 /** Signed URL for one path, memoised until shortly before it expires. */
 export async function photoUrl(path: string): Promise<string | null> {
-  // Demo paths are already public URLs under /demo - serve them as-is.
+  // Demo paths are already public URLs under /demo — serve them as-is.
   if (DEMO) return path
 
   const hit = urlCache.get(path)
@@ -108,7 +108,7 @@ export async function photoUrl(path: string): Promise<string | null> {
  * Signed URLs for many paths in ONE request.
  *
  * My Grove renders a thumbnail per tree. Calling photoUrl() per card would fire
- * 40 sequential round trips on a phone - several seconds of blank cards. This
+ * 40 sequential round trips on a phone — several seconds of blank cards. This
  * is the difference between the list feeling instant and feeling broken.
  */
 export async function photoUrls(

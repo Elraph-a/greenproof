@@ -1,4 +1,4 @@
-"""Build and run the attack set - deliberate fraud, against the live system.
+"""Build and run the attack set — deliberate fraud, against the live system.
 
     python ml/attack_set.py --plan          # what would be attempted
     python ml/attack_set.py --run           # actually submit them
@@ -8,7 +8,7 @@ WHY THIS EXISTS
 Every reforestation verification project asserts that its verification works.
 None publish how often it fails. The difference between an assertion and a
 measurement is a set of attacks you designed to defeat yourself, ran against the
-deployed system, and reported honestly - including the ones that got through.
+deployed system, and reported honestly — including the ones that got through.
 
 Seven attack types. Six are expected to be caught by DETERMINISTIC checks, not
 by the neural network. That is the honest reason the system works, and this
@@ -16,7 +16,7 @@ script is what turns that claim into a table.
 
 Every row is tagged `signals.self_test.injected = true`, so injected attacks can
 never be confused with real pilot data in any later analysis, and can be deleted
-wholesale - see `--cleanup`.
+wholesale — see `--cleanup`.
 
 ATTACK 7 IS THE ONE THAT CREATES A TREE. The other six submit a check-in against
 a tree that already exists; #7 registers a SECOND tree on top of an existing one,
@@ -130,7 +130,7 @@ ATTACKS = [
 def dead_plant_image() -> Image.Image:
     """A brown, textured, plausible-looking dead stick against soil.
 
-    Deliberately not a flat brown rectangle - that would be a straw man. It has
+    Deliberately not a flat brown rectangle — that would be a straw man. It has
     noise and structure so it fails on VEGETATION INDEX rather than on being
     obviously synthetic.
     """
@@ -284,8 +284,8 @@ DUPLICATE_OFFSET_DEG = 2.0 / 111_320
 def register_duplicate_tree(target: dict, owner: str, when: datetime) -> str:
     """Register a SECOND tree on top of an existing one.
 
-    Deliberately reuses the target's owner. The proximity check is owner-blind -
-    it compares positions, not people - so one submitter exercises exactly the
+    Deliberately reuses the target's owner. The proximity check is owner-blind —
+    it compares positions, not people — so one submitter exercises exactly the
     same code path as two, and needing a second seeded profile would make the
     attack set refuse to run on a fresh database.
     """
@@ -408,7 +408,7 @@ def run() -> list[Attack]:
                     attack,
                 )
 
-            else:  # 7 - the same tree registered a second time
+            else:  # 7 — the same tree registered a second time
                 # Unseen photos, so the duplicate gate cannot fire and the
                 # PROXIMITY check is what has to catch this. Someone registering
                 # the same trunk a second time photographs it afresh, so new

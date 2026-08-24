@@ -17,7 +17,7 @@ import { TreeDetail } from "./screens/TreeDetail";
 import { Profile } from "./screens/Profile";
 
 /*
-  LAZY-LOADED - everything off the T0 critical path.
+  LAZY-LOADED — everything off the T0 critical path.
 
   On Monday the only screens that matter are sign-in, My Grove and Register.
   Leaflet alone is ~170 KB and the map is a tab a field user never opens, so
@@ -43,7 +43,7 @@ const SponsorHome = lazy(() =>
 const FundGrove = lazy(() =>
   import("./screens/FundGrove").then((m) => ({ default: m.FundGrove })),
 );
-/** The wide desktop view is kept for a funder at a laptop - see /sponsor/full. */
+/** The wide desktop view is kept for a funder at a laptop — see /sponsor/full. */
 const SponsorDashboard = lazy(() =>
   import("./screens/SponsorDashboard").then((m) => ({
     default: m.SponsorDashboard,
@@ -113,7 +113,7 @@ export function App() {
         During T0 the user spends the entire session inside /register, which is
         a full-screen flow outside the tabs. If this banner only rendered on My
         Grove, a run of failing uploads would stay invisible for the whole hour
-        - and the one moment it is cheap to fix a lost tree is while you are
+        — and the one moment it is cheap to fix a lost tree is while you are
         still standing next to it.
       */}
       {/* Renders nothing unless VITE_DEMO=1. See components/DemoBanner.tsx. */}
@@ -133,13 +133,13 @@ export function App() {
         />
         {/*
           Deliberately NOT `session ? <Home /> : …` like /signin. The session
-          appears midway through signUp - before the name and role are saved -
+          appears midway through signUp — before the name and role are saved —
           and gating on it would unmount the form at that exact moment. The
           screen navigates itself when the whole sign-up has finished.
         */}
         <Route path="/signup" element={<CreateAccount />} />
 
-        {/* Full-screen flows - no bottom tab bar competing for thumb space. */}
+        {/* Full-screen flows — no bottom tab bar competing for thumb space. */}
         <Route
           path="/register"
           element={

@@ -22,7 +22,7 @@ forgeable.** The anon key ships inside the PWA and must be assumed public, so
 column level. This process holds the only key that can write them.
 
 `POST /score` takes an id and nothing else. Every input is re-read from the
-database and from storage - a caller can ask for a check-in to be scored, but
+database and from storage — a caller can ask for a check-in to be scored, but
 can never influence what the score is.
 
 ## Endpoints
@@ -30,13 +30,13 @@ can never influence what the score is.
 | Method | Path | Purpose |
 |---|---|---|
 | GET | `/health` | liveness, model-loaded, config present |
-| POST | `/score` | score one check-in - `{"checkin_id": "..."}` |
+| POST | `/score` | score one check-in — `{"checkin_id": "..."}` |
 | POST | `/backfill?limit=50` | score everything still `pending` |
 | GET | `/docs` | interactive OpenAPI |
 
 ## How a check-in is judged
 
-**Stage 1 - gates.** Disqualifying on their own, run before any scoring.
+**Stage 1 — gates.** Disqualifying on their own, run before any scoring.
 
 | Gate | Catches |
 |---|---|
@@ -44,7 +44,7 @@ can never influence what the score is.
 | GPS radius | right tree, wrong place |
 | travel speed | one account submitting from two impossible places |
 
-**Stage 2 - scores.** Continuous 0–1 signals, weighted into a confidence.
+**Stage 2 — scores.** Continuous 0–1 signals, weighted into a confidence.
 
 | Score | Signal |
 |---|---|
@@ -60,7 +60,7 @@ overall accuracy is much better than the 54% rank-1 of image matching alone.
 ## Honest limits
 
 - Image matching is **corroboration, not identity**. Measured on our own 15
-  plants: rank-1 54% against 5% chance, AUC 0.77 - real signal, nowhere near
+  plants: rank-1 54% against 5% chance, AUC 0.77 — real signal, nowhere near
   enough to authorise a payout. It is **bimodal**: near-perfect on distinctive
   trees, near-zero inside a dense same-species stand.
 - Wide-shot matching works partly off the **background**, not the tree.

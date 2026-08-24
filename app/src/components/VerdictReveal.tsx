@@ -4,7 +4,7 @@ import { Spinner } from './ui'
 import type { Checkin, CheckinVerdict } from '../lib/types'
 
 /**
- * The check-in result - built to docs/design/v2/09.
+ * The check-in result — built to docs/design/v2/09.
  *
  * PROGRESSIVE REVEAL, NOT A TABLE. The confidence number alone is unfalsifiable
  * ("trust us, 87"), and the raw `signals` blob is unreadable standing in a
@@ -295,7 +295,7 @@ function useCountUp(target: number, ms = 900): number {
 function Gauge({ value, colour }: { value: number; colour: string }) {
   const R = 62
   const C = 2 * Math.PI * R
-  // 270° sweep, opening at the bottom - a full ring has no visible start or
+  // 270° sweep, opening at the bottom — a full ring has no visible start or
   // end, so the eye cannot judge how far along the value sits.
   const SWEEP = 0.75
   const target = Math.max(0, Math.min(100, value))
@@ -364,7 +364,7 @@ interface Check {
 /**
  * Turn the raw signals blob into three sentences a person can act on.
  *
- * Only three are shown. The full breakdown lives on the tree page - at the
+ * Only three are shown. The full breakdown lives on the tree page — at the
  * moment of the reveal the user is standing in a field and needs to know
  * whether to walk on, not to audit a model.
  */

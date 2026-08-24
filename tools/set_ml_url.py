@@ -6,7 +6,7 @@
     python tools/set_ml_url.py --clear
 
 Writes one row of `app_config`. The app reads it at startup, so a change takes
-effect on the next load on every device - no Vercel rebuild, no per-phone
+effect on the next load on every device — no Vercel rebuild, no per-phone
 setup, no reinstall.
 
 Needs SUPABASE_URL and SUPABASE_SERVICE_KEY (from .env). Clients are granted

@@ -1,4 +1,4 @@
-# GreenProof - Project Context & Build Handoff
+# GreenProof — Project Context & Build Handoff
 
 > **Purpose of this file:** full context for continuing development in Claude Code.
 > Everything below is already decided and stress-tested. Start from here rather than
@@ -9,10 +9,10 @@
 ## 0. Situation
 
 - **Competition:** TeProD Ulysseus Innovation Challenge 2026, University of Ghana.
-- **Theme:** *Twin Transition - Innovate with AI and Green Technologies to Transform our Economy.*
-- **Status:** Shortlisted - **top 10 out of 56 teams.**
+- **Theme:** *Twin Transition — Innovate with AI and Green Technologies to Transform our Economy.*
+- **Status:** Shortlisted — **top 10 out of 56 teams.**
 - **Time remaining:** ~1 month to the final.
-- **Final format:** **20-minute pitch. Live demos encouraged. Judges will ask deep technical questions** - the team must own every detail.
+- **Final format:** **20-minute pitch. Live demos encouraged. Judges will ask deep technical questions** — the team must own every detail.
 - **Team:** 4 final-year undergraduates (Business Analytics / Data Science background: NLP, social network analysis, data visualisation).
 - **Constraint:** Tooling must be **free or very cheap**. No budget.
 
@@ -32,11 +32,11 @@ Ghana plants millions of trees yearly (Green Ghana Day and similar), but a large
 
 ## 2. The user loop (what we're building)
 
-1. **Register** - user plants/adopts a seedling, submits photo. App captures GPS + timestamp. Tree gets unique ID, appears on map. Tree is now theirs.
-2. **Check in** - every few weeks, user re-photographs the same tree. Streaks/leaderboards for engagement.
-3. **AI verifies** - the verification engine scores each check-in (see §3).
-4. **Milestone payout** - on survival milestones (e.g. 6 months, 12 months), earnings accrue in an in-app wallet and pay out to MoMo **in batches** (never per check-in - fees would kill it).
-5. **Sponsors fund it** - companies/government buy verified groves, see live dashboards ("your 5,000 trees - 87% alive, verified monthly").
+1. **Register** — user plants/adopts a seedling, submits photo. App captures GPS + timestamp. Tree gets unique ID, appears on map. Tree is now theirs.
+2. **Check in** — every few weeks, user re-photographs the same tree. Streaks/leaderboards for engagement.
+3. **AI verifies** — the verification engine scores each check-in (see §3).
+4. **Milestone payout** — on survival milestones (e.g. 6 months, 12 months), earnings accrue in an in-app wallet and pay out to MoMo **in batches** (never per check-in — fees would kill it).
+5. **Sponsors fund it** — companies/government buy verified groves, see live dashboards ("your 5,000 trees — 87% alive, verified monthly").
 
 **Users are not only individuals:** schools, churches, farmer groups, NGOs, communities. These institutional users are the *durable* users (individuals churn).
 
@@ -55,13 +55,13 @@ Ghana plants millions of trees yearly (Green Ghana Day and similar), but a large
 
 **Output:** confidence score → high = auto-verify; low = human review queue.
 
-**Research backing:** deep-learning tree-bark re-identification is established - ~**93.88% accuracy single-image, 97.81% multi-image** (BarkNet/DeepBark line of research).
+**Research backing:** deep-learning tree-bark re-identification is established — ~**93.88% accuracy single-image, 97.81% multi-image** (BarkNet/DeepBark line of research).
 
 ### Known hard problem: young seedlings
-Bark re-ID is strong on *mature* bark. **Young seedlings look alike** - this is the single most likely technical attack from judges.
+Bark re-ID is strong on *mature* bark. **Young seedlings look alike** — this is the single most likely technical attack from judges.
 **Mitigation (must be able to defend live):**
 - Cheap **physical tag** (numbered/QR or biodegradable stake) planted with each seedling.
-- **Wider context shot** - surrounding rocks, structures, neighbouring plants form a scene fingerprint.
+- **Wider context shot** — surrounding rocks, structures, neighbouring plants form a scene fingerprint.
 - Precise GPS + the other signals.
 - Confidence **rises as the tree matures** and bark re-ID takes over.
 - Low-confidence cases → human review.
@@ -75,10 +75,10 @@ Individual tracking matters most in **years 1–5** (when trees die). Once trees
 
 **We are NOT in the seedling business.** We sit on top of supply that already exists. Two channels, one platform:
 
-- **Channel A - Nursery partner network (year-round engine).** Community/private nurseries onboarded as registered supply partners. Sponsor money buys seedlings from them; planters collect and register. Creates local jobs, keeps platform alive all year.
-- **Channel B - Green Ghana Day (annual accelerator + cold-start engine).** Forestry Commission gives out millions of free seedlings each June; GreenProof registers that surge. Requires **no sponsor money**, so it breaks the chicken-and-egg problem.
+- **Channel A — Nursery partner network (year-round engine).** Community/private nurseries onboarded as registered supply partners. Sponsor money buys seedlings from them; planters collect and register. Creates local jobs, keeps platform alive all year.
+- **Channel B — Green Ghana Day (annual accelerator + cold-start engine).** Forestry Commission gives out millions of free seedlings each June; GreenProof registers that surge. Requires **no sponsor money**, so it breaks the chicken-and-egg problem.
 
-**Nursery payment model (locked):** split - **majority on delivery + a survival bonus.**
+**Nursery payment model (locked):** split — **majority on delivery + a survival bonus.**
 Rationale: paid fully on delivery, a nursery has no incentive to supply healthy seedlings. But responsibility is split **fairly**:
 - **Nursery bonus** → tied to **early establishment survival (first 4–8 weeks)** = seedling quality.
 - **Planter reward** → tied to **long-term survival** = care.
@@ -94,7 +94,7 @@ Each party judged only on what they control.
 - **Phase 2: Verified impact-as-a-service.** Subscription dashboards, ESG reporting data, proof-of-survival certificates.
 - **Phase 3 (long-term): Carbon credits.** Bundled verified trees feed the voluntary carbon market, where verification quality commands the ~4x price premium.
 
-**CRITICAL FRAMING:** Do **not** lead with carbon. A young tree's raw carbon value is **cents** - it cannot fund a seedling + planter reward + nursery bonus + fees. Phase 1 revenue is **proof-of-impact / CSR**, sold at a premium far above tonnage value. A sharp judge doing the carbon math will catch any overclaim.
+**CRITICAL FRAMING:** Do **not** lead with carbon. A young tree's raw carbon value is **cents** — it cannot fund a seedling + planter reward + nursery bonus + fees. Phase 1 revenue is **proof-of-impact / CSR**, sold at a premium far above tonnage value. A sharp judge doing the carbon math will catch any overclaim.
 
 ---
 
@@ -134,7 +134,7 @@ TREE LEDGER (PostgreSQL)  ──────►  PAYOUT ENGINE
         │
         ▼
 DASHBOARDS
- • User: "my grove" - trees, age, earnings, streaks
+ • User: "my grove" — trees, age, earnings, streaks
  • Sponsor: grove health, % alive, verified
  • Public: live national tree map
 ```
@@ -146,7 +146,7 @@ DASHBOARDS
 > We do **not** need a real carbon market, real payouts, or millions of users.
 > We need a **thin vertical slice that runs live on stage** + a **real pilot number.**
 
-### Priority 1 - The demo loop (weeks 1–3)
+### Priority 1 — The demo loop (weeks 1–3)
 `register → check-in → AI same-tree match → confidence score → dashboard`
 
 - [ ] Registration flow: photo upload + GPS + timestamp → tree ID in DB
@@ -154,28 +154,28 @@ DASHBOARDS
 - [ ] **Same-tree matching model** running live (embeddings + similarity threshold)
 - [ ] Confidence scoring combining available signals
 - [ ] Duplicate-image + basic spoof detection
-- [ ] **Live map** of registered trees (this is a strong visual moment - plays to team's data-viz strength)
+- [ ] **Live map** of registered trees (this is a strong visual moment — plays to team's data-viz strength)
 - [ ] Sponsor dashboard: total trees, % verified alive
 - [ ] **Simulated MoMo payout** (sandbox is fine; must *look* real on stage)
 - [ ] Real **Sentinel-2 / NDVI** pull for ONE Ghanaian pilot location
 
-### Priority 2 - The pilot number (weeks 1–4, runs in parallel - DO NOT SKIP)
+### Priority 2 — The pilot number (weeks 1–4, runs in parallel — DO NOT SKIP)
 This is the single biggest differentiator and most teams skip it.
 - [ ] Register **30–50 real trees** at one unambiguous site (school compound / church land / family farm)
 - [ ] Run **2–3 real check-in cycles** before the final
 - [ ] Result to quote on stage: *"We registered 42 real trees three weeks ago and verified 39 alive yesterday."*
-- Note: trees need not be newly planted - existing young trees on known land prove the verification loop fine.
+- Note: trees need not be newly planted — existing young trees on known land prove the verification loop fine.
 
-### Priority 3 - Polish (week 4)
+### Priority 3 — Polish (week 4)
 - [ ] Rehearse pitch to finish at **18–19 min**, never 20
 - [ ] **Backup demo video** (stage wifi always dies)
 - [ ] Mock Q&A sessions; assign a primary owner per likely question
 
 ### Suggested role split
-- **ML & verification engine** - embeddings, same-tree matching, confidence scoring
-- **Backend & data** - FastAPI, PostgreSQL/PostGIS, MoMo sandbox, tree ledger + wallet
-- **Geospatial & visualisation** - Sentinel-2/NDVI pipeline, live map, dashboards
-- **Product, pitch & partnerships** - nursery/Forestry outreach, pilot logistics, demo script, slides
+- **ML & verification engine** — embeddings, same-tree matching, confidence scoring
+- **Backend & data** — FastAPI, PostgreSQL/PostGIS, MoMo sandbox, tree ledger + wallet
+- **Geospatial & visualisation** — Sentinel-2/NDVI pipeline, live map, dashboards
+- **Product, pitch & partnerships** — nursery/Forestry outreach, pilot logistics, demo script, slides
 
 ---
 
@@ -185,7 +185,7 @@ This is the single biggest differentiator and most teams skip it.
 |---|---|
 | 2 min | Problem + the numbers |
 | 3 min | Solution loop: plant → register → check in → verify → get paid |
-| **6 min** | **LIVE DEMO** - register a seedling on stage, run same-tree match, show confidence score, show map, trigger simulated payout |
+| **6 min** | **LIVE DEMO** — register a seedling on stage, run same-tree match, show confidence score, show map, trigger simulated payout |
 | 3 min | Pilot results + how verification works (the four signals) |
 | 3 min | Business model sequencing, regulatory drivers, honest Greenstand comparison |
 | 2 min | Impact, SDGs, closing one-liner |
@@ -197,13 +197,13 @@ This is the single biggest differentiator and most teams skip it.
 Every team member should be able to answer without deferring. Assign a primary owner to each.
 
 1. **How does same-tree matching actually work?** → embeddings, similarity threshold, which model, and where it fails.
-2. **Seedlings look identical - so how?** → four fused signals + physical tag + wider context shot + confidence grows with maturity + human review queue.
+2. **Seedlings look identical — so how?** → four fused signals + physical tag + wider context shot + confidence grows with maturity + human review queue.
 3. **False positives / fraud?** → duplicate detection, GPS spoof detection, growth curves, satellite cross-check. Honest goal: make fraud **cost more than the payout is worth** (no system is perfect).
 4. **How does the satellite check work?** → Sentinel-2, NDVI, plot-level not tree-level, revisit frequency.
 5. **Unit economics per tree?** → know the cents-per-tree carbon math cold; explain why Phase 1 is CSR, not carbon.
 6. **How is this not Greenstand?** → manual vs automated, NGO-gated vs consumer, foreign vs Ghana-native, no satellite/MoMo layer.
 7. **What happens at forest density?** → plot-share conversion.
-8. **Whose land is the tree on?** → you own the **tree asset in the app, not the land**; pilots on unambiguous land (school/church/family farm). Ghana land tenure is customary and contested - say this before they ask.
+8. **Whose land is the tree on?** → you own the **tree asset in the app, not the land**; pilots on unambiguous land (school/church/family farm). Ghana land tenure is customary and contested — say this before they ask.
 9. **Who really pays, and will they?** → Phase 1 CSR budgets already being spent on unverifiable planting.
 10. **Are you legally allowed to move this money?** → we're the **tech + verification layer**; disbursement runs **through a licensed MoMo provider / payment partner**, we don't hold deposits.
 
@@ -222,7 +222,7 @@ An existing US-founded NGO platform. Growers take geotagged photos of trees; ima
 | Infrastructure in US/Europe, not localised | Ghana-first; Green Ghana Day + local nurseries |
 | No gamification | Ownership, streaks, leaderboards, inheritance |
 
-**Positioning line:** *"Tree tracking exists - but it's manual, NGO-gated, and foreign. We automate it with AI, make it consumer-scale, and localise it to Ghana."* Claiming to be first would be false and judges will check.
+**Positioning line:** *"Tree tracking exists — but it's manual, NGO-gated, and foreign. We automate it with AI, make it consumer-scale, and localise it to Ghana."* Claiming to be first would be false and judges will check.
 
 ---
 
@@ -230,10 +230,10 @@ An existing US-founded NGO platform. Growers take geotagged photos of trees; ima
 
 | Bottleneck | Fix |
 |---|---|
-| **Unit economics tight** - young tree's carbon value is cents | Phase 1 = CSR/proof-of-impact premium, **not** carbon |
+| **Unit economics tight** — young tree's carbon value is cents | Phase 1 = CSR/proof-of-impact premium, **not** carbon |
 | **MoMo fees eat micro-payments** | Never pay per check-in; accumulate in wallet, **batch payouts** on threshold |
 | **Nursery survival bonus unfair** (weak seedling vs poor watering?) | Nursery judged on **early establishment (4–8 wks)**; planter on **long-term survival** |
-| **Cold start** (sponsors want proof; planters want money) | **Green Ghana Day** - free seedlings, no sponsor money needed, generates first verified batch |
+| **Cold start** (sponsors want proof; planters want money) | **Green Ghana Day** — free seedlings, no sponsor money needed, generates first verified batch |
 | **Financial regulation** (holding/disbursing funds) | We're the tech/verification layer; disbursement via **licensed MoMo provider** |
 | **Overselling carbon certification** | Verra/Gold Standard demand additionality + permanence; scattered smallholder trees are hard to certify → Phase 3, framed as long-term |
 | **Young seedlings look alike** | Physical tag + context shot + GPS + four-signal fusion; confidence rises with maturity |
@@ -242,12 +242,12 @@ An existing US-founded NGO platform. Growers take geotagged photos of trees; ima
 
 ---
 
-## 12. Evidence base (verified - cite these, don't invent new ones)
+## 12. Evidence base (verified — cite these, don't invent new ones)
 
 ### Problem
 - ~**42 million trees** planted under Green Ghana Day since 2021.
 - Official average survival ~**73.3%** (67% 2021, 72% 2022, 81% 2023) → **10M+ dead trees** by official count.
-- Independent monitoring worse: Compassion International Ghana tracked its own planting - only **8,030 of 16,670 survived (~48%)**.
+- Independent monitoring worse: Compassion International Ghana tracked its own planting — only **8,030 of 16,670 survived (~48%)**.
 - A Forestry Commission manager attributed first-year poor survival to **weak monitoring**.
 
 ### Market
@@ -264,35 +264,35 @@ An existing US-founded NGO platform. Growers take geotagged photos of trees; ima
 
 ---
 
-## 13. Regulatory drivers (verified - note the honest framing)
+## 13. Regulatory drivers (verified — note the honest framing)
 
-**Critical:** **No law orders a company to plant a tree.** What regulation does is force large companies to **measure, disclose and stand behind** their carbon claims - and build the official market infrastructure verified trees plug into. Overclaiming here destroys credibility.
+**Critical:** **No law orders a company to plant a tree.** What regulation does is force large companies to **measure, disclose and stand behind** their carbon claims — and build the official market infrastructure verified trees plug into. Overclaiming here destroys credibility.
 
 ### Ghana
-- **Environmental Protection Act, 2025 (Act 1124)** - assented **6 January 2025**. Creates the statutory **Carbon Markets Office (CMO)** and the digital **Ghana Carbon Registry (GCR)**, tracking mitigation activities at sector, city and corporate levels. Ghana has now built official "trust infrastructure" for carbon - our verified-tree data is exactly what it needs.
-- **Bank of Ghana Climate-Related Financial Risk Directive** - issued **Nov 2024**, effective **Jan 2026** for banks (Jan 2027 others). **Mandatory** climate-risk management; banks must **disclose climate risks in audited financial statements and annual reports**. Every bank we'd approach as a sponsor sits under this.
-- **REDD+ / FCPF** - Ghana paid **USD 4.86M for 972,456 tonnes** reduced (first monitoring period); eligible for up to **USD 50M** for 10M tonnes.
-- **Article 6.2, Paris Agreement** - Ghana was the **first African country** to execute an Article 6.2 transfer, selling verified reductions to **Switzerland on 8 July 2025**.
-- **GSE ESG Disclosure Guidance Manual (2022)** - *honest note:* **largely voluntary**, not a hard mandate. Use as context only.
+- **Environmental Protection Act, 2025 (Act 1124)** — assented **6 January 2025**. Creates the statutory **Carbon Markets Office (CMO)** and the digital **Ghana Carbon Registry (GCR)**, tracking mitigation activities at sector, city and corporate levels. Ghana has now built official "trust infrastructure" for carbon — our verified-tree data is exactly what it needs.
+- **Bank of Ghana Climate-Related Financial Risk Directive** — issued **Nov 2024**, effective **Jan 2026** for banks (Jan 2027 others). **Mandatory** climate-risk management; banks must **disclose climate risks in audited financial statements and annual reports**. Every bank we'd approach as a sponsor sits under this.
+- **REDD+ / FCPF** — Ghana paid **USD 4.86M for 972,456 tonnes** reduced (first monitoring period); eligible for up to **USD 50M** for 10M tonnes.
+- **Article 6.2, Paris Agreement** — Ghana was the **first African country** to execute an Article 6.2 transfer, selling verified reductions to **Switzerland on 8 July 2025**.
+- **GSE ESG Disclosure Guidance Manual (2022)** — *honest note:* **largely voluntary**, not a hard mandate. Use as context only.
 
 ### International
-- **EU CSRD** - large companies must publicly report environmental performance against standardised, independently-assured standards. The **2025 "Omnibus"** narrowed scope (now 1,000+ employees and >€450m turnover; ~90% fewer firms in scope) - but those remaining are the **largest, most reputation-sensitive buyers**. Reaches **non-EU companies** earning >€450m in the EU with a qualifying subsidiary.
-- **EU CSDDD** - beyond reporting: largest firms (5,000+ employees, >€1.5bn turnover) must identify and address environmental harm across supply chains, phasing in **2028–2029**. *Honest caveat:* the Omnibus **removed** the CSDDD obligation to adopt climate transition plans - do **not** claim it forces transition plans.
+- **EU CSRD** — large companies must publicly report environmental performance against standardised, independently-assured standards. The **2025 "Omnibus"** narrowed scope (now 1,000+ employees and >€450m turnover; ~90% fewer firms in scope) — but those remaining are the **largest, most reputation-sensitive buyers**. Reaches **non-EU companies** earning >€450m in the EU with a qualifying subsidiary.
+- **EU CSDDD** — beyond reporting: largest firms (5,000+ employees, >€1.5bn turnover) must identify and address environmental harm across supply chains, phasing in **2028–2029**. *Honest caveat:* the Omnibus **removed** the CSDDD obligation to adopt climate transition plans — do **not** claim it forces transition plans.
 
-**Defensible line for judges:** *"No single law orders a company to plant a tree. But a wave of regulation - Ghana's EPA Act 2025 and Bank of Ghana climate directive, and the EU's CSRD and CSDDD - now forces large companies to measure, disclose and stand behind their carbon claims under independent assurance. That turns vague tree-planting PR into a legal-grade reporting problem, and the market pays a premium for proof. GreenProof sells the proof."*
+**Defensible line for judges:** *"No single law orders a company to plant a tree. But a wave of regulation — Ghana's EPA Act 2025 and Bank of Ghana climate directive, and the EU's CSRD and CSDDD — now forces large companies to measure, disclose and stand behind their carbon claims under independent assurance. That turns vague tree-planting PR into a legal-grade reporting problem, and the market pays a premium for proof. GreenProof sells the proof."*
 
 ---
 
 ## 14. SDG alignment
 
-Lead with the first four - they tell the "climate + livelihoods" story in one breath.
+Lead with the first four — they tell the "climate + livelihoods" story in one breath.
 
-- **SDG 13 - Climate Action.** Verified carbon sequestration, credible climate finance.
-- **SDG 15 - Life on Land.** Reforestation, halting land degradation - most direct fit.
-- **SDG 8 - Decent Work & Economic Growth.** Planter income, nursery jobs, tree rangers.
-- **SDG 1 - No Poverty.** MoMo payouts turn surviving trees into rural income and an inheritable asset.
-- **SDG 17 - Partnerships for the Goals.** Government + nurseries + corporates + communities on one platform.
-- **SDG 9 - Industry, Innovation & Infrastructure.** The AI verification engine itself.
+- **SDG 13 — Climate Action.** Verified carbon sequestration, credible climate finance.
+- **SDG 15 — Life on Land.** Reforestation, halting land degradation — most direct fit.
+- **SDG 8 — Decent Work & Economic Growth.** Planter income, nursery jobs, tree rangers.
+- **SDG 1 — No Poverty.** MoMo payouts turn surviving trees into rural income and an inheritable asset.
+- **SDG 17 — Partnerships for the Goals.** Government + nurseries + corporates + communities on one platform.
+- **SDG 9 — Industry, Innovation & Infrastructure.** The AI verification engine itself.
 - Also supported: **SDG 12** (offset integrity), **SDG 11** (urban greening).
 
 ---
@@ -316,6 +316,6 @@ Lead with the first four - they tell the "climate + livelihoods" story in one br
 - **Don't re-open settled decisions** (§4 seedling model, §5 revenue sequencing, §3 four-signal design). They were stress-tested deliberately.
 - **Optimise for the demo, not for production.** A thin vertical slice that runs live beats a well-architected system that isn't finished.
 - **Free tools only.** No paid APIs, no paid hosting, no paid model training.
-- **Be honest about technical limits.** Especially young-seedling matching - the team must be able to defend accuracy claims live. Don't let the build imply accuracy the model doesn't have.
+- **Be honest about technical limits.** Especially young-seedling matching — the team must be able to defend accuracy claims live. Don't let the build imply accuracy the model doesn't have.
 - **The map and dashboards matter more than they look.** They're the visual payoff on stage, and they play to the team's data-visualisation strength.
 - **Deadline-driven:** ~1 month. Prioritise ruthlessly; ship the loop first, polish later.

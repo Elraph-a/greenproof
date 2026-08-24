@@ -3,14 +3,14 @@ import { useAuth } from '../auth/AuthProvider'
 import { Icon, type IconName } from './Icon'
 
 /**
- * App chrome - built to docs/design/v2.
+ * App chrome — built to docs/design/v2.
  *
  * A five-item bottom bar sitting flush on white, with the active item marked by
  * colour AND a dot beneath the label. Deliberately not the floating pill of the
  * previous version: the reference screens keep the bar quiet so the white cards
  * stay the loudest thing on screen.
  *
- * Colour alone is not enough for the active state - at arm's length in sunlight
+ * Colour alone is not enough for the active state — at arm's length in sunlight
  * a shift between two greens is invisible, but a shape appearing is not.
  */
 
@@ -19,7 +19,7 @@ type Tab = { to: string; label: string; icon: IconName }
 /**
  * Two different products share one shell.
  *
- * A planter's tabs are verbs - register, check in. A sponsor never does either;
+ * A planter's tabs are verbs — register, check in. A sponsor never does either;
  * their tabs are evidence. Showing a sponsor a camera button would be the
  * clearest possible signal that we had not thought about them.
  */

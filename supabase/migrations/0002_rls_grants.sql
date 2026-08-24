@@ -1,4 +1,4 @@
--- GreenProof - row level security + column grants
+-- GreenProof — row level security + column grants
 -- Split from 0001 to mirror the Youth Management System migration layout.
 
 -- ---------------------------------------------------------------------------
@@ -30,7 +30,7 @@ create policy "register tree" on trees for insert to authenticated
   with check (auth.uid() = registered_by);
 
 -- Owners may edit their own trees' descriptive fields. Note this cannot change
--- status or confidence - those columns are not granted to clients (see below).
+-- status or confidence — those columns are not granted to clients (see below).
 create policy "own tree update" on trees for update to authenticated
   using (auth.uid() = owner_id);
 
@@ -44,7 +44,7 @@ create policy "own ledger" on ledger_entries for select to authenticated
   using (auth.uid() = user_id);
 
 -- ---------------------------------------------------------------------------
--- Column-level grants - the part that actually stops forged verdicts
+-- Column-level grants — the part that actually stops forged verdicts
 -- ---------------------------------------------------------------------------
 -- RLS controls WHICH ROWS you touch. It cannot stop you writing a particular
 -- COLUMN. So we revoke everything, then grant back only the columns a client is

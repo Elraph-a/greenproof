@@ -4,7 +4,7 @@
  * Insert types deliberately omit every column the client is not GRANTed, so
  * attempting to write `verdict` or `confidence` is a compile error here rather
  * than a silent permission failure at runtime. The database is still the real
- * enforcement - this just moves the mistake to the earliest possible moment.
+ * enforcement — this just moves the mistake to the earliest possible moment.
  */
 
 export type TreeStatus = 'pending' | 'alive' | 'flagged' | 'dead'
@@ -163,7 +163,7 @@ export type SponsorshipInsert = {
  *
  * A `type` and not an `interface`, like every other Row here. An interface has
  * no implicit index signature, so it fails the Database generic's constraint
- * and collapses EVERY table's types to `never` - an error that surfaces
+ * and collapses EVERY table's types to `never` — an error that surfaces
  * hundreds of lines away from the cause.
  */
 export type AppConfigRow = {
@@ -210,7 +210,7 @@ export type PlotSurvivalRow = {
  * happened the first time this file was written.
  *
  * `Update: Record<string, never>` on checkins encodes "clients never update a
- * check-in" - there is no update RLS policy for it, so this makes the database's
+ * check-in" — there is no update RLS policy for it, so this makes the database's
  * rule visible in the type system rather than discovered at runtime.
  */
 export type Database = {
@@ -237,7 +237,7 @@ export type Database = {
       ledger_entries: {
         Row: LedgerEntry
         // No client insert. Money appears ONLY via the accrue_on_verified
-        // trigger on a verified check-in - see migration 0007. You cannot pay
+        // trigger on a verified check-in — see migration 0007. You cannot pay
         // yourself; you can only pass verification.
         Insert: Record<string, never>
         Update: Record<string, never>
@@ -252,7 +252,7 @@ export type Database = {
       sponsorships: {
         Row: Sponsorship
         Insert: SponsorshipInsert
-        // `status` and `momo_ref` are not granted - a client cannot mark its
+        // `status` and `momo_ref` are not granted — a client cannot mark its
         // own pledge paid. See migration 0009.
         Update: Record<string, never>
         Relationships: []
@@ -287,7 +287,7 @@ export type Database = {
       }
       /**
        * The only way a client may change its own role, and it accepts just the
-       * two self-service values. `reviewer` is administrative - see 0009.
+       * two self-service values. `reviewer` is administrative — see 0009.
        */
       set_my_role: {
         Args: { p_role: UserRole }

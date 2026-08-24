@@ -6,7 +6,7 @@
  *    previous check-in's timestamp, "impossible travel speed".
  *  - Compass heading is recorded at registration so the next visit can say
  *    "stand here, face this way". Reproducing framing is the cheapest available
- *    improvement to image matching - the spike found matching partly works off
+ *    improvement to image matching — the spike found matching partly works off
  *    the background, which only helps if the background is the same background.
  *
  * NOTE: both APIs require a secure context. They silently do nothing over plain
@@ -67,7 +67,7 @@ export type GeoState = 'idle' | 'locating' | 'ready' | 'denied' | 'unavailable'
  * Accuracy at or below this is good enough to register.
  *
  * A consumer phone under open sky settles around 4–8 m. Under canopy it can sit
- * at 15–30 m, which is wider than the spacing between neighbouring trees - so
+ * at 15–30 m, which is wider than the spacing between neighbouring trees — so
  * accepting a poor fix would mean registering two trees at effectively the same
  * point and making the GPS gate meaningless afterwards.
  */
@@ -110,7 +110,7 @@ export function useGeolocation(active = true) {
           at: pos.timestamp,
         }
         const best = bestRef.current
-        // Accept if tighter, or if the current best is stale (>30 s) - the user
+        // Accept if tighter, or if the current best is stale (>30 s) — the user
         // may have walked to the next tree.
         if (!best || next.accuracy <= best.accuracy || next.at - best.at > 30_000) {
           bestRef.current = next
@@ -159,7 +159,7 @@ type PermissionCapableCtor = {
  * Two incompatible platform behaviours:
  *  - iOS Safari fires `deviceorientation` carrying `webkitCompassHeading`,
  *    already a true heading. It requires an explicit permission grant that must
- *    originate in a user gesture - hence `request()` rather than asking on mount.
+ *    originate in a user gesture — hence `request()` rather than asking on mount.
  *  - Android Chrome fires `deviceorientationabsolute` with `alpha` measured
  *    ANTICLOCKWISE from north, so the heading is `360 - alpha`. Getting this
  *    backwards is an easy and completely silent bug: the value looks plausible
@@ -196,7 +196,7 @@ export function useHeading(active = true) {
     }
   }, [])
 
-  /** Call from a click handler - iOS ignores it otherwise. */
+  /** Call from a click handler — iOS ignores it otherwise. */
   const request = useCallback(async () => {
     const ctor = window.DeviceOrientationEvent as unknown as PermissionCapableCtor
     if (typeof ctor?.requestPermission === 'function') {

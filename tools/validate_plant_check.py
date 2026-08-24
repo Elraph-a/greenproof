@@ -15,15 +15,15 @@ TWO WRONG VERSIONS OF THIS TEST CAME FIRST. Both are why this docstring is long.
      far from everything in embedding space, so separation looked perfect and
      meant nothing.
 
-  v2 used PlantNet-300K as the reference set and scored AUC 1.000 against COCO,
-     and then flagged 97% of OUR OWN photos as "not a plant". PlantNet images
+  v2 used PlantNet-300K as the reference set and scored AUC 1.000 against COCO
+     — and then flagged 97% of OUR OWN photos as "not a plant". PlantNet images
      are square cropped specimens; ours are 960x1280 wide shots of a whole tree
      with sky, ground and buildings in frame. The check had learned
      "cropped specimen vs wide scene", not "plant vs not-plant". An AUC of 1.000
      is the tell: real problems do not separate perfectly.
 
 THE REFERENCE SET MUST MATCH THE PHOTOS THE APP ACTUALLY CAPTURES. So the
-reference here is our own field photos, and the negatives are COCO - ordinary
+reference here is our own field photos, and the negatives are COCO — ordinary
 photographs of furniture, people, vehicles and rooms, which is what a chair
 photographed on a phone actually looks like.
 
@@ -147,7 +147,7 @@ def main() -> int:
     auc = float(roc_auc_score(y, np.r_[s_held, s_neg]))
 
     print("\n" + "=" * 66)
-    print(f"PLANT-PLAUSIBILITY CHECK - reference: {args.reference}")
+    print(f"PLANT-PLAUSIBILITY CHECK — reference: {args.reference}")
     print("=" * 66)
     print(f"  reference photos          {len(ref)}")
     print(f"  held-out same-domain      {len(held)}")

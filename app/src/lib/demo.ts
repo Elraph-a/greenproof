@@ -1,5 +1,5 @@
 /**
- * LOCAL DEMO DATA - localhost only, never touches Supabase.
+ * LOCAL DEMO DATA — localhost only, never touches Supabase.
  *
  * Why this exists: exercising a screen needs data, and seeding real data means
  * uploading photos into Supabase Storage. The free allowance is the most likely
@@ -11,7 +11,7 @@
  * reads env only at startup).
  *
  * SAFETY: every write path checks this flag and refuses. Demo mode cannot
- * create a tree, upload a photo, or move money - if it could, a stray demo
+ * create a tree, upload a photo, or move money — if it could, a stray demo
  * build would pollute the pilot data we are about to spend four weeks
  * collecting.
  */
@@ -21,7 +21,7 @@ import type { TreeWithLatest } from './trees'
 
 export const DEMO = import.meta.env.VITE_DEMO === '1'
 
-/** Photos are served straight from app/public/demo - no signed URLs, no network. */
+/** Photos are served straight from app/public/demo — no signed URLs, no network. */
 const P = (n: number) => `/demo/tree${n}.jpg`
 
 const DAY = 86_400_000
@@ -41,7 +41,7 @@ export const demoProfile: Profile = {
 
 /**
  * Eight trees, matching the reference screen: 4 verified, 1 needing review,
- * 1 flagged, 2 not yet checked. Deliberately NOT all healthy - a grove of
+ * 1 flagged, 2 not yet checked. Deliberately NOT all healthy — a grove of
  * uniformly verified trees demonstrates nothing about detecting death, and the
  * screens that matter most are the unhappy ones.
  */
@@ -108,7 +108,7 @@ export const demoEarnings = new Map(
 )
 
 /* Sorted newest-first to match the real query's `.order('created_at',
-   { ascending: false })` - an unordered ledger is the fastest way for a demo
+   { ascending: false })` — an unordered ledger is the fastest way for a demo
    to read as fake. ISO timestamps compare correctly as strings. */
 export const demoLedger: LedgerEntry[] = SEEDS.flatMap((s, i) =>
   s.earned === 0
@@ -127,7 +127,7 @@ export const demoLedger: LedgerEntry[] = SEEDS.flatMap((s, i) =>
       ],
 ).sort((a, b) => b.created_at.localeCompare(a.created_at))
 
-/** Full visit history for one tree - the photo timeline on the detail screen. */
+/** Full visit history for one tree — the photo timeline on the detail screen. */
 export function demoCheckinsFor(treeId: string): Checkin[] {
   const idx = Number(treeId.replace('demo-tree-', '')) || 1
   const seed = SEEDS[idx - 1]
@@ -172,7 +172,7 @@ export function demoCheckinsFor(treeId: string): Checkin[] {
 
 /**
  * The verdict a demo check-in returns. Deliberately a PASS with a visible
- * margin rather than a perfect score - 87% with three named checks is what the
+ * margin rather than a perfect score — 87% with three named checks is what the
  * reveal screen is designed to explain, and a 100% result teaches nobody
  * anything about how the system decides.
  */

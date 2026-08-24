@@ -5,14 +5,14 @@ import { Icon } from '../components/Icon'
  * Full-bleed photograph, dark ground, content sitting on the lower third.
  *
  * NOTE ON COPY: the Stitch design captioned this "Web3 Verification" and
- * "Join the decentralized network". That is not what GreenProof is - there is
+ * "Join the decentralized network". That is not what GreenProof is — there is
  * no blockchain anywhere in the stack, and claiming one on the first screen
  * would be the first thing a technical judge pulled at. The layout is ours; so
  * are the words.
  *
  * NOTE ON THE GRADIENT: the photo is scrimmed to near-black at the bottom
  * rather than blurred. A blur costs a compositing layer on every scroll frame;
- * a gradient costs nothing and gives the same text contrast - which on this
+ * a gradient costs nothing and gives the same text contrast — which on this
  * screen has to survive a projector in a lit room.
  */
 export function Landing() {
@@ -20,7 +20,7 @@ export function Landing() {
     <div className="relative flex min-h-dvh flex-col">
       {/*
         z-0, NOT -z-10. The .night scope paints its own background-color, and a
-        negatively-stacked child renders behind its parent's background - which
+        negatively-stacked child renders behind its parent's background — which
         made the photograph invisible while still downloading it.
       */}
       <div className="absolute inset-0 z-0">

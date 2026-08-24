@@ -29,7 +29,7 @@ hostname changes.
 
 ---
 
-## Bring it up - one command
+## Bring it up — one command
 
 ```
 python tools/start_demo.py
@@ -75,7 +75,7 @@ Work down this list. Every item has failed for somebody at some point.
 - [ ] **On the venue wifi**, not tethered to a phone you will also be demoing on.
 - [ ] `python tools/start_demo.py` → wait for **READY**.
 - [ ] **Open the app on your phone and check in one tree.** Not a browser tab on
-      the laptop - the actual phone, on the actual network. This is the only
+      the laptop — the actual phone, on the actual network. This is the only
       test that proves the whole path.
 - [ ] Confirm the verdict comes back within ~10 seconds.
 - [ ] Leave the app open on the tree you will demo from.
@@ -85,7 +85,7 @@ Work down this list. Every item has failed for somebody at some point.
 ## If something breaks
 
 **Verdict never arrives, spinner keeps going.**
-The check-in is safe - it is uploaded and sitting at `pending`. Nothing is lost.
+The check-in is safe — it is uploaded and sitting at `pending`. Nothing is lost.
 Carry on talking; it can be scored afterwards with `tools/score_pilot.py`. This
 is designed behaviour, not a failure: see the comment at the top of
 `app/src/lib/ml.ts`.
@@ -110,7 +110,7 @@ Expect `{"ok":true,"model_ready":true,"supabase_configured":true}`.
 
 ## The fallback, and how to use it well
 
-**If the network fails, do not apologise for it - use it.**
+**If the network fails, do not apologise for it — use it.**
 
 Open a tree that was scored during the pilot and walk through its `signals`
 breakdown: which gates passed, what the confidence was, why it landed where it
@@ -123,7 +123,7 @@ project is built on, and a network failure on stage is that claim demonstrating
 itself. The honest line is:
 
 > *"The scoring service is unreachable right now, so this check-in is queued.
-> That is exactly what should happen - verification is asynchronous by design,
+> That is exactly what should happen — verification is asynchronous by design,
 > so a planter in a village with no signal is never blocked. It will score when
 > the connection returns."*
 
@@ -139,7 +139,7 @@ does not persist.
 
 The honest answer:
 
-> *"For the pilot this runs as one container we can host anywhere - we've run it
+> *"For the pilot this runs as one container we can host anywhere — we've run it
 > locally and it deploys unchanged to any container platform. We didn't put it
 > on a paid host because nothing about the pilot required it: scoring is
 > asynchronous, so the service being up is never on the critical path."*

@@ -33,7 +33,7 @@ export function Screen({
   onBack?: () => void
   children: ReactNode
   footer?: ReactNode
-  /** Skip body padding - for full-bleed screens like the map. */
+  /** Skip body padding — for full-bleed screens like the map. */
   bare?: boolean
 }) {
   return (
@@ -82,7 +82,7 @@ export function PageTitle({ children }: { children: ReactNode }) {
 }
 
 /* ---------------------------------------------------------------------------
-   Hero and stats - the focal point vocabulary.
+   Hero and stats — the focal point vocabulary.
 
    Every screen gets exactly ONE hero. The old layout gave My Grove three stats
    at equal weight in a bordered strip, so the screen had no subject and the
@@ -106,7 +106,7 @@ export function HeroCard({
   value: ReactNode
   foot?: ReactNode
   badge?: ReactNode
-  /** Gold-lit variant - for money, rather than the default green-lit. */
+  /** Gold-lit variant — for money, rather than the default green-lit. */
   accent?: boolean
   children?: ReactNode
 }) {
@@ -137,7 +137,7 @@ export function HeroCard({
   )
 }
 
-/** Small pill for the hero's top-right corner - a trend, a grade, a count. */
+/** Small pill for the hero's top-right corner — a trend, a grade, a count. */
 export function HeroBadge({
   children,
   tone = 'neutral',
@@ -183,7 +183,7 @@ export function StatCell({
   /*
    * justify-between, not a plain stack. The grid stretches every cell to the
    * tallest, so a label that wraps to two lines ("Per living tree") used to
-   * push its own value down while its neighbours' values stayed up - three
+   * push its own value down while its neighbours' values stayed up — three
    * figures on two different baselines. Pinning labels to the top and values
    * to the bottom keeps the numbers on one line whatever the labels do.
    */
@@ -269,7 +269,7 @@ export function InfoNote({
   return <div className={`mt-3 rounded-lg p-3 ${cls}`}>{children}</div>
 }
 
-/** "Step 2 of 5" - the exported screens use it as the page title. */
+/** "Step 2 of 5" — the exported screens use it as the page title. */
 export function stepTitle(step: number, total: number): string {
   return `Step ${step} of ${total}`
 }

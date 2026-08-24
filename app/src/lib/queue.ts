@@ -1,5 +1,5 @@
 /**
- * OFFLINE REGISTRATION QUEUE - the T0 insurance policy.
+ * OFFLINE REGISTRATION QUEUE — the T0 insurance policy.
  *
  * On Monday you will register ~40 trees in one session, outdoors, on mobile
  * data, under tree canopy. Some uploads will fail. Without a queue, a failure
@@ -14,7 +14,7 @@
  * attempted, and only deleted once the database row exists. Everything in
  * between is retried.
  *
- * IndexedDB rather than localStorage because localStorage stores strings only -
+ * IndexedDB rather than localStorage because localStorage stores strings only —
  * two 60 KB JPEGs would have to be base64'd (+33%) into a 5 MB quota shared with
  * everything else. IndexedDB stores Blobs natively with a quota in the hundreds
  * of MB.
@@ -50,7 +50,7 @@ export interface PendingRegistration {
     heading_deg: number | null
     blur_score: number | null
     /**
-     * Optional, and optional on purpose - most T0 trees are not measured.
+     * Optional, and optional on purpose — most T0 trees are not measured.
      * Items queued before this field existed simply have it undefined, which
      * inserts as null; no migration of the IndexedDB queue is needed.
      */
@@ -68,7 +68,7 @@ export interface PendingRegistration {
    *
    * Submission is three steps (upload → insert tree → insert check-in) and a
    * connection can die between any two. Without recording the tree id, a retry
-   * after step 2 succeeded would insert the tree a SECOND time - giving one
+   * after step 2 succeeded would insert the tree a SECOND time — giving one
    * physical tree two rows at the same GPS point. That is exactly the condition
    * the "two people registered the same tree" proximity check is meant to
    * detect, so we would be manufacturing our own fraud signal and polluting the
@@ -138,7 +138,7 @@ export async function pendingCount(): Promise<number> {
 /**
  * Ask the browser not to evict our IndexedDB under storage pressure.
  *
- * Without this, a phone low on space can silently drop the queue - taking
+ * Without this, a phone low on space can silently drop the queue — taking
  * unuploaded trees with it. Chrome grants this automatically for installed
  * PWAs; on other browsers it may prompt or refuse, and refusal is not fatal.
  */

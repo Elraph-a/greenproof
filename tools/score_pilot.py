@@ -4,11 +4,11 @@
 WHY THIS EXISTS
 The verification service writes verdicts INTO Supabase; the app reads them OUT
 of Supabase. The two never talk directly. So the service does not have to be
-hosted anywhere for the pilot data to be scored - it only has to run somewhere
+hosted anywhere for the pilot data to be scored — it only has to run somewhere
 once. Your laptop is somewhere.
 
 Hosting buys exactly one thing: scoring a check-in live, on stage, while someone
-watches. Everything else - the map, the review queue, every number in the deck -
+watches. Everything else — the map, the review queue, every number in the deck —
 comes from rows this script writes.
 
     python tools/score_pilot.py                 # score everything pending
@@ -17,7 +17,7 @@ comes from rows this script writes.
 
 Credentials come from the environment, or from a .env file next to the repo
 root or in ml/. Needs SUPABASE_URL and SUPABASE_SERVICE_KEY (the service_role
-key - the anon key cannot write verdicts and will fail).
+key — the anon key cannot write verdicts and will fail).
 """
 
 from __future__ import annotations
@@ -118,7 +118,7 @@ def main() -> int:
     print(f"  {'TOTAL':<10} {total:>4}   in {(time.time()-started)/60:.1f} minutes")
 
     if failures:
-        print(f"\n{len(failures)} failed - these stay pending and can be re-run:")
+        print(f"\n{len(failures)} failed — these stay pending and can be re-run:")
         for cid, err in failures[:10]:
             print(f"  {cid[:8]}  {err}")
 

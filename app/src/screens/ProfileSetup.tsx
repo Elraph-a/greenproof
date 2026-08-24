@@ -12,7 +12,7 @@ import { ErrorNote, Spinner } from '../components/ui'
  *
  * The role choice is written through `set_my_role`, a SECURITY DEFINER
  * function that accepts only 'planter' or 'sponsor'. `profiles.role` itself is
- * not writable by a client - otherwise anyone could promote themselves to
+ * not writable by a client — otherwise anyone could promote themselves to
  * 'reviewer' and approve their own check-ins. See migration 0009.
  */
 export function ProfileSetup() {

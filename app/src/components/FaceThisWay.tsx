@@ -13,7 +13,7 @@ import { Icon } from './Icon'
  * signal in the system.
  */
 
-/** Within this many degrees, close enough - phone compasses are not better. */
+/** Within this many degrees, close enough — phone compasses are not better. */
 export const ALIGNED_WITHIN_DEG = 15
 
 interface Props {

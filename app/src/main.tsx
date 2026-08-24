@@ -9,7 +9,7 @@ import './index.css'
 
 
 // Ask the browser not to evict the pending-upload queue under storage
-// pressure. Fire and forget - refusal is not fatal.
+// pressure. Fire and forget — refusal is not fatal.
 void requestDurableStorage()
 
 // Read the scoring service URL from app_config. Deliberately not awaited: a

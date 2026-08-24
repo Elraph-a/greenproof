@@ -1,8 +1,8 @@
 """The individual detectors.
 
 Each is deliberately small, pure and independently testable. Five of the six
-fraud types in the attack set are caught here by ordinary deterministic code -
-not by the neural network - and that is the honest reason the system works.
+fraud types in the attack set are caught here by ordinary deterministic code —
+not by the neural network — and that is the honest reason the system works.
 """
 
 from __future__ import annotations
@@ -16,7 +16,7 @@ import numpy as np
 from PIL import Image
 
 # ---------------------------------------------------------------------------
-# Perceptual hash - the duplicate detector
+# Perceptual hash — the duplicate detector
 # ---------------------------------------------------------------------------
 
 PHASH_SIZE = 32
@@ -54,13 +54,13 @@ def hamming(a: str, b: str) -> int:
 
 
 # Below this many differing bits, treat two photos as the same image.
-# Provisional - recalibrate from the T0/round-1 distribution of genuine
+# Provisional — recalibrate from the T0/round-1 distribution of genuine
 # same-tree pairs, which must sit comfortably ABOVE it.
 DUPLICATE_MAX_HAMMING = 6
 
 
 # ---------------------------------------------------------------------------
-# Liveness - is this a living plant at all?
+# Liveness — is this a living plant at all?
 # ---------------------------------------------------------------------------
 
 
@@ -70,7 +70,7 @@ def excess_green(img: Image.Image) -> float:
     ExG = 2G - R - B on channels normalised per-pixel, which is the standard
     agronomy vegetation index for ordinary RGB cameras. Per-pixel normalisation
     is what makes it survive Ghanaian midday sun and deep shade in the same
-    frame - an absolute green threshold would not.
+    frame — an absolute green threshold would not.
 
     Catches: photographing a dead brown stick, a plank, or the ground.
     It does NOT prove the plant is the right plant. That is a different signal.
@@ -89,7 +89,7 @@ def liveness_score(frac: float) -> float:
     A healthy young tree in a wide shot typically fills 0.25-0.6 of the frame
     with vegetation; below ~0.05 there is essentially nothing living in view.
     Ramped rather than stepped so a leaf-dropping tree degrades smoothly instead
-    of falling off a cliff - the point is to flag decline, not to fail it.
+    of falling off a cliff — the point is to flag decline, not to fail it.
     """
     return float(np.clip((frac - 0.05) / (0.30 - 0.05), 0.0, 1.0))
 
@@ -135,7 +135,7 @@ def plant_reference() -> "np.ndarray | None":
 
 
 # ---------------------------------------------------------------------------
-# Scene match - ORB + RANSAC, corroborating the embedding
+# Scene match — ORB + RANSAC, corroborating the embedding
 # ---------------------------------------------------------------------------
 
 
@@ -183,7 +183,7 @@ def orb_inliers(a: Image.Image, b: Image.Image, max_side: int = 640) -> int:
 
 
 # ---------------------------------------------------------------------------
-# ArUco - turning a photo into millimetres
+# ArUco — turning a photo into millimetres
 # ---------------------------------------------------------------------------
 
 DEFAULT_MARKER_MM = 80.0
@@ -195,8 +195,8 @@ def find_aruco(img: Image.Image) -> dict | None:
     The marker solves two problems at once, which is why it beats holding up a
     coin or a ruler:
 
-      * SCALE - its real edge length is known, so we get mm per pixel
-      * TILT  - four corners of a known square let us see that the card was
+      * SCALE — its real edge length is known, so we get mm per pixel
+      * TILT  — four corners of a known square let us see that the card was
                 photographed at an angle. A plain rectangle cannot give this,
                 and an uncorrected 30 degree tilt is a ~15% error in width.
 
@@ -231,7 +231,7 @@ def trunk_width_mm(img: Image.Image, taps: dict | None) -> dict | None:
     Trunk width feeds the "a trunk cannot shrink" plausibility check, so a
     client-supplied width would let a forged request defeat that check.
 
-    Requires the ArUco marker to be visible in the same frame - without a known
+    Requires the ArUco marker to be visible in the same frame — without a known
     reference length a photo has no scale at all, and a thin trunk photographed
     close up is pixel-for-pixel identical to a thick one photographed far away.
 
@@ -277,7 +277,7 @@ def trunk_width_mm(img: Image.Image, taps: dict | None) -> dict | None:
 
 
 # ---------------------------------------------------------------------------
-# Canopy - the signal that actually moves in four weeks
+# Canopy — the signal that actually moves in four weeks
 # ---------------------------------------------------------------------------
 
 
@@ -289,7 +289,7 @@ def canopy_fraction(img: Image.Image) -> float:
     putting on leaf. This is the dying-tree detector, and it is why the pilot
     deliberately includes struggling trees.
 
-    Only comparable BETWEEN VISITS when framing is reproduced - which is what
+    Only comparable BETWEEN VISITS when framing is reproduced — which is what
     the compass heading and the ghost overlay exist to achieve.
     """
     return excess_green(img)

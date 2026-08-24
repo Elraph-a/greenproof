@@ -1,4 +1,4 @@
-# GreenProof - Roadmap
+# GreenProof — Roadmap
 
 **Today 28 July · Pitch 26 August · 29 days**
 
@@ -15,8 +15,8 @@ Those have very different accuracy numbers:
 
 | | |
 |---|---|
-| Image matching alone | 54% (measured) - modest |
-| The whole system | 90%+ expected - because five of six fraud types never reach the AI |
+| Image matching alone | 54% (measured) — modest |
+| The whole system | 90%+ expected — because five of six fraud types never reach the AI |
 
 Greenstand pays a human to look at every photo. We don't. **That** is the
 product, and it works whether or not the AI is brilliant.
@@ -32,14 +32,14 @@ product, and it works whether or not the AI is brilliant.
 | Right tree, wrong location | GPS distance check | No |
 | Dead brown stick | liveness (green fraction) | No |
 | Old gallery photo of that tree | duplicate check | No |
-| **Different tree, same spot** | **image matching** | **Yes - the only one** |
+| **Different tree, same spot** | **image matching** | **Yes — the only one** |
 
 Deterministic checks do the heavy lifting. The AI covers the residual case.
 Say this on stage; it is the honest reason the system works.
 
 ---
 
-## Measuring trees - the growth plausibility signal
+## Measuring trees — the growth plausibility signal
 
 A photo has no scale: a thin trunk close up looks like a thick trunk far away.
 Fix scale and this signal becomes real rather than a hand-wave.
@@ -47,18 +47,18 @@ Fix scale and this signal becomes real rather than a hand-wave.
 ### How we do it in the pilot
 
 **One printed ArUco marker (~80mm), reused for all 40 trees.** Not a tag on a
-tree - one card in the surveyor's pocket. OpenCV detects ArUco instantly and it
+tree — one card in the surveyor's pocket. OpenCV detects ArUco instantly and it
 solves two problems at once:
 
-- **scale** - the square's real width is known, so we get millimetres per pixel
-- **tilt** - four corners in a known square let us correct for photographing at
+- **scale** — the square's real width is known, so we get millimetres per pixel
+- **tilt** — four corners in a known square let us correct for photographing at
   an angle. A plain card cannot do this.
 
 Then **tap the two edges of the trunk on screen** → width in millimetres.
 Deliberately not automatic: finding trunk edges against a messy background is
 unreliable, and two taps take two seconds. It is still a real measurement.
 
-Measure at **1.3 m from the ground** - that is *diameter at breast height*, the
+Measure at **1.3 m from the ground** — that is *diameter at breast height*, the
 standard every forestry dataset in the world uses.
 
 ### The validation that makes this worth doing
@@ -82,10 +82,10 @@ demonstrate growth.** So the signal's job is catching the impossible:
 - a seedling that became a mature tree (someone swapped trees)
 - growth beyond any species' physical maximum
 
-### Canopy area - the signal that actually moves
+### Canopy area — the signal that actually moves
 
 **How much green the tree occupies in the wide shot.** Unlike trunk width, this
-changes in weeks - a stressed tree drops leaves, and July–August is the rainy
+changes in weeks — a stressed tree drops leaves, and July–August is the rainy
 season so healthy trees are putting on leaf.
 
 Framing is controlled by GPS + compass heading + ghost overlay, and we align the
@@ -102,25 +102,25 @@ The measurement technique changes; **the loop does not**.
 | Stage | How trunk width is measured |
 |---|---|
 | Pilot (now) | printed ArUco marker + tap two points |
-| Soon | any object people already carry - ID card (85.6 mm worldwide) or a banknote |
-| Production | **no object at all** - ARCore depth sensing in a native app |
+| Soon | any object people already carry — ID card (85.6 mm worldwide) or a banknote |
+| Production | **no object at all** — ARCore depth sensing in a native app |
 
 **And in production you do not measure every tree.** Every tree gets a photo
 check every visit (survival, payment, fraud). Only a **sample** gets physically
-measured, quarterly - which is how forest inventory has always worked and what
+measured, quarterly — which is how forest inventory has always worked and what
 carbon standards require.
 
-### Measuring a whole grove - three layers
+### Measuring a whole grove — three layers
 
 | Layer | What it gives | Who else has it |
 |---|---|---|
-| **Per-tree photos** | survival · payment attribution · fraud | **nobody - this is ours** |
+| **Per-tree photos** | survival · payment attribution · fraud | **nobody — this is ours** |
 | **Sample plots** | trunk/height → biomass estimates | industry standard |
-| **Satellite** | grove-level canopy and greening trend | Sentinel-2 free at 10 m - too coarse for one tree, fine for a grove |
+| **Satellite** | grove-level canopy and greening trend | Sentinel-2 free at 10 m — too coarse for one tree, fine for a grove |
 
 **Worth investigating: [Planet NICFI](https://www.planet.com/nicfi/).** Funded by Norway's
 International Climate & Forest Initiative, it provides **free high-resolution satellite imagery
-of the tropics** - Ghana included - at roughly 4–5 m, versus Sentinel-2's 10 m. Monthly mosaics,
+of the tropics** — Ghana included — at roughly 4–5 m, versus Sentinel-2's 10 m. Monthly mosaics,
 free for non-commercial monitoring use. Sharp enough to see canopy structure rather than just a
 greenness average, which would make the grove-level layer considerably more convincing. Check
 the licence terms before putting it in a slide.
@@ -137,9 +137,9 @@ That gap is the reason layer 1 exists.
 **Two numbers, both reported.** Reporting only the second looks like moving the
 goalposts; reporting only the first understates the product.
 
-1. **Open identification** - "find the tree among all of them." The hard
+1. **Open identification** — "find the tree among all of them." The hard
    academic framing. Currently 54% vs 5% chance.
-2. **GPS-scoped verification** - "the user claims tree #7 and is standing 3m
+2. **GPS-scoped verification** — "the user claims tree #7 and is standing 3m
    from it; is this consistent?" What the app actually does.
 
 **Plus the three that matter commercially:**
@@ -148,13 +148,13 @@ goalposts; reporting only the first understates the product.
 - genuine check-ins auto-approved
 - genuine check-ins wrongly rejected (annoying) vs fraud wrongly approved (fatal)
 
-**Thresholds are chosen by leave-one-tree-out cross-validation** - hold out one
+**Thresholds are chosen by leave-one-tree-out cross-validation** — hold out one
 tree, fit on the rest, test on the held-out one, repeat. Never tune and report on
 the same data.
 
 ---
 
-## The attack set - design this deliberately
+## The attack set — design this deliberately
 
 Six types, several attempts each, run against the live system in week 3 and
 reported as a plain table.
@@ -174,7 +174,7 @@ One of these gets performed **live on stage**.
 
 ## Week by week
 
-### Week 1 · 28 Jul – 3 Aug - capture path
+### Week 1 · 28 Jul – 3 Aug — capture path
 
 **Build:** Supabase project + schema · email sign-in · register a tree (wide +
 close-up, GPS, compass heading, blur check, 800px resize) · My Grove list ·
@@ -187,10 +187,10 @@ measure to T0 and record trunk width for ~20 trees**.
 **Done when:** you can register a tree on your phone, standing outside, and see
 it in a list.
 
-> **~31 Jul - T0. Register ~40 trees.** Site needs ≥15 of one species near each
+> **~31 Jul — T0. Register ~40 trees.** Site needs ≥15 of one species near each
 > other, and 5–8 visibly struggling trees.
 
-### Week 2 · 4 – 10 Aug - the verification engine
+### Week 2 · 4 – 10 Aug — the verification engine
 
 **Build:** ML service on Hugging Face Spaces (DINOv2 via onnxruntime) ·
 embeddings · duplicate detection · GPS + travel gates · liveness · confidence
@@ -205,9 +205,9 @@ GPS-scoped metric for the first time.
 
 **Done when:** a check-in produces a score and a verdict, live.
 
-> **~7 Aug - Check-in round 1**
+> **~7 Aug — Check-in round 1**
 
-### Week 3 · 11 – 17 Aug - proving it
+### Week 3 · 11 – 17 Aug — proving it
 
 **Build:** "why this score" breakdown · progressive signal reveal · review queue
 · live map.
@@ -219,34 +219,34 @@ numbers.
 **Done when:** you can state the fraud-catch rate and auto-approve rate from your
 own data.
 
-> **~14 Aug - Check-in round 2**
-> **CUT-LINE 17 Aug** - if register→check-in→score→map isn't solid, drop MoMo and
+> **~14 Aug — Check-in round 2**
+> **CUT-LINE 17 Aug** — if register→check-in→score→map isn't solid, drop MoMo and
 > NDVI and spend the rest on pilot and rehearsal.
 
-### Week 4 · 18 – 24 Aug - the rest of the story
+### Week 4 · 18 – 24 Aug — the rest of the story
 
 **Build:** sponsor dashboard (trees, % alive, survival curve) · wallet · MoMo
 sandbox behind a mock adapter · NDVI for the plot · random audits of
-auto-approvals · **leaderboards** (schools/churches/communities - promised in the
+auto-approvals · **leaderboards** (schools/churches/communities — promised in the
 submitted description, and it is a sorted query, about an hour).
 
-> **~21 Aug - Check-in round 3**
+> **~21 Aug — Check-in round 3**
 
-### Week 5 · 25 – 26 Aug - stage
+### Week 5 · 25 – 26 Aug — stage
 
-**~25 Aug - Check-in round 4.** The freshest number you quote.
+**~25 Aug — Check-in round 4.** The freshest number you quote.
 
 Rehearsals against the offline fallback, wifi off, twice. Backup video. Mock Q&A.
 Finish at 18–19 minutes, never 20.
 
-> **26 Aug - Pitch**
+> **26 Aug — Pitch**
 
 ---
 
 ## What you should be able to say on the day
 
 > *"We registered 40 real trees on 31 July and checked them four times over four
-> weeks - 160 check-ins. We also ran 20 deliberate fraud attempts across six
+> weeks — 160 check-ins. We also ran 20 deliberate fraud attempts across six
 > types. The system caught 19 of 20, auto-approved 85% of genuine visits, and
 > wrongly approved none. Those thresholds were cross-validated, so no tree
 > influenced the threshold it was tested against."*
@@ -255,7 +255,7 @@ And the limits, volunteered before anyone asks:
 
 - one site, one season, four weeks
 - 1–3 year old trees; fresh seedlings are harder and unmeasured
-- image matching alone is 54% - real signal, not identity. Tag-free by design.
+- image matching alone is 54% — real signal, not identity. Tag-free by design.
 
 ---
 
@@ -276,7 +276,7 @@ always going to score well in. Rebalance.
 
 ### Where the originality actually is
 
-The components are not novel - DINOv2 is off the shelf, GPS is GPS. But **nobody
+The components are not novel — DINOv2 is off the shelf, GPS is GPS. But **nobody
 in this field builds a verification system that knows and proves its own error
 rate.** Greenstand has humans check photos. TIST has humans count trees. veritree
 fuses satellite and drone. All of them *assert* their verification works. None
@@ -284,47 +284,47 @@ publish how often it is wrong.
 
 Four things to build and say, all true of what we are building anyway:
 
-1. **Identity as accumulated evidence** - not a tag or a fingerprint, but a chain
+1. **Identity as accumulated evidence** — not a tag or a fingerprint, but a chain
    of consistent observations that strengthens with every visit. A tree with four
    consistent check-ins is far harder to fake than one registration photo.
-2. **A system that tests itself continuously** - periodically inject known-bad
+2. **A system that tests itself continuously** — periodically inject known-bad
    check-ins to confirm the detectors still fire. Standard in payments and
    security; essentially unheard of in impact verification. About a day's work
    and the most original item here.
-3. **Publishing our own false-accept rate** - measured, cross-validated, stated
+3. **Publishing our own false-accept rate** — measured, cross-validated, stated
    out loud. Turns honesty from a defensive posture into a contribution.
-4. **Designed to degrade, not break** - tag gone, GPS poor, photo blurry: lower
+4. **Designed to degrade, not break** — tag gone, GPS poor, photo blurry: lower
    the confidence and route to a human rather than failing.
 
 **The line:** *"We didn't build a tree classifier. We built a verification system
 that measures its own reliability, tests itself continuously, and degrades
-safely - and we're the first to do that for reforestation."*
+safely — and we're the first to do that for reforestation."*
 
 ### Cheap points elsewhere
 
 - **Impact (25):** cover *financial* sustainability explicitly, not just
   environmental. Judges want to know it survives without grant money.
-- **Scalability (15):** put two numbers on a slide - Greenstand needs 100,000
+- **Scalability (15):** put two numbers on a slide — Greenstand needs 100,000
   human reviews for 100,000 trees; we need ~5,000.
 - **Clarity (10):** cheapest points on the board. Rehearse to 18 minutes, backup
   video, one named owner per likely question.
 
 ### On the submitted description
 
-**Do not change the idea.** The submitted text already says the right thing -
+**Do not change the idea.** The submitted text already says the right thing —
 *"no single signal is trusted alone"* is layered identity, and *"humans manually
 reviewing photos, which cannot scale"* is the automation argument. Refine
 execution, add rigour, keep the concept. Judges reward iteration; they punish
 bait-and-switch.
 
 Keep all four signals, keep the leaderboards promise, keep "AI-verified tree
-ownership" as the headline - the theme is *Innovate with AI*, so burying the AI
+ownership" as the headline — the theme is *Innovate with AI*, so burying the AI
 would cost points on the biggest criterion.
 
 ---
 
 ## Blocking right now
 
-1. **Supabase project** - 15 minutes, only you can do it
-2. **Plain screens now, or wait for Stitch?** - decides whether T0 lands 31 Jul
+1. **Supabase project** — 15 minutes, only you can do it
+2. **Plain screens now, or wait for Stitch?** — decides whether T0 lands 31 Jul
    (four rounds) or ~5 Aug (three rounds). Worth roughly half a point.

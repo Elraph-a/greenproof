@@ -16,12 +16,12 @@ payment can follow survival rather than planting.
 Everyone in reforestation verification asserts their verification works. **None
 of them publish how often it is wrong.**
 
-1. **Identity as accumulated evidence** - a chain of consistent observations,
+1. **Identity as accumulated evidence** — a chain of consistent observations,
    not a tag or a fingerprint
-2. **A system that tests itself** - known-bad check-ins injected to confirm the
+2. **A system that tests itself** — known-bad check-ins injected to confirm the
    detectors still fire
-3. **We publish our own false-accept rate** - measured, cross-validated
-4. **Designed to degrade, not break** - any signal can fail; confidence drops
+3. **We publish our own false-accept rate** — measured, cross-validated
+4. **Designed to degrade, not break** — any signal can fail; confidence drops
    and a human reviews
 
 ---
@@ -29,8 +29,8 @@ of them publish how often it is wrong.**
 ## Layout
 
 ```
-app/       React PWA (Vercel)          - capture, check-in, map, wallet
-ml/        FastAPI service (HF Spaces) - the only server-side surface
+app/       React PWA (Vercel)          — capture, check-in, map, wallet
+ml/        FastAPI service (HF Spaces) — the only server-side surface
 supabase/  Postgres schema + RLS + column grants
 spike/     the image-matching feasibility study and its findings
 tools/     icon and ArUco marker generators
@@ -42,7 +42,7 @@ data/      pilot and spike photos
 
 | Doc | What it is |
 |---|---|
-| [docs/SETUP.md](docs/SETUP.md) | accounts and keys - **do this first** |
+| [docs/SETUP.md](docs/SETUP.md) | accounts and keys — **do this first** |
 | [docs/DEPLOY.md](docs/DEPLOY.md) | deploy, field-test checklist, T0 plan |
 | [docs/ROADMAP.md](docs/ROADMAP.md) | week by week, and what each week produces |
 | [docs/DEFEND.md](docs/DEFEND.md) | one note per subsystem, written for Q&A |
@@ -70,10 +70,10 @@ python ml/calibrate.py           # LOTO cross-validation, fitted weights
 
 | | |
 |---|---|
-| Image matching, rank-1 | **54.2%** vs 5.1% chance - real signal, not identity |
-| Pooled AUC | 0.77 - bimodal: strong on distinctive trees, ~0 in a dense stand |
+| Image matching, rank-1 | **54.2%** vs 5.1% chance — real signal, not identity |
+| Pooled AUC | 0.77 — bimodal: strong on distinctive trees, ~0 in a dense stand |
 | pHash duplicate gate | 0 of 42 genuine pairs wrongly flagged; a re-encoded copy still scores 0 bits |
-| ORB/RANSAC | **measured and switched off** - no discrimination on real photos |
+| ORB/RANSAC | **measured and switched off** — no discrimination on real photos |
 | Trunk measurement | 60.3 mm against a true 60.0 mm on known geometry |
 | Verdict logic | a false accept on attack #4, **found and fixed** before any pilot data |
 
@@ -81,9 +81,9 @@ Full write-ups in [spike/FINDINGS.md](spike/FINDINGS.md).
 
 ## Non-negotiables
 
-- The client can **never** write its own verification result - enforced by
+- The client can **never** write its own verification result — enforced by
   Postgres column grants, not application code
-- Two scored photos per visit, **no tag in either** - a numbered card in frame
+- Two scored photos per visit, **no tag in either** — a numbered card in frame
   means the model may match the card
 - Tags are field convenience, **never identity**
 - Gates run **before** scoring; a gate failure is disqualifying

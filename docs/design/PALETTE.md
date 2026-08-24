@@ -1,6 +1,6 @@
 # Palette
 
-Fill in whatever Stitch gives you. Leave the rest blank - anything blank keeps
+Fill in whatever Stitch gives you. Leave the rest blank — anything blank keeps
 its current value, so a half-filled file is still useful.
 
 These map directly onto the `@theme` block in
@@ -47,7 +47,7 @@ What the app uses right now, so you can see what each one actually controls:
 | Needs review | `#a15c07` | verdict card, overdue check-ins, pending banner |
 | Flagged | `#b3261e` | verdict card, failed checks, reject button |
 
-**One constraint worth keeping.** Muted text is deliberately dark - 7.1:1
+**One constraint worth keeping.** Muted text is deliberately dark — 7.1:1
 against the background. The usual `#9ca3af` grey is unreadable in direct sun,
 which is the single most common mobile-in-sunlight failure and this app is used
 standing in a field at midday. If Stitch hands back a pale grey for secondary

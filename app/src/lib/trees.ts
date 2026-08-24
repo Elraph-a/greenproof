@@ -64,7 +64,7 @@ export function nextCheckinDue(lastIso: string): {
 /**
  * My Grove's list.
  *
- * One query with an embedded child select rather than N+1 - on a phone, forty
+ * One query with an embedded child select rather than N+1 — on a phone, forty
  * follow-up requests is several seconds of blank screen. Supabase returns the
  * check-ins nested, and we pick the newest client-side because PostgREST cannot
  * express "latest child per parent" without a view.
@@ -108,7 +108,7 @@ export async function getTree(id: string): Promise<Tree | null> {
   return (data as Tree | null) ?? null
 }
 
-/** Full visit history, oldest first - the photo timeline reads left to right. */
+/** Full visit history, oldest first — the photo timeline reads left to right. */
 export async function listCheckins(treeId: string): Promise<Checkin[]> {
   if (DEMO) return demoCheckinsFor(treeId)
 
@@ -122,7 +122,7 @@ export async function listCheckins(treeId: string): Promise<Checkin[]> {
 }
 
 // ---------------------------------------------------------------------------
-// Proximity - "is there already a tree here?"
+// Proximity — "is there already a tree here?"
 // ---------------------------------------------------------------------------
 
 /**
@@ -145,14 +145,14 @@ export interface NearbyRegisteredTree extends Tree {
 }
 
 /**
- * Trees already registered near a point, closest first - ACROSS ALL OWNERS.
+ * Trees already registered near a point, closest first — ACROSS ALL OWNERS.
  *
  * Deliberately not scoped to the current user. One physical tree registered by
  * two different people is the double-payment case, and scoping this query to
  * `owner_id` would miss precisely that. `trees readable ... using (true)` in
  * migration 0002 already permits the read, so this needs no new RPC.
  *
- * WHAT THIS IS AND IS NOT. It is a UX guard that stops an honest mistake - the
+ * WHAT THIS IS AND IS NOT. It is a UX guard that stops an honest mistake — the
  * surveyor who walks back to a tree they already did. It is NOT a security
  * gate: it runs on the client and anyone can skip it. The gate that catches a
  * DELIBERATE double-registration has to run server-side, next to the other
@@ -197,7 +197,7 @@ export async function findTreesNear(
         last_wide_url: null as string | null,
       }
     })
-    // The box is a square and the radius is a circle - the corners are further
+    // The box is a square and the radius is a circle — the corners are further
     // away than radiusM, so the real distance still has to be checked.
     .filter((t) => t.distance_m <= radiusM)
     .sort((a, b) => a.distance_m - b.distance_m)

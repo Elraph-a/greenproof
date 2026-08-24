@@ -1,7 +1,7 @@
 """Generate the PWA icons.
 
 Placeholder art: a deep-forest circle with a simple sapling. Replace with the
-real mark once Stitch produces one - regenerate by editing FOREST/LEAF below and
+real mark once Stitch produces one — regenerate by editing FOREST/LEAF below and
 re-running. Kept as a script rather than committed binaries so the icon is
 reproducible and matches the design tokens in app/src/index.css.
 
@@ -15,7 +15,7 @@ from PIL import Image, ImageDraw
 OUT = Path(__file__).resolve().parent.parent / "app" / "public"
 
 # Kept in sync BY HAND with the @theme block in app/src/index.css. The icons are
-# raster PNGs, so a palette change does not reach them until this is re-run -
+# raster PNGs, so a palette change does not reach them until this is re-run —
 # which is exactly how they were left showing the old dark green for a week.
 FOREST = (20, 67, 44)  # --color-primary   #14432c
 SPROUT = (127, 217, 180)  # --color-inverse-primary #7fd9b4
@@ -70,7 +70,7 @@ def main() -> None:
         draw_icon(size, maskable=size == 512).save(OUT / f"icon-{size}.png")
         print(f"wrote {OUT / f'icon-{size}.png'}")
 
-    # Apple touch icon - iOS ignores the web manifest for the home-screen icon.
+    # Apple touch icon — iOS ignores the web manifest for the home-screen icon.
     draw_icon(180, maskable=False).save(OUT / "apple-touch-icon.png")
     print(f"wrote {OUT / 'apple-touch-icon.png'}")
 

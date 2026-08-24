@@ -4,8 +4,8 @@
     python ml/test_scoring.py            # runs without pytest too
 
 WHY THESE EXIST
-Testing found the system AUTO-APPROVING attack #4 - "a different tree
-photographed at the correct GPS" - at 75/100, because a plain weighted sum let
+Testing found the system AUTO-APPROVING attack #4 — "a different tree
+photographed at the correct GPS" — at 75/100, because a plain weighted sum let
 location, liveness and growth compensate for a scene_match of zero. That is the
 one attack the AI is actually responsible for, and the one error class that is
 fatal rather than annoying.
@@ -47,7 +47,7 @@ NOW = datetime(2026, 8, 8, 10, 0, tzinfo=timezone.utc)
 LAT, LNG = 5.65050, -0.19620
 
 CLEAN = "0" * 16
-FAR = "f" * 16  # 64 bits different - nothing like any stored photo
+FAR = "f" * 16  # 64 bits different — nothing like any stored photo
 
 
 def build(
@@ -103,7 +103,7 @@ def test_dense_stand_weak_match_still_verifies():
 
     The spike measured image matching as near-zero inside a dense stand of one
     species. If a weak-but-real match were vetoed, every tree in a plantation
-    would go to a human - destroying the scalability claim that we need ~5,000
+    would go to a human — destroying the scalability claim that we need ~5,000
     reviews where Greenstand needs 100,000.
     """
     r = build(cos_w=0.44, cos_c=0.40)
@@ -148,7 +148,7 @@ def test_different_tree_at_correct_gps_is_not_auto_approved():
 
     Every gate passes. Location, liveness and growth are perfect. Only the
     scene match fails. Before CRITICAL_FLOORS this scored 75/100 and was
-    auto-approved - a false accept on the single attack that needs the AI.
+    auto-approved — a false accept on the single attack that needs the AI.
     """
     r = build(cos_w=0.30, cos_c=0.28)
     assert r.verdict != "verified", r.signals
@@ -205,7 +205,7 @@ def test_gate_failure_overrides_perfect_scores():
 
 
 # ---------------------------------------------------------------------------
-# Proximity - one physical tree registered twice
+# Proximity — one physical tree registered twice
 #
 # The pilot produced this for real: the same trunk was photographed twice and
 # became two tree rows, because nothing looked. These tests are the regression.

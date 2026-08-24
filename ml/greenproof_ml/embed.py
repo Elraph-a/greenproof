@@ -1,7 +1,7 @@
 """DINOv2 embeddings via ONNX Runtime.
 
 Preprocessing is deliberately IDENTICAL to spike/measure.py. That file produced
-the numbers we publish - rank-1 54.2%, AUC 0.77 - and if production resized or
+the numbers we publish — rank-1 54.2%, AUC 0.77 — and if production resized or
 normalised differently, those numbers would no longer describe this system. The
 published figure has to be a measurement of the thing we shipped.
 
@@ -25,7 +25,7 @@ MODEL_REPO = "onnx-community/dinov2-small"
 IMG_SIZE = 224
 EMBED_DIM = 384
 
-# ImageNet statistics - what DINOv2 was trained with.
+# ImageNet statistics — what DINOv2 was trained with.
 _MEAN = np.array([0.485, 0.456, 0.406], dtype=np.float32)
 _STD = np.array([0.229, 0.224, 0.225], dtype=np.float32)
 
@@ -78,8 +78,8 @@ def preprocess(img: Image.Image, watermark_crop: float = 0.0) -> np.ndarray:
         img = img.crop((0, 0, w, int(h * (1 - watermark_crop))))
 
     # Resize the WHOLE frame rather than centre-cropping. For the wide shot the
-    # surroundings are a large part of the signal - the spike showed matching
-    # works partly off the background - and a centre crop throws exactly that
+    # surroundings are a large part of the signal — the spike showed matching
+    # works partly off the background — and a centre crop throws exactly that
     # away.
     img = img.resize((IMG_SIZE, IMG_SIZE), Image.BICUBIC)
     a = np.asarray(img, dtype=np.float32) / 255.0

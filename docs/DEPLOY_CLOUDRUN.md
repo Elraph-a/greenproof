@@ -1,4 +1,4 @@
-# Cloud Run - optional, and blocked
+# Cloud Run — optional, and blocked
 
 > ## ⚠️ This is NOT the document for the pitch.
 >
@@ -32,7 +32,7 @@ If billing ever clears, the rest of this page is the deployment.
 **Do this first.** A billing account charges automatically once you leave the
 free tier, with no prompt.
 
-Budget **alerts do not stop anything** - Google's own docs say they "don't
+Budget **alerts do not stop anything** — Google's own docs say they "don't
 automatically prevent the use or billing of your services". They are emails.
 Cloud Run is one of the few services supporting a real **spend cap**, which
 pauses the service instead.
@@ -58,7 +58,7 @@ bills roughly **$60–70/month**.
 Per month: 2,000,000 requests · 180,000 vCPU-seconds · 360,000 GiB-seconds.
 
 Scoring a check-in costs about 15 seconds of container time. **160 check-ins is
-roughly 1.3% of the compute allowance** - the whole pilot could be re-scored
+roughly 1.3% of the compute allowance** — the whole pilot could be re-scored
 fifty times over and stay inside it.
 
 **Region: `us-central1`.** Google's free-tier page states a North America
@@ -70,7 +70,7 @@ irrelevant when scoring takes seconds.
 
 ## Deploy
 
-Push to GitHub first - Cloud Build builds from the repository, so anything
+Push to GitHub first — Cloud Build builds from the repository, so anything
 uncommitted will not deploy.
 
 1. Enable **Cloud Run**, **Cloud Build**, **Artifact Registry**
@@ -100,7 +100,7 @@ uncommitted will not deploy.
 `SUPABASE_SERVICE_KEY` must be a **secret**. It can write any verdict for any
 tree; it is the one value here that must not leak.
 
-`ALLOWED_ORIGINS` defaults to `*` if unset, which is safe - the endpoints carry
+`ALLOWED_ORIGINS` defaults to `*` if unset, which is safe — the endpoints carry
 no secrets a caller could extract, and every verdict is derived from stored
 photos rather than the request body.
 
@@ -132,7 +132,7 @@ gcloud run services update greenproof-ml --region us-central1 \
 curl https://<service-url>/health
 ```
 
-Then point the app at it - the same command the tunnel uses, because the app
+Then point the app at it — the same command the tunnel uses, because the app
 reads its scoring URL from the database either way:
 
 ```

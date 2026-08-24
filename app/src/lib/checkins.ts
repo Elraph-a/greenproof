@@ -1,7 +1,7 @@
 /**
  * Submitting a return visit.
  *
- * Shares the photo pipeline, the upload path and the queue with registration -
+ * Shares the photo pipeline, the upload path and the queue with registration —
  * a check-in and a registration differ only in whether a tree row already
  * exists. Keeping them on one code path means blur_score, resize and storage
  * layout mean exactly the same thing in both, which is what makes the pilot data
@@ -27,7 +27,7 @@ export interface NearbyTree extends Tree {
  * Trees near the user, closest first.
  *
  * GPS narrows the candidates; the PERSON confirms which tree it is against the
- * previous photo. That ordering is the layered-identity model made concrete -
+ * previous photo. That ordering is the layered-identity model made concrete —
  * we never ask the software to pick the tree on its own, because the spike
  * showed it gets that wrong nearly half the time.
  */
@@ -119,7 +119,7 @@ export interface CheckinInput {
  * Upload both photos, insert the row, ask for scoring.
  *
  * Unlike registration this is NOT queued offline. A check-in is a live,
- * interactive flow - the user is watching the four checks resolve and expects a
+ * interactive flow — the user is watching the four checks resolve and expects a
  * verdict now. Queuing it would mean showing a verdict screen with nothing to
  * put on it. If the upload fails the user retries on the spot, which is fine
  * because unlike T0 they are not working through a list of forty.
@@ -163,7 +163,7 @@ export async function submitCheckin(input: CheckinInput): Promise<string> {
  *
  * The row arrives `pending` and only the ML service can move it. Polling the
  * DATABASE rather than trusting the /score response means the UI shows what was
- * actually persisted under service-role - if the two ever disagreed, the
+ * actually persisted under service-role — if the two ever disagreed, the
  * database is right.
  */
 export async function waitForVerdict(
