@@ -162,12 +162,25 @@ export function demoCheckinsFor(treeId: string): Checkin[] {
   const idx = Number(treeId.replace('demo-tree-', '')) || 1
   const seed = SEEDS[idx - 1]
   if (!seed || seed.visits === 0) return []
-  return Array.from({ length: seed.visits }, (_, k) => ({
+  return Array.from({ length: seed.visits }, (_, k) => {
+    /*
+     * Photos are indexed BACKWARDS from the latest visit, so visit N always
+     * lands on P(seed.n) - the same photo `demoTrees[i].latest.wide_photo`
+     * claims.
+     *
+     * It used to index forwards from k, so the two disagreed: My Grove showed
+     * one photograph as the tree's most recent evidence and the tree page
+     * showed a different one for the same visit. On any other screen that is a
+     * cosmetic mismatch. Here it undermines the product's central claim, which
+     * is that a tree's identity is a consistent chain of photographs.
+     */
+    const back = seed.visits - 1 - k
+    return {
     id: `demo-checkin-${idx}-${k}`,
     tree_id: treeId,
     submitted_by: demoUserId,
-    wide_photo: P(((seed.n + k) % 6) + 1),
-    close_photo: P(((seed.n + k + 2) % 6) + 1),
+    wide_photo: P(((seed.n - 1 + back) % 6) + 1),
+    close_photo: P(((seed.n + 1 + back) % 6) + 1),
     tag_photo: null,
     captured_at: ago(seed.lastDays + (seed.visits - 1 - k) * 5),
     server_received_at: ago(seed.lastDays + (seed.visits - 1 - k) * 5),
@@ -197,7 +210,8 @@ export function demoCheckinsFor(treeId: string): Checkin[] {
     audit_sample: false,
     reviewed_by: null,
     reviewed_at: null,
-  }))
+    }
+  })
 }
 
 /**

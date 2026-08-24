@@ -6,7 +6,7 @@ import { formatAge, getTree, listCheckins, treeLabel } from '../lib/trees'
 import { demoCommonName, demoEarnings } from '../lib/demo'
 import type { Checkin, Tree } from '../lib/types'
 import { Icon, type IconName } from '../components/Icon'
-import { ErrorNote, HeroCard, StatusChip } from '../components/ui'
+import { ErrorNote, PhotoHero, StatusChip } from '../components/ui'
 
 /**
  * One tree's whole history.
@@ -116,31 +116,51 @@ export function TreeDetail() {
       }
     >
       {/*
-        ONE hero: the confidence score. Previously the top of this page was a
-        chip row plus three equal stat cards, so the number the whole product
-        exists to produce was one of five things at the same size.
+        THE EVIDENCE LEADS AND THE SCORE RIDES ON IT.
+
+        This was a green card with "87/100" set at display size, and directly
+        beneath it a comment calling the photo timeline the most important
+        element on the page. Both cannot be true. The page is about one tree;
+        the most recent photograph of that tree is the subject, and the
+        confidence is a reading taken FROM it.
+
+        Putting the number on the image also states the relationship correctly.
+        A score floating in its own card reads as a fact about the app. A score
+        pinned to a photograph reads as a fact about that photograph, which is
+        what it actually is - and it is the same claim the pitch makes out
+        loud: no verdict exists without evidence behind it.
       */}
-      <HeroCard
-        label="Confidence"
-        value={
+      <PhotoHero
+        photo={latest ? urls.get(latest.wide_photo) : null}
+        alt={`Most recent photo of ${name}`}
+        chip={<StatusChip status={latest?.verdict ?? 'pending'} />}
+        eyebrow={
+          latest
+            ? `Last seen ${new Date(latest.captured_at).toLocaleDateString('en-GB', {
+                day: 'numeric',
+                month: 'long',
+              })}`
+            : 'No visits yet'
+        }
+        title={
           latest?.confidence != null ? (
-            <>
+            <span className="tnum">
               {latest.confidence}
-              <span className="text-headline-xl font-semibold text-on-primary/60">
-                /100
+              <span className="text-headline-lg font-semibold text-white/60">
+                {' '}
+                / 100 confidence
               </span>
-            </>
+            </span>
           ) : (
-            'Not scored'
+            'Not scored yet'
           )
         }
-        badge={<StatusChip status={latest?.verdict ?? 'pending'} />}
-        foot={
-          <span className="text-label-lg">
+        sub={
+          <>
             {checkins.length} {checkins.length === 1 ? 'visit' : 'visits'} ·
             registered {formatAge(tree.created_at)} ago
             {earned !== undefined && earned > 0 && ` · GH₵${earned} earned`}
-          </span>
+          </>
         }
       />
 
