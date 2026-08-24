@@ -1,4 +1,4 @@
-# Pinned loosely — Hugging Face Spaces rebuilds on push and a surprise major
+# Pinned loosely - Hugging Face Spaces rebuilds on push and a surprise major
 # version on pitch week is not a risk worth taking for a few KB of convenience.
 
 fastapi>=0.115,<1
@@ -13,7 +13,7 @@ huggingface_hub>=0.26,<1
 numpy>=1.26,<3
 pillow>=10.4,<12
 
-# contrib, not plain opencv — cv2.aruco lives in contrib and the ArUco marker is
+# contrib, not plain opencv - cv2.aruco lives in contrib and the ArUco marker is
 # how a photo becomes a measurement in millimetres.
 opencv-contrib-python-headless>=4.10,<5
 

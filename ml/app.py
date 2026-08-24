@@ -37,7 +37,7 @@ app = FastAPI(title="GreenProof verification service", version=MODEL_VERSION)
 # The PWA is served from Vercel, so this is a genuine cross-origin call.
 # Set ALLOWED_ORIGINS to the Vercel URL in the Space's variables; the default
 # is permissive so the pilot is never blocked by a CORS typo at 6am, and the
-# endpoints carry no secrets a caller could extract — the service key stays
+# endpoints carry no secrets a caller could extract - the service key stays
 # server-side and every write is derived from stored photos, not from the
 # request body.
 origins = os.environ.get("ALLOWED_ORIGINS", "*").split(",")
@@ -57,7 +57,7 @@ def _warm() -> None:
 
     Spaces health-check the container early. Blocking startup on a ~90 MB model
     download makes the Space look dead and get restarted, which restarts the
-    download — a loop that has eaten whole afternoons.
+    download - a loop that has eaten whole afternoons.
     """
 
     def run() -> None:
@@ -107,7 +107,7 @@ def health() -> dict:
 def score(req: ScoreRequest) -> ScoreResponse:
     """Score one check-in.
 
-    Takes only an id. The request body cannot influence the outcome — every
+    Takes only an id. The request body cannot influence the outcome - every
     input is re-read from the database and from storage. A caller can ask for a
     check-in to be scored; it can never say what the score should be.
     """

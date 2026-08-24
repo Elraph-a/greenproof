@@ -92,7 +92,7 @@ def main() -> int:
     )
 
     # --- duplicate candidates ---------------------------------------------
-    # Report each PAIR once, attributing the problem to the LATER registration —
+    # Report each PAIR once, attributing the problem to the LATER registration -
     # the earlier row is the one with the honest photo history and should be the
     # one that survives a merge.
     seen: set[tuple[str, str]] = set()

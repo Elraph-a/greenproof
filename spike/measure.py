@@ -1,12 +1,12 @@
-"""GreenProof — can image matching identify a specific tree?
+"""GreenProof - can image matching identify a specific tree?
 
 Standalone. Measures RANK-1 RETRIEVAL over the spike photos:
 
     for each photo, find its most similar photo among all the others.
     is that photo of the same tree?
 
-That is the operational question — "a check-in arrives; does the right tree come
-back first?" — and it needs no wide/close labels, which is why it is the metric
+That is the operational question - "a check-in arrives; does the right tree come
+back first?" - and it needs no wide/close labels, which is why it is the metric
 we trust. See FINDINGS.md for the three labelling approaches that failed.
 
 Result on 28 Jul 2026: 54.2% rank-1 against 5.1% chance, pooled AUC 0.77.
@@ -87,7 +87,7 @@ def main():
     rows = load_index()
     trees = np.array([r["tree"] for r in rows])
 
-    # ONNX Runtime, not PyTorch — it is what the deployed ML service will use,
+    # ONNX Runtime, not PyTorch - it is what the deployed ML service will use,
     # so this exercises the same runtime we ship.
     import onnxruntime as ort
     sess = ort.InferenceSession(get_model_path(),
@@ -136,7 +136,7 @@ READ THIS BEFORE QUOTING THE NUMBER
   near-zero inside a dense stand of one species. A plantation is the hard case.
 
   All photos were taken within ~19 minutes, so there is no weather, growth or
-  lighting change. Real check-ins are a week apart — treat this as an UPPER
+  lighting change. Real check-ins are a week apart - treat this as an UPPER
   BOUND on cross-week performance.
 """)
 

@@ -1,4 +1,4 @@
--- GreenProof — auto-create a profile row for every new auth user
+-- GreenProof - auto-create a profile row for every new auth user
 --
 -- WHY THIS EXISTS AS A TRIGGER AND NOT CLIENT CODE:
 -- trees.owner_id and trees.registered_by both reference profiles with

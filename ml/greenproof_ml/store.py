@@ -124,7 +124,7 @@ def trees_near_registered_before(
     measured here. PostGIS is available and `trees.location` is indexed, but
     reaching it needs a SQL function; the box uses the plain lat/lng columns and
     is correct because the caller re-measures. At pilot scale the difference is
-    unmeasurable — the box is there so this does not become a full table scan
+    unmeasurable - the box is there so this does not become a full table scan
     when the grove is 40,000 trees rather than 40.
     """
     d_lat = radius_m / 111_320.0
@@ -165,7 +165,7 @@ def previous_checkins(tree_id: str, before_iso: str) -> list[dict]:
 def previous_by_submitter(
     submitter_id: str, before_iso: str, exclude_checkin_id: str
 ) -> dict | None:
-    """The submitter's most recent check-in anywhere — for the travel gate."""
+    """The submitter's most recent check-in anywhere - for the travel gate."""
     r = (
         db()
         .table("checkins")
@@ -199,7 +199,7 @@ def parse_embedding(value) -> np.ndarray | None:
 
 
 # ---------------------------------------------------------------------------
-# Writes — only this process may perform them
+# Writes - only this process may perform them
 # ---------------------------------------------------------------------------
 
 
@@ -231,7 +231,7 @@ def update_tree_status(tree_id: str, confidence: int, verdict: str) -> None:
     """Roll the latest verdict up onto the tree.
 
     'alive' only on a verified check-in. A tree never becomes 'dead'
-    automatically — that is a human decision, because being wrong about it stops
+    automatically - that is a human decision, because being wrong about it stops
     someone's payment.
     """
     status = {

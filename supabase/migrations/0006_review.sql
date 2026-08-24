@@ -1,10 +1,10 @@
--- GreenProof — human review of uncertain check-ins
+-- GreenProof - human review of uncertain check-ins
 --
 -- THE PROBLEM THIS SOLVES
 -- Column grants deliberately prevent ANY client from writing checkins.verdict.
 -- That is the rule that stops a planter approving their own check-in. But
 -- "designed to degrade, not break" requires that a low-confidence visit routes
--- to a person — and that person is also a client.
+-- to a person - and that person is also a client.
 --
 -- The answer is a SECURITY DEFINER function: a single, narrow, audited doorway
 -- that runs with the owner's privileges, checks the caller is a reviewer, and
@@ -44,7 +44,7 @@ begin
          reviewed_by = auth.uid(),
          reviewed_at = now(),
          -- Keep the machine's original assessment. Overwriting it would destroy
-         -- the only evidence of how often the model and the human disagree —
+         -- the only evidence of how often the model and the human disagree -
          -- which is precisely the number that lets us publish a false-accept
          -- rate rather than assert one.
          signals     = coalesce(signals, '{}'::jsonb) || jsonb_build_object(
@@ -79,8 +79,8 @@ grant execute on function public.review_checkin(uuid, checkin_verdict, text) to 
 -- The queue itself
 -- ---------------------------------------------------------------------------
 -- Two kinds of row belong here:
---   * verdict = 'review'  — the model was not confident enough
---   * audit_sample = true — a RANDOM sample of AUTO-APPROVED check-ins.
+--   * verdict = 'review'  - the model was not confident enough
+--   * audit_sample = true - a RANDOM sample of AUTO-APPROVED check-ins.
 --
 -- The second is the unusual one and it is the point. Reviewing only the
 -- uncertain cases tells you nothing about how often you were confidently WRONG.

@@ -1,4 +1,4 @@
-"""Fit the signal weights and measure our own error rate — honestly.
+"""Fit the signal weights and measure our own error rate - honestly.
 
     python ml/calibrate.py
 
@@ -15,7 +15,7 @@ held-out tree. Repeat for all trees, and report the pooled result.
 Why leave out a TREE and not a check-in: check-ins of the same tree are not
 independent. Four photos of tree 12 share a trunk, a background and a
 neighbourhood. Holding out a single check-in leaves its siblings in the training
-set, and the model effectively memorises that tree — producing a number that
+set, and the model effectively memorises that tree - producing a number that
 looks excellent and means nothing. Leaving out the whole tree asks the
 operational question: how does this behave on a tree it has never seen?
 
@@ -59,7 +59,7 @@ def label_of(row: dict) -> int | None:
       * injected attacks (signals.self_test.injected) are known fraud
       * check-ins a HUMAN reviewed are known-good or known-bad by that decision
 
-    Everything else is unlabelled — the machine's own verdict must never be used
+    Everything else is unlabelled - the machine's own verdict must never be used
     as its own ground truth, which would just measure self-consistency.
     """
     s = row.get("signals") or {}
@@ -126,7 +126,7 @@ def main() -> None:
             continue
         ys = np.array([y for _, y in train])
         if len(set(ys.tolist())) < 2:
-            # This fold has only one class — it cannot train a classifier, and
+            # This fold has only one class - it cannot train a classifier, and
             # silently filling it with a constant would flatter the result.
             preds[test_idx] = np.nan
             continue
@@ -206,7 +206,7 @@ def main() -> None:
 
 
 def _report_gate_only(rows: list[dict]) -> None:
-    """Even with no labels, the gates can be summarised — they are deterministic."""
+    """Even with no labels, the gates can be summarised - they are deterministic."""
     if not rows:
         return
     fails: dict[str, int] = {}

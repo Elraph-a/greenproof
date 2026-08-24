@@ -1,4 +1,4 @@
--- GreenProof — trunk measurement taps
+-- GreenProof - trunk measurement taps
 --
 -- The user taps the left and right edge of the trunk on screen. We store WHERE
 -- THEY TAPPED, never the resulting width.
@@ -6,7 +6,7 @@
 -- WHY THE SPLIT MATTERS:
 -- millimetres = pixel distance x (marker_mm / marker_px), and the marker is
 -- found by ArUco detection on the server. If the client computed the width, a
--- forged request could claim any trunk diameter it liked — and trunk width is a
+-- forged request could claim any trunk diameter it liked - and trunk width is a
 -- growth-plausibility signal, so a forged value would defeat the "a trunk
 -- cannot shrink" check. Taps are raw observation; millimetres are a derived
 -- verification result, and derived results are service-role only.

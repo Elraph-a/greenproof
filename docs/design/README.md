@@ -3,7 +3,7 @@
 **Just put everything in this folder. Don't sort, don't rename, don't organise.**
 
 Screenshots, exported HTML/CSS, ZIPs, a screen-recording, a photo of your
-screen — all fine, all in here. I work out which screen is which and which batch
+screen - all fine, all in here. I work out which screen is which and which batch
 it belongs to by looking at them.
 
 Whatever Stitch gives you, drop it in.
@@ -27,7 +27,7 @@ Screenshots are useful; the hex codes are what actually move the build.
 | You drop | I do |
 |---|---|
 | Screenshots of any screen | identify it, match it to the built component, rebuild the layout |
-| Hex codes / a palette | swap the `@theme` block — every screen restyles at once |
+| Hex codes / a palette | swap the `@theme` block - every screen restyles at once |
 | Exported HTML/CSS | lift spacing, radii, type scale and shadows directly |
 | Something I can't place | ask you about that one specific image, not all of them |
 
@@ -39,7 +39,7 @@ came from. That's my job.
 ## What's already built and waiting to be skinned
 
 Everything below exists, works, and is styled with placeholder tokens. A design
-for any of these drops straight onto a working screen — nothing needs to be
+for any of these drops straight onto a working screen - nothing needs to be
 built from scratch.
 
 | Screen | Route | Built |
@@ -55,7 +55,7 @@ built from scratch.
 | Wallet | `/wallet` | ✅ |
 | Leaderboard | `/leaderboard` | ✅ |
 | Review queue | `/review` | ✅ |
-| Sponsor dashboard | — | not yet — post-T0 |
+| Sponsor dashboard | - | not yet - post-T0 |
 
 **Priority if you're short on time:** Landing, Sign in, My Grove, Register.
 Those four are the only screens Monday needs. Everything else can be skinned any
@@ -66,7 +66,7 @@ time before 20 August.
 ## Two things that would slow me down
 
 - **A single flattened image of all screens at once.** Individual screens are
-  much easier to work from. If Stitch gives you a contact sheet, that's fine —
+  much easier to work from. If Stitch gives you a contact sheet, that's fine -
   just note it.
 - **Colours only visible in a screenshot.** I can eyedrop them, but an
   eyedropped colour off a compressed PNG is approximately right, and
@@ -96,4 +96,4 @@ Font:          (if Stitch picked one)
 Corner radius: (cards / buttons, in px)
 ```
 
-Anything you don't have, leave blank — I'll keep the current value for it.
+Anything you don't have, leave blank - I'll keep the current value for it.

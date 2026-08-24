@@ -1,10 +1,10 @@
--- GreenProof — runtime configuration
+-- GreenProof - runtime configuration
 --
 -- WHY THIS TABLE EXISTS
 -- Vite inlines environment variables at BUILD time, so `VITE_ML_URL` cannot be
 -- changed without rebuilding and redeploying the frontend. That is tolerable
 -- for a permanent host and unworkable for a tunnelled service, whose hostname
--- changes whenever the tunnel restarts — including on the morning of a demo.
+-- changes whenever the tunnel restarts - including on the morning of a demo.
 --
 -- The alternative considered and REJECTED was storing the URL per-device in
 -- localStorage. It works on the phone you set it up on and silently does not
@@ -17,7 +17,7 @@
 -- to `authenticated` at the column level, so only a holder of the service key
 -- can write them, and the request carries a check-in id and nothing else. The
 -- worst a wrong URL achieves is failing to score, which leaves the check-in
--- `pending` for backfill — the same state as no service at all.
+-- `pending` for backfill - the same state as no service at all.
 --
 -- Writes are another matter, and are service-role only.
 
@@ -30,7 +30,7 @@ create table if not exists app_config (
 alter table app_config enable row level security;
 
 -- Readable by any signed-in user: every device needs it, and it holds nothing
--- secret. Deliberately NOT readable by anon — there is no reason for a
+-- secret. Deliberately NOT readable by anon - there is no reason for a
 -- logged-out visitor to need it, and a smaller surface is free.
 create policy "config readable" on app_config
   for select to authenticated using (true);

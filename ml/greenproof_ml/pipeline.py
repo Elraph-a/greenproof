@@ -45,7 +45,7 @@ log = logging.getLogger(__name__)
 
 # Fraction of auto-approved check-ins pulled for human spot-checking.
 # Without this we would have no way to estimate the false-ACCEPT rate, which is
-# the number that actually matters — a wrongly rejected genuine visit is
+# the number that actually matters - a wrongly rejected genuine visit is
 # annoying, a wrongly approved fraud is fatal, and nothing else in the system
 # measures the second one.
 AUDIT_RATE = 0.10
@@ -113,7 +113,7 @@ def score_checkin(checkin_id: str) -> Assessment:
     scores["liveness"] = score_liveness(green, liveness_score(green))
 
     # Scene match needs something to match AGAINST. On the very first visit
-    # there is nothing, so the signal is absent rather than zero — assess()
+    # there is nothing, so the signal is absent rather than zero - assess()
     # renormalises and lowers confidence via the coverage term instead of
     # treating a registration as suspicious.
     if prev_visits:
@@ -147,7 +147,7 @@ def score_checkin(checkin_id: str) -> Assessment:
         canopy_prev = prev_growth.get("canopy_frac")
         trunk_prev = prev_growth.get("trunk_mm")
 
-    # Millimetres are derived HERE, from the stored photo and the stored taps —
+    # Millimetres are derived HERE, from the stored photo and the stored taps -
     # never from anything the client calculated. See signals.trunk_width_mm.
     measurement = trunk_width_mm(close, row.get("trunk_taps"))
     trunk_now = measurement.get("trunk_mm") if measurement and measurement.get("available") else None
@@ -169,7 +169,7 @@ def score_checkin(checkin_id: str) -> Assessment:
     )
 
     # Only on the tree's FIRST check-in, i.e. its registration. On every later
-    # visit the tree already exists and standing near a neighbour is not news —
+    # visit the tree already exists and standing near a neighbour is not news -
     # re-flagging it every round would bury the reviewer in the same alert.
     if not prev_visits:
         review_flags["tree_proximity"] = check_proximity(

@@ -2,12 +2,12 @@
 
 TWO-STAGE BY DESIGN.
 
-    Stage 1 — GATES. Disqualifying on their own, regardless of anything else.
+    Stage 1 - GATES. Disqualifying on their own, regardless of anything else.
               A duplicate photo is a duplicate photo; no amount of scene
               similarity should rescue it. Gates run BEFORE scoring so a
               failure is cheap and unambiguous.
 
-    Stage 2 — SCORES. Continuous 0..1 signals, combined by weights, producing a
+    Stage 2 - SCORES. Continuous 0..1 signals, combined by weights, producing a
               confidence out of 100.
 
 This ordering is the reason the system's overall accuracy is far better than the
@@ -17,7 +17,7 @@ never reach stage 2.
 THRESHOLDS AND WEIGHTS BELOW ARE PROVISIONAL. They are informed guesses that let
 the pipeline run end-to-end from day one. They are replaced by weights fitted
 with logistic regression under leave-one-tree-out cross-validation once real
-check-in rounds exist — see calibrate.py. Reporting a number produced by
+check-in rounds exist - see calibrate.py. Reporting a number produced by
 hand-tuned weights on the same data would be exactly the mistake CLAUDE.md
 forbids.
 """
@@ -44,7 +44,7 @@ GPS_MAX_RADIUS_M = 60.0
 MAX_TRAVEL_KMH = 120.0
 
 # Two TREES registered closer together than this are possibly one tree entered
-# twice — the double-payment case.
+# twice - the double-payment case.
 #
 # NOT A GATE, DELIBERATELY. A failed gate means confidence 0 and 'flagged', and
 # trees genuinely do grow 3 m apart: flagging a dense grove as fraud would be
@@ -53,7 +53,7 @@ MAX_TRAVEL_KMH = 120.0
 # response is a human look, not an accusation. It routes to REVIEW instead.
 #
 # PROVISIONAL. Calibrate against the pilot's nearest-neighbour distance
-# distribution and set it below the 5th percentile — see tools/proximity_audit.py.
+# distribution and set it below the 5th percentile - see tools/proximity_audit.py.
 # Must stay in step with PROXIMITY_WARN_M in app/src/lib/trees.ts, which is the
 # client-side warning for the same condition.
 PROXIMITY_REVIEW_M = 8.0
@@ -108,7 +108,7 @@ ORB_INLIER_STRONG = 25  # inliers that would count as strong agreement
 #
 # The distributions overlap almost entirely. ORB finds no consistent geometry
 # between two genuine photos of the same tree taken minutes apart from slightly
-# different positions — foliage moves, and bark at two scales shares almost no
+# different positions - foliage moves, and bark at two scales shares almost no
 # repeatable keypoints. Leaving it in the score would have added up to +0.08 of
 # essentially random confidence, which helps an impostor as readily as a genuine
 # visit.
@@ -124,7 +124,7 @@ ORB_CONTRIBUTES_TO_SCORE = False
 
 # Deliberately NOT equal. Image matching is the weakest signal we measured
 # (rank-1 54%, AUC 0.77, and bimodal), so it must not dominate. Location and
-# liveness are cheap, deterministic and reliable — they carry more.
+# liveness are cheap, deterministic and reliable - they carry more.
 DEFAULT_WEIGHTS: dict[str, float] = {
     "location": 0.35,
     "liveness": 0.30,
@@ -136,12 +136,12 @@ VERIFY_AT = 70
 REVIEW_AT = 45
 
 # ---------------------------------------------------------------------------
-# CRITICAL FLOORS — the fix for a false accept found in testing
+# CRITICAL FLOORS - the fix for a false accept found in testing
 # ---------------------------------------------------------------------------
 #
 # A plain weighted sum lets strong signals COMPENSATE for a failed one. Tested
-# against "a different tree photographed at the correct GPS" — attack #4, the
-# one case that genuinely needs the AI — the result was:
+# against "a different tree photographed at the correct GPS" - attack #4, the
+# one case that genuinely needs the AI - the result was:
 #
 #     scene_match 0.00, location 1.00, liveness 1.00, growth 1.00
 #     -> 75/100 -> VERIFIED
@@ -151,7 +151,7 @@ REVIEW_AT = 45
 # Compensation is correct for a quality score and wrong for a fraud decision.
 #
 # So a signal that is present and near-zero VETOES auto-approval. It does not
-# flag the visit — it routes it to a human, which is the honest response to
+# flag the visit - it routes it to a human, which is the honest response to
 # "this looks wrong but we are not certain". Confidence is still reported
 # unchanged so the disagreement stays visible in the data.
 #
@@ -276,7 +276,7 @@ def check_proximity(
     `earlier` is (tree_id, lat, lng) for trees registered STRICTLY BEFORE this
     one. The ordering matters: when one trunk becomes two rows, only the second
     row is the problem. Comparing against all trees would retroactively taint
-    the original — and the original is the one with the honest photo history.
+    the original - and the original is the one with the honest photo history.
 
     Returns a GateResult for shape consistency with the real gates, but it is
     passed to assess() as a REVIEW FLAG, not a gate. `passed=False` here means
@@ -367,10 +367,10 @@ def score_scene(
 
     The wide shot is weighted above the close-up because the spike showed
     matching works substantially off the surrounding scene, and young bark is
-    smooth and far less distinctive than mature bark — BarkNet's ~94% figures
+    smooth and far less distinctive than mature bark - BarkNet's ~94% figures
     are on MATURE bark and do not transfer to a two-year-old sapling.
 
-    ORB inliers are RECORDED BUT DO NOT AFFECT THE SCORE — see
+    ORB inliers are RECORDED BUT DO NOT AFFECT THE SCORE - see
     ORB_CONTRIBUTES_TO_SCORE above for the measurement that produced that
     decision. Reporting a signal we have shown to be non-discriminating would be
     exactly the unfounded assertion this project exists to avoid.
@@ -412,7 +412,7 @@ def score_growth(
     overnight, a canopy that vanished.
 
     With no prior visit there is nothing to compare, so it returns a neutral 0.5
-    rather than 0 — a first check-in must not be penalised for being first.
+    rather than 0 - a first check-in must not be penalised for being first.
     """
     out: dict = {}
     if canopy_now is not None:
@@ -462,7 +462,7 @@ def assess(
     review_flags: dict[str, GateResult] | None = None,
 ) -> Assessment:
     """`review_flags` are conditions that must not AUTO-APPROVE but are not
-    disqualifying — they demote 'verified' to 'review' and are recorded with a
+    disqualifying - they demote 'verified' to 'review' and are recorded with a
     reason. Separate from gates on purpose: a gate says "this is fraud", a review
     flag says "a person should look at this", and collapsing the two would either
     accuse honest planters or wave through the thing we wanted a human to see."""
@@ -487,7 +487,7 @@ def assess(
         return Assessment(0, "flagged", signals)
 
     # Renormalise over the signals we actually have. A missing signal must lower
-    # confidence, never silently count as zero — "designed to degrade, not
+    # confidence, never silently count as zero - "designed to degrade, not
     # break" means an absent compass or a first visit routes to a human rather
     # than being scored as fraud.
     present = {k: v for k, v in w.items() if k in scores and "score" in scores[k]}

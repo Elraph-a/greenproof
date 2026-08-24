@@ -1,4 +1,4 @@
--- GreenProof — storage bucket + policies
+-- GreenProof - storage bucket + policies
 
 -- ---------------------------------------------------------------------------
 -- Storage

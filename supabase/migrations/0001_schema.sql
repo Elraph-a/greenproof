@@ -1,4 +1,4 @@
--- GreenProof — database schema
+-- GreenProof - database schema
 -- Run this in the Supabase SQL Editor on a fresh project.
 --
 -- KEY SECURITY IDEA: the app's anon key is public (it ships inside the browser).
@@ -29,7 +29,7 @@ create table profiles (
   full_name   text,
   phone       text,                       -- for MoMo payout later
   role        user_role not null default 'planter',
-  -- "Planter story" (borrowed from EcoMatcher) — a name and a face attached to
+  -- "Planter story" (borrowed from EcoMatcher) - a name and a face attached to
   -- each tree makes the sponsor dashboard far stronger on stage.
   story       text,
   photo_path  text,
@@ -91,7 +91,7 @@ create index trees_location_idx on trees using gist (location);
 create index trees_owner_idx on trees (owner_id);
 
 -- ---------------------------------------------------------------------------
--- Check-ins — one row per visit to a tree
+-- Check-ins - one row per visit to a tree
 -- ---------------------------------------------------------------------------
 create table checkins (
   id                uuid primary key default gen_random_uuid(),
