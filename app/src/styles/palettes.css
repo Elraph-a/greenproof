@@ -1,39 +1,65 @@
 /* ===========================================================================
    PALETTE VARIANTS — for choosing, on localhost, with the real app
 
-   Set `data-palette` on <html> and every screen re-tints. The switcher in
-   components/PaletteSwitcher.tsx does that, and is stripped from production
-   builds.
+   Set `data-palette` on <html> and every screen re-tints. `data-money` is a
+   second, independent switch for the one hue that carries a meaning. The
+   switcher in components/PaletteSwitcher.tsx drives both, and is stripped
+   from production builds.
 
-   TWO RULES EVERY PALETTE HERE OBEYS, because both are load-bearing:
+   THESE ARE NOT INVENTED. Every palette below is derived from colours pulled
+   out of the live CSS of apps in this category, on 24 Aug 2026:
 
-   1. SECONDARY TEXT STAYS DARK. `--color-on-surface-variant` must clear ~5.9:1
-      against `--color-background`, not against white — most secondary text in
-      this app sits on the page, not on a card. The usual pale grey secondary
-      is unreadable on a phone in direct midday sun, which is the condition
-      this app is actually used in. Measured per palette, in the table below.
+     veritree          page #f4efe9   green #0c483c   bright #009e69
+     Sylvera           page #f7f5ef   green #01311d   bright #bff102
+     Wren              page #f4f3ef   green #1b3c34   bright #00836c
+     Ecologi           page #edebe1   green #134d40   bright #1c8c6c
+     One Acre Fund     page #f2f1eb   green #1a4c3e   bright #2b7f68
+     One Tree Planted  page #f9f8f4   green #487840
+     Terraformation    page #f7faf7   green #1a5035   bright #8ac656
+     Pachama           page #ffffff   green #042e22   bright #d4f085
+     Farmerline (GH)   page #ebeae5   green #008000   accent #ffa000
 
-   2. AMBER IS MONEY AND IS NEVER RETINTED. `--color-accent*` and
-      `--color-tertiary*` are deliberately ABSENT from every block below, so
-      they inherit one fixed set of values from @theme. That is what lets a
-      planter find a cedi figure without reading its label, and it only holds
-      if the hue means one thing on every screen in every palette.
+   THREE THINGS THAT SURVEY SAYS, WHICH WE WERE NOT DOING:
 
-   Measured, not estimated:
+   1. WARM PAPER IS THE CATEGORY NORM, and we already had it right. Eight of
+      the nine above use a warm off-white, not white and not grey. Our
+      #f7f6f2 sits squarely in that family. `slate`, the cool-grey option
+      that used to live here, has been REMOVED: not one site in the survey
+      uses a cool neutral page, and being the only one is a weak reason.
 
-     palette   muted/bg   muted/card   ink/bg   white-on-primary
-     field       5.91        6.39      15.32       11.24
-     ink         6.57        7.11      16.93       14.52
-     canopy      6.05        6.60      15.66        7.85
-     slate       6.44        7.03      16.36       11.68
+   2. THE CATEGORY GREEN IS TEALER THAN OURS. Every dark green above sits at
+      hue 155-170. Ours is 151, which is far enough toward yellow to read as
+      bottle glass rather than as forest. Every palette here except `field`
+      moves into that band.
 
-   `ink` and `slate` are BETTER in sun than what we ship today, not merely
-   equal to it.
+   3. THE DARK-GREEN-PLUS-BRIGHT-ACCENT PAIRING is what the credible MRV
+      players do — Sylvera #01311d with #bff102, Pachama #042e22 with
+      #d4f085. `signal` is that idea.
+
+   TWO RULES EVERY PALETTE STILL OBEYS:
+
+   · SECONDARY TEXT STAYS DARK — `--color-on-surface-variant` clears 5.9:1
+     against `--color-background`, not against white, because that is where
+     most of it sits. Pale grey secondary text is unreadable on a phone in
+     direct midday sun, which is the condition this app is used in.
+
+   · ONE HUE MEANS MONEY, AND NOTHING ELSE MEANS IT. No palette below touches
+     `--color-accent*`; they all inherit one fixed set. The hue itself is
+     chosen separately, under `data-money`, so it can be compared honestly
+     rather than changing four times while you are judging paper.
+
+     palette   muted/page   ink/page   white/primary   verified/chip   green hue
+     field        5.91       15.32        11.24            5.57          151
+     sand         6.32       15.19        10.46            5.41          168
+     ledger       6.35       15.97        14.32            5.25          167
+     canopy       6.10       15.80         9.36            7.65          150
+     ink          6.57       16.93        14.52            5.54          153
+     signal       6.84       18.01        14.80            6.28          163
    =========================================================================== */
 
 /* ---------------------------------------------------------------------------
-   FIELD — warm paper, deep forest. What the app looks like today.
-   Listed explicitly so the switcher can come back to it.
+   FIELD — what the app looks like today. Warm paper, forest green.
+   The survey says the paper is right; it is the green that is an outlier.
    --------------------------------------------------------------------------- */
 :root[data-palette='field'] {
   --color-surface: #f7f6f2;
@@ -79,13 +105,172 @@
 }
 
 /* ---------------------------------------------------------------------------
-   INK — near-neutral paper, near-black green.
+   SAND — modelled on veritree (#f4efe9 paper, #0c483c green, #009e69 bright).
 
-   The green stops being a colour and becomes ink. Almost nothing on screen is
-   saturated except a cedi amount and a status, so the eye goes straight to the
-   two things that carry information. The highest-contrast option, and the one
-   that reads least like a template: warm beige plus green is the house style
-   of every eco startup landing page on the internet.
+   The warmest paper in the set, and the closest thing to a direct competitor:
+   veritree is the satellite-and-drone verification company we name in the
+   pitch. Their paper is noticeably pinker than ours, which flatters
+   photographs of soil and bark — the two things filling this app's thumbnails.
+
+   The green moves to hue 168, a proper teal-forest.
+   --------------------------------------------------------------------------- */
+:root[data-palette='sand'] {
+  --color-surface: #f4efe9;
+  --color-surface-dim: #e6ddd2;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #faf7f3;
+  --color-surface-container: #efe7de;
+  --color-surface-container-high: #e6dcd0;
+  --color-surface-container-highest: #dbd0c1;
+  --color-surface-variant: #e6dcd0;
+  --color-background: #f4efe9;
+
+  --color-on-surface: #1c1a17;
+  --color-on-surface-variant: #5d564e;
+  --color-on-background: #1c1a17;
+  --color-inverse-surface: #1c1a17;
+  --color-inverse-on-surface: #f4efe9;
+  --color-outline: #92887c;
+  --color-outline-variant: #e4dbd0;
+
+  --color-primary: #0c483c;
+  --color-primary-container: #dcece7;
+  --color-on-primary-container: #0c483c;
+  --color-inverse-primary: #7fd6c0;
+  --color-primary-fixed: #dcece7;
+  --color-primary-fixed-dim: #b6dbd0;
+  --color-on-primary-fixed: #04201a;
+  --color-on-primary-fixed-variant: #046a4e;
+  --color-surface-tint: #046a4e;
+
+  --color-secondary: #3d6157;
+  --color-secondary-container: #dcece7;
+  --color-on-secondary-container: #0c483c;
+  --color-secondary-fixed: #dcece7;
+  --color-secondary-fixed-dim: #b6dbd0;
+  --color-on-secondary-fixed: #04201a;
+  --color-on-secondary-fixed-variant: #046a4e;
+
+  --color-verified: #046a4e;
+  --color-verified-container: #dcece7;
+
+  --tint-ink: 28 26 23;
+}
+
+/* ---------------------------------------------------------------------------
+   LEDGER — modelled on Sylvera (#f7f5ef, #01311d) and Wren (#f4f3ef, #1b3c34).
+
+   Both are carbon-RATINGS companies rather than planting charities, and they
+   look like it: cream paper, a green so dark it behaves as ink, almost no
+   saturation anywhere else. That is the register we actually want, because
+   the claim we are making is an audit claim, not a nature claim.
+
+   Highest white-on-primary contrast of the realistic options at 14.32:1.
+   --------------------------------------------------------------------------- */
+:root[data-palette='ledger'] {
+  --color-surface: #f7f5ef;
+  --color-surface-dim: #e9e6dc;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #fcfbf7;
+  --color-surface-container: #f0ede4;
+  --color-surface-container-high: #e7e3d8;
+  --color-surface-container-highest: #dcd7ca;
+  --color-surface-variant: #e7e3d8;
+  --color-background: #f7f5ef;
+
+  --color-on-surface: #171b18;
+  --color-on-surface-variant: #585b52;
+  --color-on-background: #171b18;
+  --color-inverse-surface: #171b18;
+  --color-inverse-on-surface: #f7f5ef;
+  --color-outline: #8d8f85;
+  --color-outline-variant: #e4e0d5;
+
+  --color-primary: #0a3028;
+  --color-primary-container: #dfeae5;
+  --color-on-primary-container: #0a3028;
+  --color-inverse-primary: #86d3bd;
+  --color-primary-fixed: #dfeae5;
+  --color-primary-fixed-dim: #bcdbd0;
+  --color-on-primary-fixed: #03150f;
+  --color-on-primary-fixed-variant: #0f6b52;
+  --color-surface-tint: #0f6b52;
+
+  --color-secondary: #3a5b52;
+  --color-secondary-container: #dfeae5;
+  --color-on-secondary-container: #0a3028;
+  --color-secondary-fixed: #dfeae5;
+  --color-secondary-fixed-dim: #bcdbd0;
+  --color-on-secondary-fixed: #03150f;
+  --color-on-secondary-fixed-variant: #0f6b52;
+
+  --color-verified: #0f6b52;
+  --color-verified-container: #dfeae5;
+
+  --tint-ink: 23 27 24;
+}
+
+/* ---------------------------------------------------------------------------
+   CANOPY — modelled on Terraformation (#f7faf7 / #e8edeb paper, #1a5035).
+
+   The one option whose page is cool rather than warm, and the only green in
+   the set light enough to read as a colour rather than as near-black. The
+   faint green cast makes white cards lift further off the page than they do
+   on warm paper.
+
+   Cost, stated honestly: white on this primary is 9.36:1 — the least headroom
+   here, though still far past the 4.5:1 it must clear.
+   --------------------------------------------------------------------------- */
+:root[data-palette='canopy'] {
+  --color-surface: #f3f7f4;
+  --color-surface-dim: #e4ebe7;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f9fcfa;
+  --color-surface-container: #e9efeb;
+  --color-surface-container-high: #dfe7e2;
+  --color-surface-container-highest: #d5ded8;
+  --color-surface-variant: #dfe7e2;
+  --color-background: #f3f7f4;
+
+  --color-on-surface: #0f1f18;
+  --color-on-surface-variant: #4e615a;
+  --color-on-background: #0f1f18;
+  --color-inverse-surface: #0f1f18;
+  --color-inverse-on-surface: #f3f7f4;
+  --color-outline: #7f918a;
+  --color-outline-variant: #dde5e0;
+
+  --color-primary: #1a5035;
+  --color-primary-container: #dcece3;
+  --color-on-primary-container: #123a26;
+  --color-inverse-primary: #7fd6ab;
+  --color-primary-fixed: #dcece3;
+  --color-primary-fixed-dim: #b3e0c9;
+  --color-on-primary-fixed: #042416;
+  --color-on-primary-fixed-variant: #1a5035;
+  --color-surface-tint: #1a5035;
+
+  --color-secondary: #3d6a57;
+  --color-secondary-container: #dcece3;
+  --color-on-secondary-container: #123a26;
+  --color-secondary-fixed: #dcece3;
+  --color-secondary-fixed-dim: #b3e0c9;
+  --color-on-secondary-fixed: #042416;
+  --color-on-secondary-fixed-variant: #1a5035;
+
+  --color-verified: #1a5035;
+  --color-verified-container: #dcece3;
+
+  --tint-ink: 15 31 24;
+}
+
+/* ---------------------------------------------------------------------------
+   INK — near-neutral paper, near-black green. Our own, not from the survey.
+
+   Kept because it is the most restrained option and restraint is what
+   separates Sylvera from a charity landing page, but note it is the one
+   choice here with no precedent in the category. If it wins, it wins on
+   looking better rather than on looking right.
    --------------------------------------------------------------------------- */
 :root[data-palette='ink'] {
   --color-surface: #f6f6f4;
@@ -131,111 +316,106 @@
 }
 
 /* ---------------------------------------------------------------------------
-   CANOPY — cool green mist, and a green that is actually green.
+   SIGNAL — modelled on Pachama (#042e22 with #d4f085) and Sylvera (#01311d
+   with #bff102): a near-black green ground and ONE bright, high-chroma
+   accent.
 
-   The only option where the primary reads as a colour rather than as a very
-   dark neutral: #0b5e3a against #14432c is the difference between leaf and
-   bottle glass. The page carries a faint green cast, so white cards lift off
-   it more than they do on warm paper.
+   Here that accent is spent on VERIFIED, which is the right place for it —
+   a verified tree is the thing this whole app exists to produce, and it is
+   currently the same muted green as everything else.
 
-   The cost is honest: white on this primary measures 7.85:1 rather than 11+,
-   the least headroom of the four if a button ever lands on a tinted surface.
-   Still comfortably past the 4.5:1 it has to clear.
+   KNOWN RISK, do not skip: lime and gold are both yellowish, so if you run
+   this with `data-money="gold"` the Verified chip and a cedi amount become
+   neighbours on the colour wheel. Judge this one with money on orange first.
    --------------------------------------------------------------------------- */
-:root[data-palette='canopy'] {
-  --color-surface: #f2f6f3;
-  --color-surface-dim: #e3ebe6;
+:root[data-palette='signal'] {
+  --color-surface: #fbfbf9;
+  --color-surface-dim: #eeeeea;
   --color-surface-container-lowest: #ffffff;
-  --color-surface-container-low: #f9fcfa;
-  --color-surface-container: #e9efeb;
-  --color-surface-container-high: #dfe7e2;
-  --color-surface-container-highest: #d5ded8;
-  --color-surface-variant: #dfe7e2;
-  --color-background: #f2f6f3;
+  --color-surface-container-low: #fefefd;
+  --color-surface-container: #f4f4f0;
+  --color-surface-container-high: #ebebe6;
+  --color-surface-container-highest: #e1e1db;
+  --color-surface-variant: #ebebe6;
+  --color-background: #fbfbf9;
 
-  --color-on-surface: #0f1f18;
-  --color-on-surface-variant: #4e615a;
-  --color-on-background: #0f1f18;
-  --color-inverse-surface: #0f1f18;
-  --color-inverse-on-surface: #f2f6f3;
-  --color-outline: #7f918a;
-  --color-outline-variant: #dde5e0;
+  --color-on-surface: #0d1411;
+  --color-on-surface-variant: #535a56;
+  --color-on-background: #0d1411;
+  --color-inverse-surface: #0d1411;
+  --color-inverse-on-surface: #fbfbf9;
+  --color-outline: #8b918d;
+  --color-outline-variant: #e6e6e0;
 
-  --color-primary: #0b5e3a;
-  --color-primary-container: #d8efe2;
-  --color-on-primary-container: #0a3f27;
+  --color-primary: #042e22;
+  --color-primary-container: #e4efe9;
+  --color-on-primary-container: #042e22;
   --color-inverse-primary: #7fd6ab;
-  --color-primary-fixed: #d8efe2;
-  --color-primary-fixed-dim: #b3e0c9;
-  --color-on-primary-fixed: #042416;
-  --color-on-primary-fixed-variant: #0b5e3a;
-  --color-surface-tint: #0b5e3a;
+  --color-primary-fixed: #e4efe9;
+  --color-primary-fixed-dim: #bde0cd;
+  --color-on-primary-fixed: #02150f;
+  --color-on-primary-fixed-variant: #0c7040;
+  --color-surface-tint: #0c7040;
 
-  --color-secondary: #3d6a57;
-  --color-secondary-container: #d8efe2;
-  --color-on-secondary-container: #0a3f27;
-  --color-secondary-fixed: #d8efe2;
-  --color-secondary-fixed-dim: #b3e0c9;
-  --color-on-secondary-fixed: #042416;
-  --color-on-secondary-fixed-variant: #0b5e3a;
+  --color-secondary: #3a5b4d;
+  --color-secondary-container: #e4efe9;
+  --color-on-secondary-container: #042e22;
+  --color-secondary-fixed: #e4efe9;
+  --color-secondary-fixed-dim: #bde0cd;
+  --color-on-secondary-fixed: #02150f;
+  --color-on-secondary-fixed-variant: #0c7040;
 
-  --color-verified: #0b5e3a;
-  --color-verified-container: #d8efe2;
+  /* The lime. Pachama's #d4f085 lightened into a chip fill, with a dark
+     olive on top of it so it still passes as text at 6.28:1. */
+  --color-verified: #3f6212;
+  --color-verified-container: #e8f8c0;
 
-  --tint-ink: 15 31 24;
+  --tint-ink: 13 20 17;
 }
 
-/* ---------------------------------------------------------------------------
-   SLATE — cool neutral grey, forest green kept.
+/* ===========================================================================
+   MONEY — a separate switch, because it is a separate question
 
-   Grey is amber's complement, so a cedi figure is louder here than anywhere
-   else without the amber changing at all. The page stops reading as paper and
-   starts reading as an instrument, which is arguably the honest description of
-   a verification tool.
+   `--color-accent*` is the one hue in this app that carries a meaning on its
+   own: a planter should be able to find what they earned without reading the
+   label next to it. That only works if it means one thing everywhere, which
+   is why no palette above touches it.
 
-   Watch for: a cool grey page can look cold and unbranded next to the warm
-   photographs this app is full of. Judge it on My Grove, where the thumbnails
-   are, not on Wallet.
-   --------------------------------------------------------------------------- */
-:root[data-palette='slate'] {
-  --color-surface: #f4f5f6;
-  --color-surface-dim: #e6e8ea;
-  --color-surface-container-lowest: #ffffff;
-  --color-surface-container-low: #fafbfb;
-  --color-surface-container: #eceef0;
-  --color-surface-container-high: #e3e6e8;
-  --color-surface-container-highest: #d9dde0;
-  --color-surface-variant: #e3e6e8;
-  --color-background: #f4f5f6;
+   Which hue it should be is still open, and the survey has an opinion:
 
-  --color-on-surface: #14181b;
-  --color-on-surface-variant: #525a5f;
-  --color-on-background: #14181b;
-  --color-inverse-surface: #14181b;
-  --color-inverse-on-surface: #f4f5f6;
-  --color-outline: #868e93;
-  --color-outline-variant: #e0e3e6;
+     Wren            #f79f22      Farmerline (Ghana)  #ffa000
+     Plant-for-the-  #f2994a      One Acre Fund       #e09600
+       Planet        #f0af32      Greenstand          #ffc107
+     Pachama         #e5b900      MTN Ghana / MoMo    #ffcb05
 
-  --color-primary: #13402c;
-  --color-primary-container: #e2efe8;
-  --color-on-primary-container: #13402c;
-  --color-inverse-primary: #8ed3b0;
-  --color-primary-fixed: #e2efe8;
-  --color-primary-fixed-dim: #c3e3d2;
-  --color-on-primary-fixed: #062416;
-  --color-on-primary-fixed-variant: #1b6b47;
-  --color-surface-tint: #1b6b47;
+   Every one of those is GOLDEN. Ours, #e2680b, is a red-orange at hue 26 —
+   it sits closer to the alert colours in the same survey (#ef7048, #f0523d,
+   #ff481d) than to any of the money colours.
 
-  --color-secondary: #3f6355;
-  --color-secondary-container: #e2efe8;
-  --color-on-secondary-container: #13402c;
-  --color-secondary-fixed: #e2efe8;
-  --color-secondary-fixed-dim: #c3e3d2;
-  --color-on-secondary-fixed: #062416;
-  --color-on-secondary-fixed-variant: #1b6b47;
+   And the market argument is the stronger one: in Ghana, money on a phone is
+   MTN MoMo, and MTN yellow is #ffcb05. That is not a style preference, it is
+   the thing every planter in the pilot already has installed.
 
-  --color-verified: #1b6b47;
-  --color-verified-container: #e2efe8;
+   The contrast argument agrees. On the warmest paper in the set our orange
+   measures 2.95:1, which is under even the 3:1 floor that large bold text is
+   allowed. Gold measures 4.00:1 on the same paper.
 
-  --tint-ink: 20 24 27;
+   WHAT THIS DOES NOT FIX, and it would be dishonest to imply otherwise: the
+   "needs review" amber sits at hue 32, so money and review are 6 degrees
+   apart today and 8 degrees apart in gold. They are told apart by FORM, not
+   by hue — money is always a bare numeral with a cedi sign, review is always
+   a pill with the word on it. Changing the hue does not change that, and
+   nothing in the survey suggests a way out that does not spend a second
+   colour on it.
+   =========================================================================== */
+:root[data-money='gold'] {
+  /* The ink for a cedi amount. Dark enough to be read, not so dark it turns
+     olive — this is the compromise the bright MTN yellow cannot make, since
+     #ffcb05 as text measures 1.66:1 and is simply unusable. */
+  --color-accent: #a06b00;
+  --color-accent-dim: #875a00;
+  /* The chip fill is where the MTN association actually lives: bright, pale
+     gold, dark text on top. This is what a planter recognises. */
+  --color-accent-container: #ffeec2;
+  --color-on-accent-container: #6e4a00;
 }
