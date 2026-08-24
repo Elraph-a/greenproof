@@ -17,6 +17,7 @@ import {
   ErrorNote,
   HeroBadge,
   HeroCard,
+  PhotoHero,
   StatusChip,
 } from '../components/ui'
 
@@ -124,6 +125,30 @@ export function MyGrove() {
     [trees],
   )
 
+  /**
+   * The one tree the hero shows: whatever is furthest past its due date, and a
+   * never-checked tree ahead of everything since it has no evidence at all.
+   *
+   * Deliberately NOT "the first due tree in the list". The list is ordered by
+   * registration date, so on a forty-tree round the arbitrary first row would
+   * take the biggest slot on the screen while a tree six days overdue sat
+   * three screens down.
+   */
+  const focus = useMemo(() => {
+    if (!trees) return null
+    const work = trees
+      .map((tree) => ({
+        tree,
+        due: tree.latest ? nextCheckinDue(tree.latest.captured_at) : null,
+      }))
+      .filter((x) => (x.due ? x.due.overdue : true))
+    if (work.length === 0) return null
+    // Unchecked trees have no due date; rank them above every overdue one.
+    return work.sort(
+      (a, b) => (b.due?.days ?? Infinity) - (a.due?.days ?? Infinity),
+    )[0]
+  }, [trees])
+
   const today = new Date()
   /*
    * The hero used to be the weekday — the biggest text on the home screen said
@@ -172,35 +197,78 @@ export function MyGrove() {
         "how am I doing?" second. Survival and earnings are still here, because
         they are what the product proves - they are just no longer the greeting.
       */}
-      <HeroCard
-        label={dueCount === 1 ? 'Tree due now' : 'Trees due now'}
-        value={trees ? dueCount : '-'}
-        badge={
-          trees && trees.length > 0 ? (
-            <HeroBadge tone="good">{survival}% survival</HeroBadge>
-          ) : undefined
-        }
-      >
-        <p className="mt-1 text-body-md text-on-primary/75">
-          {trees && trees.length > 0
-            ? dueCount === 0
-              ? 'Every tree is up to date. Nothing to walk to.'
-              : `${alive} of ${trees.length} confirmed alive${
+      {/*
+        THE HERO IS THE TREE, NOT THE COUNT.
+
+        "Trees due now: 3" is a fact about a list. A planter cannot walk to a
+        3. Leading with the specific tree that is most overdue - its own last
+        photograph, its name, and the one button that starts the visit - turns
+        the home screen from a summary into the first step of the round.
+
+        It also puts the app's own evidence at the top of its own home screen,
+        which a product that claims identity IS photo history should have been
+        doing from the start.
+
+        When there is no work, the count comes back. A grove with nothing due
+        should be reporting proof, not manufacturing urgency, and that is the
+        one moment the survival figure deserves display size.
+      */}
+      {focus ? (
+        <PhotoHero
+          photo={focus.tree.latest ? thumbs.get(focus.tree.latest.wide_photo) : null}
+          alt={`Most recent photo of ${demoCommonName.get(focus.tree.id) ?? treeLabel(focus.tree)}`}
+          chip={
+            <span
+              className={`chip ${focus.due?.overdue ? 'chip-flagged' : 'chip-review'}`}
+            >
+              {focus.due?.label ?? 'Never checked'}
+            </span>
+          }
+          eyebrow={dueCount > 1 ? `Next of ${dueCount} due` : 'Due now'}
+          title={demoCommonName.get(focus.tree.id) ?? treeLabel(focus.tree)}
+          sub={
+            focus.tree.species ||
+            (focus.tree.latest ? 'Species not recorded' : 'Not yet checked in')
+          }
+          action={
+            <Link
+              to={`/checkin?tree=${focus.tree.id}`}
+              className="btn btn-fab bg-white text-primary"
+            >
+              <Icon name="camera" size={18} />
+              Check in
+            </Link>
+          }
+        />
+      ) : (
+        <HeroCard
+          label="Trees confirmed alive"
+          value={trees ? `${alive} of ${trees.length}` : '-'}
+          badge={
+            trees && trees.length > 0 ? (
+              <HeroBadge tone="good">{survival}% survival</HeroBadge>
+            ) : undefined
+          }
+        >
+          <p className="mt-1 text-body-md text-on-primary/75">
+            {trees && trees.length > 0
+              ? `Every tree is up to date. Nothing to walk to${
                   balance === null ? '' : ` · GH₵${balance.toFixed(0)} earned`
-                }`
-            : 'Register a tree to begin.'}
-        </p>
-        <div className="mt-3.5 h-1.5 overflow-hidden rounded-full bg-white/20">
-          <div
-            // scaleX, not width. Animating width runs layout on every frame;
-            // transform is composited. This bar sits in the hero card that
-            // paints first on a low-end Android, which is exactly where a
-            // layout-thrashing animation is felt.
-            className="h-full w-full origin-left rounded-full bg-inverse-primary transition-transform duration-500 ease-out"
-            style={{ transform: `scaleX(${survival / 100})` }}
-          />
-        </div>
-      </HeroCard>
+                }.`
+              : 'Register a tree to begin.'}
+          </p>
+          <div className="mt-3.5 h-1.5 overflow-hidden rounded-full bg-white/20">
+            <div
+              // scaleX, not width. Animating width runs layout on every frame;
+              // transform is composited. This bar sits in the hero card that
+              // paints first on a low-end Android, which is exactly where a
+              // layout-thrashing animation is felt.
+              className="h-full w-full origin-left rounded-full bg-inverse-primary transition-transform duration-500 ease-out"
+              style={{ transform: `scaleX(${survival / 100})` }}
+            />
+          </div>
+        </HeroCard>
+      )}
 
       {/*
         The three-equal-stat strip is gone. Three identical cards in a row is
@@ -241,14 +309,13 @@ export function MyGrove() {
       </div>
 
       {!trees && !error && (
-        <div className="flex flex-col gap-2.5">
-          {[0, 1, 2].map((i) => (
-            <div key={i} className="card flex min-h-[120px] gap-3 overflow-hidden p-0">
-              <div className="skeleton w-28 shrink-0 self-stretch" />
-              <div className="flex-1 space-y-2.5 py-4 pr-4">
-                <div className="skeleton h-4 w-1/2 rounded" />
+        <div className="grid grid-cols-2 gap-2.5">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="card overflow-hidden p-0">
+              <div className="skeleton aspect-[5/4]" />
+              <div className="space-y-2 px-3 pt-2.5 pb-3">
                 <div className="skeleton h-3 w-2/3 rounded" />
-                <div className="skeleton h-3 w-1/3 rounded" />
+                <div className="skeleton h-4 w-4/5 rounded" />
               </div>
             </div>
           ))}
@@ -278,7 +345,7 @@ export function MyGrove() {
         <p className="group-h">Due now</p>
       )}
 
-      <div className="rise-stagger flex flex-col gap-2.5">
+      <div className="rise-stagger grid grid-cols-2 gap-2.5">
         {(grouped ? grouped.due : shown).map((tree) => (
           <TreeRow
             key={tree.id}
@@ -295,7 +362,7 @@ export function MyGrove() {
       {grouped && grouped.done.length > 0 && (
         <>
           {grouped.due.length > 0 && <p className="group-h">Up to date</p>}
-          <div className="rise-stagger flex flex-col gap-2.5">
+          <div className="rise-stagger grid grid-cols-2 gap-2.5">
             {grouped.done.map((tree) => (
               <TreeRow
                 key={tree.id}
@@ -335,124 +402,99 @@ function TreeRow({ tree, thumb }: { tree: TreeWithLatest; thumb?: string }) {
   const name = demoCommonName.get(tree.id) ?? treeLabel(tree)
 
   return (
-
     /*
-      THREE COLUMNS, NOT TWO PLUS AN OVERLAY.
+      TWO COLUMNS OF PHOTOGRAPHS, NOT A LIST OF ROWS.
 
-      The check-in shortcut used to be absolutely positioned in the top-right
-      corner, so the topmost text row had to reserve 48px of empty padding for
-      it. After the row was reordered to lead with the tree's state, that row
-      never fit: measured at 9px of overflow, ellipsising "Due tomorrow" and
-      "Added 2 weeks" on every card.
+      The row layout gave each tree a 112px thumbnail beside three lines of
+      text. Squared off that is roughly 12,500px of evidence per tree; a card
+      in this grid gives about 29,000. Same screen, more than twice the
+      photograph - on the screen belonging to a product whose entire claim is
+      that a tree's identity IS its photographic record.
 
-      Giving the button its own column removes the overlap instead of
-      negotiating around it, and every text row gets its full width back. Still
-      a SIBLING of the card link and never a child: an anchor inside an anchor
-      is invalid HTML and unpredictable on mobile Safari.
+      It costs about one tree per screenful of scroll. That is the trade and it
+      is worth taking: a planter opening their grove is looking for a tree they
+      recognise, and recognition is a function of image size, not row count.
+
+      The row also had a hard geometry problem - three columns fighting over
+      180px of text width, which truncated names and due labels until it was
+      measured and re-cut twice. A card gives every line the full width of its
+      own column and the problem stops existing.
     */
-    <div className="card flex min-h-[96px] items-stretch overflow-hidden p-0">
-            <Link
-              to={`/tree/${tree.id}`}
-              className="flex min-w-0 flex-1 items-stretch active:bg-surface-container-low"
-            >
-              {/*
-                The photo IS the product — this app exists to photograph trees,
-                so the evidence runs flush to the card edge at full height
-                rather than sitting as a thumbnail inside the padding.
-              */}
-              {/*
-                THE STATUS BADGE SITS ON THE PHOTO.
-
-                In the text column the chip cost 91px of a 180px row, so
-                whichever line it shared got truncated: first the schedule, then
-                the tree's name down to "Aben...". Moving it onto the evidence
-                frees the whole column, and a state badge on a thumbnail is the
-                pattern every listing app already uses, so it needs no learning.
-              */}
-              <div className="relative w-28 shrink-0 bg-surface-container-high">
-                {thumb ? (
-                  <img src={thumb} alt="" loading="lazy" className="size-full object-cover" />
-                ) : (
-                  <div className="flex size-full items-center justify-center text-on-surface-variant">
-                    <Icon name="image" size={24} />
-                  </div>
-                )}
-                <span className="absolute inset-x-1.5 bottom-1.5 flex justify-center">
-                  <StatusChip status={tree.latest?.verdict ?? 'pending'} />
-                </span>
-              </div>
-
-              {/*
-                THREE elements, down from seven. Species (a Latin binomial in
-                italics on every row), the tag code and the per-tree money chip
-                all moved to the tree page. On a list of forty they were noise,
-                and eight amber chips in a column destroyed the rule that amber
-                means money — it just meant "a card".
-              */}
-              <div className="flex min-w-0 flex-1 flex-col justify-center gap-1.5 py-3.5 pr-2 pl-3.5">
-                {/* The name carries the clearance for the check-in button in
-                    the top corner. It has the most slack of the three — a long
-                    name ellipsises harmlessly next to its own photograph,
-                    whereas a clipped status or date loses actual information. */}
-                {/*
-                  HIERARCHY WAS INVERTED. The tree's NAME - the one thing the
-                  planter already knows, because they are standing in their own
-                  grove - was the biggest, blackest text on the row, while the
-                  only field that tells them what to do today was the smallest
-                  and the palest.
-
-                  So the row now leads with the state and demotes the name to
-                  an identifier. Weight and colour carry it rather than size:
-                  making the due label bigger would have cost the photograph
-                  its width, and the photograph is the evidence.
-                */}
-                {/*
-                  THE INSTRUCTION GETS ITS OWN LINE.
-
-                  Chip and schedule shared a row and did not fit: measured, the
-                  text column carries 180px, the status chip takes 91, and "1
-                  day overdue" needs 98. Shaving padding was never going to
-                  close a 17px gap.
-
-                  Giving the schedule the full width fixes the overflow and
-                  sharpens the hierarchy at the same time - the line that says
-                  what to do today is now unshared and unabbreviated. The chip
-                  drops to the second row beside the name, where the name may
-                  ellipsise harmlessly next to its own photograph.
-                */}
-                <span
-                  className={`truncate text-label-lg font-semibold ${
-                    due?.overdue ? 'text-error' : 'text-on-surface-variant'
-                  }`}
-                >
-                  {due ? due.label : `Added ${formatAge(tree.created_at)}`}
-                </span>
-                <h3 className="truncate font-headline text-headline-lg font-semibold text-on-surface">
-                  {name}
-                </h3>
-              </div>
-            </Link>
-
-            {/*
-              A SIBLING of the card link, not a child of it.
-
-              This was an aria-hidden <span> INSIDE the <Link>, so it looked
-              like a check-in shortcut and actually navigated to the tree page
-              like the rest of the card — a control that lied about what it did.
-              As a sibling it goes where it claims, and an anchor nested inside
-              an anchor (invalid HTML, unpredictable on mobile Safari) is
-              avoided. Absolutely positioned, so it costs the text rows nothing.
-            */}
-            <Link
-              to={`/checkin?tree=${tree.id}`}
-              aria-label={`Check in on ${name}`}
-              className="flex w-14 shrink-0 items-center justify-center self-stretch text-primary active:bg-primary-container/60"
-            >
-              <span className="flex size-9 items-center justify-center rounded-full bg-primary-container">
-                <Icon name="camera" size={17} />
-              </span>
-            </Link>
+    <div className="relative">
+      <Link
+        to={`/tree/${tree.id}`}
+        className="card block overflow-hidden p-0 active:bg-surface-container-low"
+      >
+        <div className="relative aspect-[5/4] bg-surface-container-high">
+          {thumb ? (
+            <img
+              src={thumb}
+              alt={`Most recent photo of ${name}`}
+              loading="lazy"
+              className="size-full object-cover"
+            />
+          ) : (
+            <div className="flex size-full items-center justify-center text-on-surface-variant">
+              <Icon name="image" size={26} />
             </div>
+          )}
+          {/* On the photograph, as every listing app does it - the state needs
+              no learning there, and it costs the text column nothing. */}
+          <span className="absolute left-2 top-2">
+            <StatusChip status={tree.latest?.verdict ?? 'pending'} />
+          </span>
+        </div>
+
+        <div className="px-3 pt-2.5 pb-3">
+          {/*
+            The instruction is still ABOVE the name and still carries the
+            colour. A planter standing in their own grove already knows what
+            the tree is called; what they do not know is whether it is due.
+          */}
+          <span
+            className={`block truncate text-label-md font-semibold ${
+              due?.overdue ? 'text-error' : 'text-on-surface-variant'
+            }`}
+          >
+            {due ? due.label : `Added ${formatAge(tree.created_at)}`}
+          </span>
+          <h3 className="mt-0.5 truncate font-headline text-headline-md font-semibold text-on-surface">
+            {name}
+          </h3>
+        </div>
+      </Link>
+
+      {/*
+        The check-in shortcut, pinned to the bottom-right of the PHOTOGRAPH.
+
+        This overlay mirrors the photo's own aspect ratio rather than offsetting
+        the button by a hardcoded distance from the card's bottom. The card is
+        172px wide on a 390px screen today and something else on a 320px one,
+        so any pixel offset would drift off the seam at other widths. Matching
+        the ratio pins it correctly at every size.
+
+        It first sat over the text with `pr-9` reserving room for it, which
+        truncated four of eight tree names by up to 19px - the third time this
+        screen has lost text to a control parked in a text column. Keeping the
+        button entirely inside the image ends that class of bug: the name gets
+        the full width of its own card.
+
+        A SIBLING of the card link, never a child. An anchor inside an anchor
+        is invalid HTML and unpredictable on mobile Safari, and this was that
+        exact bug once - a control that looked like a check-in shortcut and
+        silently opened the tree page instead.
+      */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 aspect-[5/4]">
+        <Link
+          to={`/checkin?tree=${tree.id}`}
+          aria-label={`Check in on ${name}`}
+          className="pointer-events-auto absolute right-2 bottom-2 flex size-10 items-center justify-center rounded-full bg-primary text-on-primary shadow-[0_4px_14px_-4px_rgb(var(--tint-ink)/0.55)] transition-transform ease-out active:scale-95"
+          style={{ transitionDuration: 'var(--duration-press)' }}
+        >
+          <Icon name="camera" size={18} />
+        </Link>
+      </div>
+    </div>
   )
 }
 

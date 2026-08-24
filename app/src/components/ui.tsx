@@ -137,6 +137,88 @@ export function HeroCard({
   )
 }
 
+/**
+ * The hero as a PHOTOGRAPH rather than a number.
+ *
+ * WHY THIS EXISTS ALONGSIDE HeroCard
+ * HeroCard states a figure. That is right for Wallet, where the subject is an
+ * amount and there is nothing to photograph. It is wrong for My Grove, where
+ * the subject is a specific tree standing in a specific place and we are
+ * holding a photograph of it.
+ *
+ * This whole product argues that identity is accumulated photographic
+ * evidence. A home screen that renders that evidence at 112px and gives the
+ * display size to an abstract count is arguing against itself.
+ *
+ * THE SCRIM IS NOT DECORATION. Photographs of trees are unpredictable - bright
+ * sky in one, deep shade in the next - and white text has to stay legible on
+ * every one of them. A fixed two-stop gradient does not do that: on a
+ * blown-out sky the mid-tones stay too light. Three stops with most of the
+ * weight in the bottom third keeps the text band dark while leaving the top of
+ * the image almost untouched, which is where the tree usually is.
+ */
+export function PhotoHero({
+  photo,
+  alt,
+  eyebrow,
+  title,
+  sub,
+  chip,
+  action,
+}: {
+  /** Last wide shot. Null falls back to a solid card - a tree can be registered and not yet photographed. */
+  photo?: string | null
+  /**
+   * Required whenever there is a photo, and deliberately NOT optional with an
+   * empty default. This image is the subject of the card, not wallpaper: it is
+   * the most recent evidence for the tree the heading names. A screen-reader
+   * user should be told it exists.
+   */
+  alt?: string
+  eyebrow?: ReactNode
+  title: ReactNode
+  sub?: ReactNode
+  /** Sits on the image, top-left. The state, in the state's own colours. */
+  chip?: ReactNode
+  action?: ReactNode
+}) {
+  return (
+    <section className="hero-surface relative isolate overflow-hidden rounded-3xl bg-primary">
+      {photo ? (
+        <>
+          <img
+            src={photo}
+            alt={alt ?? ''}
+            className="absolute inset-0 -z-10 size-full object-cover"
+          />
+          <div
+            aria-hidden
+            className="absolute inset-0 -z-10 bg-gradient-to-t from-black/85 via-black/45 via-45% to-black/10"
+          />
+        </>
+      ) : (
+        <div aria-hidden className="absolute inset-0 -z-10 bg-primary" />
+      )}
+
+      <div className="flex min-h-[252px] flex-col justify-between gap-4 p-4">
+        <div className="flex justify-start">{chip}</div>
+        <div>
+          {eyebrow && (
+            <span className="block font-semibold uppercase text-white/70 text-micro tracking-[0.06em]">
+              {eyebrow}
+            </span>
+          )}
+          <h2 className="mt-1 font-headline text-headline-xl font-bold text-white">
+            {title}
+          </h2>
+          {sub && <p className="mt-0.5 text-body-md text-white/75">{sub}</p>}
+          {action && <div className="mt-3.5">{action}</div>}
+        </div>
+      </div>
+    </section>
+  )
+}
+
 /** Small pill for the hero's top-right corner — a trend, a grade, a count. */
 export function HeroBadge({
   children,

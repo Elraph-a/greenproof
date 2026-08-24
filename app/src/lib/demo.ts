@@ -65,8 +65,14 @@ const SEEDS: Seed[] = [
   { n: 4, tag: 'GP-0044', species: 'Khaya senegalensis', common: "Yaw's Mahogany", verdict: 'verified', confidence: 94, status: 'alive', lastDays: 2, visits: 3, earned: 24 },
   { n: 5, tag: 'GP-0045', species: 'Azadirachta indica', common: "Esi's Neem", verdict: 'flagged', confidence: 21, status: 'flagged', lastDays: 6, visits: 2, earned: 6 },
   { n: 6, tag: 'GP-0046', species: 'Mangifera indica', common: "Kwame's Mango", verdict: 'verified', confidence: 89, status: 'alive', lastDays: 3, visits: 2, earned: 12 },
-  { n: 1, tag: 'GP-0047', species: 'Ceiba pentandra', common: "Abena's Onyina", verdict: null, confidence: null, status: 'pending', lastDays: 0, visits: 0, earned: 0 },
-  { n: 3, tag: 'GP-0048', species: 'Milicia regia', common: "Kojo's Odum", verdict: null, confidence: null, status: 'pending', lastDays: 0, visits: 0, earned: 0 },
+  // Registered today, awaiting a verdict. ONE visit each, not zero:
+  // submitRegistration inserts a `checkins` row alongside the tree, so
+  // registration IS visit #1 and a tree with no photograph at all cannot
+  // exist. Seeding `visits: 0` modelled an impossible state, and it showed -
+  // My Grove's hero picked one of these two, found no photo to display, and
+  // fell back to a flat card on the screen whose whole point is the evidence.
+  { n: 1, tag: 'GP-0047', species: 'Ceiba pentandra', common: "Abena's Onyina", verdict: null, confidence: null, status: 'pending', lastDays: 0, visits: 1, earned: 0 },
+  { n: 3, tag: 'GP-0048', species: 'Milicia regia', common: "Kojo's Odum", verdict: null, confidence: null, status: 'pending', lastDays: 0, visits: 1, earned: 0 },
 ]
 
 /**
