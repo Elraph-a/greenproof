@@ -5,7 +5,14 @@ import { AuthProvider } from './auth/AuthProvider'
 import { App } from './App'
 import { requestDurableStorage } from './lib/queue'
 import { primeMlUrl } from './lib/ml'
+import { applyStoredPalette } from './lib/palette'
 import './index.css'
+
+// Before the first paint, not in an effect — otherwise the default palette
+// renders for a frame and then swaps, and a flash of the colours you are
+// comparing against is exactly what makes the comparison untrustworthy.
+// Compiles away entirely outside `npm run dev`.
+applyStoredPalette()
 
 // Ask the browser not to evict the pending-upload queue under storage
 // pressure. Fire and forget — refusal is not fatal.

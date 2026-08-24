@@ -670,11 +670,16 @@ function GpsStep({
   const usable = fix ? gpsUsable : DEMO ? true : false
 
   const tone = good ? 'good' : usable ? 'warn' : 'bad'
+  // tertiary, NOT accent. Both are amber, and that is the point: accent is
+  // reserved for cedi amounts so a planter can find money without reading a
+  // label, and a GPS fix is not money. tertiary is the "a human should look at
+  // this" amber, which is what a marginal fix actually is. It is also darker,
+  // so this ring goes from 3.12:1 to 5.25:1 on the page.
   const ring =
     tone === 'good'
       ? 'text-[var(--color-verified)]'
       : tone === 'warn'
-        ? 'text-accent'
+        ? 'text-tertiary'
         : 'text-error'
 
   return (
@@ -766,11 +771,13 @@ function Legend({
   range: string
   text: string
 }) {
+  // Matches the ring above — the legend and the thing it explains have to be
+  // the same amber, and it is the status amber, not the money one.
   const dot =
     tone === 'good'
       ? 'bg-[var(--color-verified)]'
       : tone === 'warn'
-        ? 'bg-accent'
+        ? 'bg-tertiary'
         : 'bg-error'
   return (
     <div className="flex items-start gap-2.5">

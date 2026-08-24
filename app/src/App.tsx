@@ -5,6 +5,7 @@ import { startQueueWatcher } from "./lib/registrations";
 import { Shell } from "./components/Shell";
 import { PendingBanner } from "./components/PendingBanner";
 import { DemoBanner } from "./components/DemoBanner";
+import { PaletteSwitcher } from "./components/PaletteSwitcher";
 import { Spinner } from "./components/ui";
 import { Landing } from "./screens/Landing";
 import { SignIn } from "./screens/SignIn";
@@ -118,6 +119,11 @@ export function App() {
       */}
       {/* Renders nothing unless VITE_DEMO=1. See components/DemoBanner.tsx. */}
       <DemoBanner />
+
+      {/* Dev only, and above the router for the same reason as the banner —
+          the register flow is outside the tab shell, and that is one of the
+          screens the palette most needs judging on. */}
+      <PaletteSwitcher />
 
       <PendingBanner />
 

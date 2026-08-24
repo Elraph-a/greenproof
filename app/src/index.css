@@ -24,6 +24,11 @@
 @import '@fontsource/work-sans/latin-700.css';
 @import '@fontsource/work-sans/latin-ext-700.css';
 
+/* Alternate palettes, applied by setting `data-palette` on <html>. Every token
+   below is a default that a palette may override — EXCEPT the amber block,
+   which no palette touches. See styles/palettes.css. */
+@import './styles/palettes.css';
+
 /* ===========================================================================
    GREENPROOF v2 — design tokens
    Source: docs/design/v2/ (12 screens) for structure and colour.
@@ -167,13 +172,19 @@
      lightest. Each step also carries a tight contact shadow plus a wide soft
      one, because a single blur reads as a sticker and two read as an object
      sitting above a surface. */
-  --shadow-chip: 0 1px 1px rgb(22 33 27 / 0.04);
+  /* The ink the shadows are tinted with, as bare channels so the alpha can
+     vary per step. Its own token because it has to track the palette: a
+     forest-tinted shadow left on the cool grey page of `slate` goes visibly
+     mossy, which is the kind of thing nobody can name but everybody sees. */
+  --tint-ink: 22 33 27;
+
+  --shadow-chip: 0 1px 1px rgb(var(--tint-ink) / 0.04);
   --shadow-card:
-    0 1px 2px rgb(22 33 27 / 0.04),
-    0 6px 18px -10px rgb(22 33 27 / 0.1);
+    0 1px 2px rgb(var(--tint-ink) / 0.04),
+    0 6px 18px -10px rgb(var(--tint-ink) / 0.1);
   --shadow-hero:
-    0 2px 4px rgb(22 33 27 / 0.06),
-    0 18px 40px -22px rgb(22 33 27 / 0.28);
+    0 2px 4px rgb(var(--tint-ink) / 0.06),
+    0 18px 40px -22px rgb(var(--tint-ink) / 0.28);
 
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
@@ -344,7 +355,18 @@
   /* The floating action button — the one fully-round control. */
   .btn-fab {
     @apply rounded-full px-5;
-    box-shadow: 0 8px 24px -8px rgb(20 67 44 / 0.45);
+    /* Tinted with the button's OWN fill rather than with neutral ink, so it
+       reads as light blocked by a green object instead of a grey halo pasted
+       behind it. Derived from the token so it follows the palette.
+
+       The neutral line first is a real fallback, not a formality: an invalid
+       colour makes the WHOLE declaration invalid, so a browser without
+       color-mix would drop the shadow entirely and the FAB would stop looking
+       like it floats — which is the only thing making it read as the primary
+       action rather than one more button. */
+    box-shadow: 0 8px 24px -8px rgb(var(--tint-ink) / 0.45);
+    box-shadow: 0 8px 24px -8px
+      color-mix(in srgb, var(--color-primary) 45%, transparent);
   }
   .btn-cta {
     letter-spacing: -0.005em;
@@ -645,9 +667,7 @@
      are still one tap away, which is where reference material belongs. */
   .disclosure {
     @apply overflow-hidden rounded-xl bg-surface-container-lowest;
-    box-shadow:
-      0 1px 2px rgb(22 33 27 / 0.04),
-      0 6px 18px -10px rgb(22 33 27 / 0.10);
+    box-shadow: var(--shadow-card);
   }
   .disclosure > summary {
     @apply flex cursor-pointer list-none items-center gap-2 p-4 font-semibold

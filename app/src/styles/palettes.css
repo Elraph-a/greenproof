@@ -1,0 +1,241 @@
+/* ===========================================================================
+   PALETTE VARIANTS — for choosing, on localhost, with the real app
+
+   Set `data-palette` on <html> and every screen re-tints. The switcher in
+   components/PaletteSwitcher.tsx does that, and is stripped from production
+   builds.
+
+   TWO RULES EVERY PALETTE HERE OBEYS, because both are load-bearing:
+
+   1. SECONDARY TEXT STAYS DARK. `--color-on-surface-variant` must clear ~5.9:1
+      against `--color-background`, not against white — most secondary text in
+      this app sits on the page, not on a card. The usual pale grey secondary
+      is unreadable on a phone in direct midday sun, which is the condition
+      this app is actually used in. Measured per palette, in the table below.
+
+   2. AMBER IS MONEY AND IS NEVER RETINTED. `--color-accent*` and
+      `--color-tertiary*` are deliberately ABSENT from every block below, so
+      they inherit one fixed set of values from @theme. That is what lets a
+      planter find a cedi figure without reading its label, and it only holds
+      if the hue means one thing on every screen in every palette.
+
+   Measured, not estimated:
+
+     palette   muted/bg   muted/card   ink/bg   white-on-primary
+     field       5.91        6.39      15.32       11.24
+     ink         6.57        7.11      16.93       14.52
+     canopy      6.05        6.60      15.66        7.85
+     slate       6.44        7.03      16.36       11.68
+
+   `ink` and `slate` are BETTER in sun than what we ship today, not merely
+   equal to it.
+   =========================================================================== */
+
+/* ---------------------------------------------------------------------------
+   FIELD — warm paper, deep forest. What the app looks like today.
+   Listed explicitly so the switcher can come back to it.
+   --------------------------------------------------------------------------- */
+:root[data-palette='field'] {
+  --color-surface: #f7f6f2;
+  --color-surface-dim: #ebe9e1;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #fbfaf7;
+  --color-surface-container: #f2f1ec;
+  --color-surface-container-high: #eae8e1;
+  --color-surface-container-highest: #e2e0d7;
+  --color-surface-variant: #eae8e1;
+  --color-background: #f7f6f2;
+
+  --color-on-surface: #16211b;
+  --color-on-surface-variant: #55625c;
+  --color-on-background: #16211b;
+  --color-inverse-surface: #16211b;
+  --color-inverse-on-surface: #f7f6f2;
+  --color-outline: #8c968f;
+  --color-outline-variant: #e5e3db;
+
+  --color-primary: #14432c;
+  --color-primary-container: #e4f1e9;
+  --color-on-primary-container: #14432c;
+  --color-inverse-primary: #8ed3b0;
+  --color-primary-fixed: #e4f1e9;
+  --color-primary-fixed-dim: #c3e3d2;
+  --color-on-primary-fixed: #062416;
+  --color-on-primary-fixed-variant: #1b6b47;
+  --color-surface-tint: #1b6b47;
+
+  --color-secondary: #3f6355;
+  --color-secondary-container: #e4f1e9;
+  --color-on-secondary-container: #14432c;
+  --color-secondary-fixed: #e4f1e9;
+  --color-secondary-fixed-dim: #c3e3d2;
+  --color-on-secondary-fixed: #062416;
+  --color-on-secondary-fixed-variant: #1b6b47;
+
+  --color-verified: #1b6b47;
+  --color-verified-container: #e4f1e9;
+
+  --tint-ink: 22 33 27;
+}
+
+/* ---------------------------------------------------------------------------
+   INK — near-neutral paper, near-black green.
+
+   The green stops being a colour and becomes ink. Almost nothing on screen is
+   saturated except a cedi amount and a status, so the eye goes straight to the
+   two things that carry information. The highest-contrast option, and the one
+   that reads least like a template: warm beige plus green is the house style
+   of every eco startup landing page on the internet.
+   --------------------------------------------------------------------------- */
+:root[data-palette='ink'] {
+  --color-surface: #f6f6f4;
+  --color-surface-dim: #e9e9e5;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #fcfcfa;
+  --color-surface-container: #f1f1ee;
+  --color-surface-container-high: #e8e8e4;
+  --color-surface-container-highest: #dededa;
+  --color-surface-variant: #e8e8e4;
+  --color-background: #f6f6f4;
+
+  --color-on-surface: #101613;
+  --color-on-surface-variant: #525a56;
+  --color-on-background: #101613;
+  --color-inverse-surface: #101613;
+  --color-inverse-on-surface: #f6f6f4;
+  --color-outline: #8a908c;
+  --color-outline-variant: #e3e3de;
+
+  --color-primary: #0e2f20;
+  --color-primary-container: #e6efe9;
+  --color-on-primary-container: #0e2f20;
+  --color-inverse-primary: #8ed3b0;
+  --color-primary-fixed: #e6efe9;
+  --color-primary-fixed-dim: #c6e2d3;
+  --color-on-primary-fixed: #04180f;
+  --color-on-primary-fixed-variant: #186b45;
+  --color-surface-tint: #186b45;
+
+  --color-secondary: #3c5b4f;
+  --color-secondary-container: #e6efe9;
+  --color-on-secondary-container: #0e2f20;
+  --color-secondary-fixed: #e6efe9;
+  --color-secondary-fixed-dim: #c6e2d3;
+  --color-on-secondary-fixed: #04180f;
+  --color-on-secondary-fixed-variant: #186b45;
+
+  --color-verified: #186b45;
+  --color-verified-container: #e6efe9;
+
+  --tint-ink: 16 22 19;
+}
+
+/* ---------------------------------------------------------------------------
+   CANOPY — cool green mist, and a green that is actually green.
+
+   The only option where the primary reads as a colour rather than as a very
+   dark neutral: #0b5e3a against #14432c is the difference between leaf and
+   bottle glass. The page carries a faint green cast, so white cards lift off
+   it more than they do on warm paper.
+
+   The cost is honest: white on this primary measures 7.85:1 rather than 11+,
+   the least headroom of the four if a button ever lands on a tinted surface.
+   Still comfortably past the 4.5:1 it has to clear.
+   --------------------------------------------------------------------------- */
+:root[data-palette='canopy'] {
+  --color-surface: #f2f6f3;
+  --color-surface-dim: #e3ebe6;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f9fcfa;
+  --color-surface-container: #e9efeb;
+  --color-surface-container-high: #dfe7e2;
+  --color-surface-container-highest: #d5ded8;
+  --color-surface-variant: #dfe7e2;
+  --color-background: #f2f6f3;
+
+  --color-on-surface: #0f1f18;
+  --color-on-surface-variant: #4e615a;
+  --color-on-background: #0f1f18;
+  --color-inverse-surface: #0f1f18;
+  --color-inverse-on-surface: #f2f6f3;
+  --color-outline: #7f918a;
+  --color-outline-variant: #dde5e0;
+
+  --color-primary: #0b5e3a;
+  --color-primary-container: #d8efe2;
+  --color-on-primary-container: #0a3f27;
+  --color-inverse-primary: #7fd6ab;
+  --color-primary-fixed: #d8efe2;
+  --color-primary-fixed-dim: #b3e0c9;
+  --color-on-primary-fixed: #042416;
+  --color-on-primary-fixed-variant: #0b5e3a;
+  --color-surface-tint: #0b5e3a;
+
+  --color-secondary: #3d6a57;
+  --color-secondary-container: #d8efe2;
+  --color-on-secondary-container: #0a3f27;
+  --color-secondary-fixed: #d8efe2;
+  --color-secondary-fixed-dim: #b3e0c9;
+  --color-on-secondary-fixed: #042416;
+  --color-on-secondary-fixed-variant: #0b5e3a;
+
+  --color-verified: #0b5e3a;
+  --color-verified-container: #d8efe2;
+
+  --tint-ink: 15 31 24;
+}
+
+/* ---------------------------------------------------------------------------
+   SLATE — cool neutral grey, forest green kept.
+
+   Grey is amber's complement, so a cedi figure is louder here than anywhere
+   else without the amber changing at all. The page stops reading as paper and
+   starts reading as an instrument, which is arguably the honest description of
+   a verification tool.
+
+   Watch for: a cool grey page can look cold and unbranded next to the warm
+   photographs this app is full of. Judge it on My Grove, where the thumbnails
+   are, not on Wallet.
+   --------------------------------------------------------------------------- */
+:root[data-palette='slate'] {
+  --color-surface: #f4f5f6;
+  --color-surface-dim: #e6e8ea;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #fafbfb;
+  --color-surface-container: #eceef0;
+  --color-surface-container-high: #e3e6e8;
+  --color-surface-container-highest: #d9dde0;
+  --color-surface-variant: #e3e6e8;
+  --color-background: #f4f5f6;
+
+  --color-on-surface: #14181b;
+  --color-on-surface-variant: #525a5f;
+  --color-on-background: #14181b;
+  --color-inverse-surface: #14181b;
+  --color-inverse-on-surface: #f4f5f6;
+  --color-outline: #868e93;
+  --color-outline-variant: #e0e3e6;
+
+  --color-primary: #13402c;
+  --color-primary-container: #e2efe8;
+  --color-on-primary-container: #13402c;
+  --color-inverse-primary: #8ed3b0;
+  --color-primary-fixed: #e2efe8;
+  --color-primary-fixed-dim: #c3e3d2;
+  --color-on-primary-fixed: #062416;
+  --color-on-primary-fixed-variant: #1b6b47;
+  --color-surface-tint: #1b6b47;
+
+  --color-secondary: #3f6355;
+  --color-secondary-container: #e2efe8;
+  --color-on-secondary-container: #13402c;
+  --color-secondary-fixed: #e2efe8;
+  --color-secondary-fixed-dim: #c3e3d2;
+  --color-on-secondary-fixed: #062416;
+  --color-on-secondary-fixed-variant: #1b6b47;
+
+  --color-verified: #1b6b47;
+  --color-verified-container: #e2efe8;
+
+  --tint-ink: 20 24 27;
+}
