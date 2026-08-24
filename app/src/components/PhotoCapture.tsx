@@ -5,22 +5,32 @@ import {
   revokePreview,
   type PreparedPhoto,
 } from '../lib/image'
+import { useLiveCamera } from '../lib/camera'
 import { DEMO } from '../lib/demo'
 import { Icon } from './Icon'
 import { ErrorNote, Spinner } from './ui'
 
 /**
- * WHY THE NATIVE CAMERA AND NOT getUserMedia
+ * THE CAMERA IS IN THE APP NOW.
  *
- * `<input type="file" capture="environment">` hands off to the phone's own
- * camera app, which buys autofocus, exposure metering, HDR and full sensor
- * resolution for free on every Android in Ghana. A getUserMedia <video> frame is
- * fixed-exposure, often soft, and lower resolution — and a soft close-up is
- * exactly what wrecks both the blur gate and the trunk measurement.
+ * This used to hand off to the phone's camera app via `<input type="file"
+ * capture="environment">`, chosen for autofocus, exposure metering and full
+ * sensor resolution. Field feedback after the July pilot was that the capture
+ * step felt too distant from the user, and re-reading the trade it is clear
+ * most of what we were buying is thrown away:
  *
- * The cost is that we cannot draw a ghost overlay on the live view. That only
- * matters at CHECK-IN, which has its own GhostCamera component. Registration has
- * no previous photo to align against, so it takes the quality instead.
+ * lib/image.ts downscales EVERY photo to 800px on the long edge at q75 before
+ * upload, and DINOv2 ViT-S/14 sees 224-518px. A 12 MP still and a 1920x1080
+ * frame reach the model as the same 800px JPEG. Resolution was never the
+ * variable.
+ *
+ * Focus and exposure ARE real, and `ImageCapture.takePhoto()` recovers them by
+ * asking the camera for an actual still on the live track. See lib/camera.ts
+ * for the three tiers and what happens when each is unavailable - including
+ * this component's own file input, which is still here as the last one.
+ *
+ * The blur gate below is unchanged and is the safety net either way: it reads
+ * the photo we actually stored, so it does not care which path produced it.
  *
  * Built to docs/design/v2/03-06: a large near-black capture surface, the prompt
  * centred inside it, and the captured state replacing it in place with a Retake
@@ -60,6 +70,11 @@ export function PhotoCapture({
   const [error, setError] = useState<string | null>(null)
   const [acceptedBlur, setAcceptedBlur] = useState(false)
 
+  // Only hold the camera open while it is actually on screen. A live stream
+  // behind a captured photo keeps the sensor powered and the preview decoding
+  // for no reason, and this flow has two of these mounted at once.
+  const cam = useLiveCamera(!photo)
+
   async function openCamera() {
     onCaptureStart?.()
 
@@ -84,7 +99,25 @@ export function PhotoCapture({
       return
     }
 
-    inputRef.current?.click()
+    // No live camera - permission refused, insecure context, or a device
+    // without one. Hand off to the phone's camera app, which still works.
+    if (!cam.ready) {
+      inputRef.current?.click()
+      return
+    }
+
+    setBusy(true)
+    setError(null)
+    setAcceptedBlur(false)
+    try {
+      const prepared = await preparePhoto(await cam.capture())
+      if (photo) revokePreview(photo)
+      onChange(prepared)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not capture')
+    } finally {
+      setBusy(false)
+    }
   }
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
@@ -127,17 +160,38 @@ export function PhotoCapture({
           type="button"
           onClick={() => void openCamera()}
           disabled={busy}
-          className="relative flex aspect-[3/4] w-full flex-col items-center justify-center rounded-2xl bg-[#1a1c19] px-6 text-center text-white"
+          className="relative flex aspect-[3/4] w-full flex-col items-center justify-center overflow-hidden rounded-2xl bg-[#1a1c19] px-6 text-center text-white"
         >
+          {/*
+            The surface IS the viewfinder. It was a black panel with a camera
+            glyph, which is a button that promises a camera; this is the camera.
+            The framing guidance - brackets, prompt - now sits over the actual
+            scene, which is the only place it can do any good.
+          */}
+          <video
+            ref={cam.videoRef}
+            playsInline
+            muted
+            // Decorative: the prompt below already says what to point at, and
+            // a live feed has no alt text worth reading out.
+            aria-hidden
+            className="absolute inset-0 size-full object-cover"
+          />
+          {/* Without this the shutter and prompt sit on whatever the camera is
+              pointing at - white sky in half the pilot photos. */}
+          <span aria-hidden className="absolute inset-0 bg-black/30" />
+
           {brackets && <Brackets />}
-          <span className="flex size-[68px] items-center justify-center rounded-full border-2 border-white/85">
+          <span className="relative flex size-[68px] items-center justify-center rounded-full border-2 border-white/85 bg-black/20 backdrop-blur-sm">
             {busy ? <Spinner className="size-7" /> : <Icon name="camera" size={30} />}
           </span>
-          <span className="mt-4 font-headline text-headline-md font-bold">
+          <span className="relative mt-4 font-headline text-headline-md font-bold [text-shadow:0_1px_6px_rgb(0_0_0/0.6)]">
             {busy ? 'Processing…' : prompt}
           </span>
           {subPrompt && (
-            <span className="mt-1 text-label-lg text-white/60">{subPrompt}</span>
+            <span className="relative mt-1 text-label-lg text-white/75 [text-shadow:0_1px_6px_rgb(0_0_0/0.6)]">
+              {subPrompt}
+            </span>
           )}
         </button>
       ) : (
@@ -205,6 +259,18 @@ export function PhotoCapture({
       )}
 
       {error && <ErrorNote>{error}</ErrorNote>}
+
+      {/*
+        Deliberately a quiet note, not an ErrorNote. When the live camera is
+        unavailable the shutter still opens the phone's camera app and the
+        registration completes normally - so nothing has failed and a red panel
+        would be a lie. It says what changed and why, and stops there.
+      */}
+      {!photo && cam.error && (
+        <p className="mt-2 text-label-md text-on-surface-variant">
+          {cam.error}
+        </p>
+      )}
     </div>
   )
 }

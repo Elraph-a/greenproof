@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { preparePhoto, type PreparedPhoto } from '../lib/image'
+import { useLiveCamera } from '../lib/camera'
 import { DEMO } from '../lib/demo'
 import { Icon } from './Icon'
 import { ErrorNote, Spinner } from './ui'
@@ -7,11 +8,10 @@ import { ErrorNote, Spinner } from './ui'
 /**
  * Live camera with the PREVIOUS visit's photo faintly overlaid.
  *
- * This is the one screen that has to use getUserMedia rather than the phone's
- * native camera app. Registration uses the native camera because it gives
- * autofocus and full sensor resolution for free (see PhotoCapture) — but the
- * native camera cannot draw anything on its viewfinder, and the whole point here
- * is to line the new shot up against the old one.
+ * The camera itself is `useLiveCamera` - the same engine registration now
+ * uses. This screen's addition is the overlay: the native camera app cannot
+ * draw anything on its viewfinder, and the whole point here is to line the new
+ * shot up against the old one.
  *
  * WHY IT IS WORTH THE QUALITY COST
  * The spike found that wide-shot matching works substantially off the
@@ -39,68 +39,13 @@ export function GhostCamera({
   onCapture,
   onCaptureStart,
 }: Props) {
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const streamRef = useRef<MediaStream | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
+  const { videoRef, ready, error: camError, capture, stop } = useLiveCamera()
 
-  const [ready, setReady] = useState(false)
   const [busy, setBusy] = useState(false)
   const [opacity, setOpacity] = useState(0.4)
-  const [error, setError] = useState<string | null>(null)
-
-  const stop = useCallback(() => {
-    streamRef.current?.getTracks().forEach((t) => t.stop())
-    streamRef.current = null
-  }, [])
-
-  useEffect(() => {
-    // Demo mode: a desktop has no rear camera, and the point of reviewing this
-    // screen is the ghost overlay and the framing aids, not the video feed.
-    if (DEMO) {
-      setReady(true)
-      return
-    }
-
-    let cancelled = false
-    ;(async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: { ideal: 'environment' },
-            // Ask for a high frame; the browser gives what it can. Below ~1280
-            // the close-up loses the bark detail the measurement depends on.
-            width: { ideal: 1920 },
-            height: { ideal: 1080 },
-          },
-          audio: false,
-        })
-        if (cancelled) {
-          stream.getTracks().forEach((t) => t.stop())
-          return
-        }
-        streamRef.current = stream
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream
-          await videoRef.current.play()
-        }
-        setReady(true)
-      } catch (err) {
-        // Permission refused, no camera, or insecure context. The file-input
-        // fallback below keeps the check-in possible — we lose the overlay, not
-        // the visit. Degrade, don't break.
-        setError(
-          err instanceof Error && err.name === 'NotAllowedError'
-            ? 'Camera permission was refused. You can still take the photo the normal way.'
-            : 'Live camera unavailable on this device. Use the normal camera below.',
-        )
-      }
-    })()
-
-    return () => {
-      cancelled = true
-      stop()
-    }
-  }, [stop])
+  const [shotError, setShotError] = useState<string | null>(null)
+  const error = shotError ?? camError
 
   async function shoot() {
     if (DEMO) {
@@ -111,39 +56,24 @@ export function GhostCamera({
         const file = new File([await res.blob()], 'demo.jpg', { type: 'image/jpeg' })
         onCapture(await preparePhoto(file))
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Could not load the demo photo')
+        setShotError(err instanceof Error ? err.message : 'Could not load the demo photo')
       } finally {
         setBusy(false)
       }
       return
     }
 
-    const video = videoRef.current
-    if (!video || !ready) return
+    if (!ready) return
     onCaptureStart?.()
     setBusy(true)
     try {
-      const canvas = document.createElement('canvas')
-      canvas.width = video.videoWidth
-      canvas.height = video.videoHeight
-      const ctx = canvas.getContext('2d')
-      if (!ctx) throw new Error('Canvas unavailable')
-      ctx.drawImage(video, 0, 0)
-
-      const blob = await new Promise<Blob>((resolve, reject) =>
-        canvas.toBlob(
-          (b) => (b ? resolve(b) : reject(new Error('Capture failed'))),
-          'image/jpeg',
-          0.92,
-        ),
-      )
       // Straight through the same resize + sharpness pipeline as registration,
-      // so blur_score means the same thing in both flows and the two are
+      // so blur_score means the same thing in both flows and the two stay
       // comparable in the data.
-      onCapture(await preparePhoto(blob))
+      onCapture(await preparePhoto(await capture()))
       stop()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not capture')
+      setShotError(err instanceof Error ? err.message : 'Could not capture')
     } finally {
       setBusy(false)
     }
@@ -158,7 +88,7 @@ export function GhostCamera({
     try {
       onCapture(await preparePhoto(file))
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not read that photo')
+      setShotError(err instanceof Error ? err.message : 'Could not read that photo')
     } finally {
       setBusy(false)
     }
