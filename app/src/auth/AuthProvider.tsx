@@ -15,7 +15,7 @@ import type { Profile } from '../lib/types'
 
 /**
  * A stand-in session for demo mode. Only the fields the app actually reads are
- * populated — this is never passed to Supabase, it exists so `RequireAuth` and
+ * populated - this is never passed to Supabase, it exists so `RequireAuth` and
  * the `session ? …` redirects behave as they do when signed in.
  */
 const demoSession = {
@@ -30,7 +30,7 @@ interface AuthValue {
   session: Session | null
   profile: Profile | null
   userId: string | null
-  /** True until the initial session lookup resolves — avoids a login flash. */
+  /** True until the initial session lookup resolves - avoids a login flash. */
   loading: boolean
   signIn: (email: string, password: string) => Promise<void>
   /**
@@ -49,7 +49,7 @@ interface AuthValue {
   saveProfile: (patch: Partial<Profile>) => Promise<void>
   /**
    * Role goes through a SECURITY DEFINER function, not an update, because
-   * `profiles.role` is no longer client-writable — a user who could set it
+   * `profiles.role` is no longer client-writable - a user who could set it
    * to 'reviewer' could decide verdicts, including their own. See 0009.
    */
   setRole: (role: 'planter' | 'sponsor') => Promise<void>
@@ -64,7 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   /**
    * True while signUp is writing the profile. The instant the session appears,
-   * the userId effect below fires loadProfile — which would race the writes in
+   * the userId effect below fires loadProfile - which would race the writes in
    * signUp and could clobber the just-saved name/role with the trigger's empty
    * row. While this is set, signUp owns the profile state.
    */
@@ -86,7 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Belt and braces. 0004_profile_trigger.sql creates this row automatically,
     // but a tree insert fails with a foreign-key error if the profile is
-    // missing — and discovering that outdoors with 40 trees to register is not
+    // missing - and discovering that outdoors with 40 trees to register is not
     // a debugging session anyone wants. Insert is permitted by the
     // "own profile insert" RLS policy (auth.uid() = id).
     const { data: created } = await supabase
@@ -130,7 +130,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    *
    * A magic link is only as good as the browser that opens it. Gmail on Android
    * opens links in its own WebView, which keeps its storage separate from
-   * Chrome and from the installed PWA — so the link signs you into a throwaway
+   * Chrome and from the installed PWA - so the link signs you into a throwaway
    * browser and the app you actually use stays signed out. There is no fix for
    * that from inside our code; it is the mail client's decision. The built-in
    * Supabase mailer also caps at roughly two messages an hour, which is below
@@ -188,7 +188,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // With "Confirm email" switched off in Supabase, signUp returns a
         // live session and the user is straight in. If that setting is ever
         // turned back on, session is null and the user is left staring at a
-        // form that looks like it did nothing — so say what happened instead.
+        // form that looks like it did nothing - so say what happened instead.
         if (!data.session) {
           throw new Error(
             'Account created, but email confirmation is switched on in Supabase. ' +
@@ -199,7 +199,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // The 0004 trigger creates the profile row in the same transaction
         // as the auth user, so this normally takes the update path; upsert
         // also covers the insert path if the trigger is ever removed. Uses
-        // data.session.user.id directly — the userId in React state has not
+        // data.session.user.id directly - the userId in React state has not
         // re-rendered yet at this point.
         const uid = data.session.user.id
         createdUid = uid
@@ -224,7 +224,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (withRole) setProfile(withRole as unknown as Profile)
       } catch (e) {
         // If the account exists but a later write failed, the user IS signed
-        // in — the userId effect was skipped, so load whatever profile the
+        // in - the userId effect was skipped, so load whatever profile the
         // trigger created rather than leaving the app with none.
         if (createdUid) void loadProfile(createdUid)
         throw e

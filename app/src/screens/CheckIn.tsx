@@ -22,7 +22,7 @@ import { VerdictReveal } from '../components/VerdictReveal'
 import { ErrorNote, Spinner } from '../components/ui'
 
 /**
- * Check in on a tree — built to docs/design/v2/09-12.
+ * Check in on a tree - built to docs/design/v2/09-12.
  *
  * Three named stages (Position → Photo → Measure) shown as a connected rail,
  * preceded by a tree picker and followed by the verdict reveal. The rail is
@@ -81,7 +81,7 @@ export function CheckIn() {
   async function choose(t: NearbyTree) {
     setTree(t)
     // The previous wide shot becomes the ghost overlay. No previous visit means
-    // no overlay — the flow still works, it just loses the alignment aid.
+    // no overlay - the flow still works, it just loses the alignment aid.
     const prev = await latestCheckin(t.id)
     setGhostUrl(prev ? await photoUrl(prev.wide_photo) : null)
     setStep(2)

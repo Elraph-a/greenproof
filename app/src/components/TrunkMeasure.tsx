@@ -4,7 +4,7 @@ import { useRef, useState } from 'react'
  * Tap the left edge of the trunk, then the right edge.
  *
  * DELIBERATELY MANUAL. Finding trunk edges automatically against a messy
- * background — grass, other trunks, dappled shade — is unreliable, and an
+ * background - grass, other trunks, dappled shade - is unreliable, and an
  * automatic measurement that is confidently wrong is worse than no measurement.
  * Two taps take two seconds and it is still a real metrological observation.
  *
@@ -13,7 +13,7 @@ import { useRef, useState } from 'react'
  * the number comparable to anything outside this project.
  *
  * The component records normalised tap positions ONLY. Converting pixels to
- * millimetres needs the ArUco marker's scale and happens server-side — see
+ * millimetres needs the ArUco marker's scale and happens server-side - see
  * migration 0005 for why that split is a security boundary and not just tidiness.
  */
 
@@ -40,7 +40,7 @@ export function TrunkMeasure({ imageUrl, taps, onChange }: Props) {
     const y = Math.min(1, Math.max(0, (e.clientY - r.top) / r.height))
 
     if (taps) {
-      // Already have both — a tap starts over rather than silently moving one
+      // Already have both - a tap starts over rather than silently moving one
       // of them, which is ambiguous when the two markers are close together.
       onChange(null)
       setPending({ x, y })

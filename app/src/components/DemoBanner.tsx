@@ -13,7 +13,7 @@ import { DEMO } from '../lib/demo'
  * The banner is deliberately not styled to fit in. It is meant to be the first
  * thing anyone notices, including on a phone in a field.
  *
- * It is NOT a substitute for setting `VITE_DEMO=0` in Vercel — it is the alarm
+ * It is NOT a substitute for setting `VITE_DEMO=0` in Vercel - it is the alarm
  * for when someone forgets.
  */
 export function DemoBanner() {

@@ -21,10 +21,10 @@ import {
 } from '../components/ui'
 
 /**
- * My Grove — built to docs/design/v2/01-my-grove.png.
+ * My Grove - built to docs/design/v2/01-my-grove.png.
  *
  * Structure, top to bottom: a dated greeting, three stat cards, a survival bar,
- * filter pills, then the tree list. The date header is not decoration — during
+ * filter pills, then the tree list. The date header is not decoration - during
  * a check-in round the question "did I already do these today?" is the most
  * common one, and the answer is the first thing on the screen.
  */
@@ -126,7 +126,7 @@ export function MyGrove() {
 
   const today = new Date()
   /*
-   * The hero used to be the weekday — the biggest text on the home screen said
+   * The hero used to be the weekday - the biggest text on the home screen said
    * "Friday", which reads as a template. It now greets the person, matching
    * SponsorHome; the full date stays as the eyebrow because "did I already do
    * these today?" is still the most common check-in-round question.
@@ -154,7 +154,7 @@ export function MyGrove() {
 
       {/*
         ONE hero. Previously this was three stat cards of equal weight plus a
-        survival bar — four competing figures and no subject, which is the main
+        survival bar - four competing figures and no subject, which is the main
         reason the screen read as a template. Survival is what this product
         proves, so it is the only thing at display size; everything else is
         demoted into the strip below.
@@ -174,7 +174,7 @@ export function MyGrove() {
       */}
       <HeroCard
         label={dueCount === 1 ? 'Tree due now' : 'Trees due now'}
-        value={trees ? dueCount : '—'}
+        value={trees ? dueCount : '-'}
         badge={
           trees && trees.length > 0 ? (
             <HeroBadge tone="good">{survival}% survival</HeroBadge>
@@ -231,7 +231,7 @@ export function MyGrove() {
 
       <h2 className="section-h">Your trees</h2>
 
-      {/* Filter pills — the counts are the point. A planter with one flagged
+      {/* Filter pills - the counts are the point. A planter with one flagged
           tree needs to find it without scrolling forty cards. */}
       <div className="hscroll hscroll-fade -mx-margin-mobile mb-3 flex gap-2 px-margin-mobile pb-1">
         <FilterPill f="all" cur={filter} set={setFilter} n={counts.all}>All</FilterPill>
@@ -356,7 +356,7 @@ function TreeRow({ tree, thumb }: { tree: TreeWithLatest; thumb?: string }) {
               className="flex min-w-0 flex-1 items-stretch active:bg-surface-container-low"
             >
               {/*
-                The photo IS the product — this app exists to photograph trees,
+                The photo IS the product - this app exists to photograph trees,
                 so the evidence runs flush to the card edge at full height
                 rather than sitting as a thumbnail inside the padding.
               */}
@@ -387,11 +387,11 @@ function TreeRow({ tree, thumb }: { tree: TreeWithLatest; thumb?: string }) {
                 italics on every row), the tag code and the per-tree money chip
                 all moved to the tree page. On a list of forty they were noise,
                 and eight amber chips in a column destroyed the rule that amber
-                means money — it just meant "a card".
+                means money - it just meant "a card".
               */}
               <div className="flex min-w-0 flex-1 flex-col justify-center gap-1.5 py-3.5 pr-2 pl-3.5">
                 {/* The name carries the clearance for the check-in button in
-                    the top corner. It has the most slack of the three — a long
+                    the top corner. It has the most slack of the three - a long
                     name ellipsises harmlessly next to its own photograph,
                     whereas a clipped status or date loses actual information. */}
                 {/*
@@ -438,7 +438,7 @@ function TreeRow({ tree, thumb }: { tree: TreeWithLatest; thumb?: string }) {
 
               This was an aria-hidden <span> INSIDE the <Link>, so it looked
               like a check-in shortcut and actually navigated to the tree page
-              like the rest of the card — a control that lied about what it did.
+              like the rest of the card - a control that lied about what it did.
               As a sibling it goes where it claims, and an anchor nested inside
               an anchor (invalid HTML, unpredictable on mobile Safari) is
               avoided. Absolutely positioned, so it costs the text rows nothing.

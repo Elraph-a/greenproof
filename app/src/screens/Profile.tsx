@@ -67,12 +67,12 @@ export function Profile() {
       </div>
 
       <div className="mt-2.5 grid grid-cols-3 gap-2.5">
-        <Tile icon="tree" label="Trees" value={stats ? String(stats.trees) : '—'} />
-        <Tile icon="check" label="Alive" value={stats ? String(stats.alive) : '—'} tone="green" />
+        <Tile icon="tree" label="Trees" value={stats ? String(stats.trees) : '-'} />
+        <Tile icon="check" label="Alive" value={stats ? String(stats.alive) : '-'} tone="green" />
         <Tile
           icon="chart"
           label="Survival"
-          value={survival === null ? '—' : `${survival}%`}
+          value={survival === null ? '-' : `${survival}%`}
           tone="green"
         />
       </div>

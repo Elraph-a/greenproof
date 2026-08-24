@@ -4,7 +4,7 @@
  * WHY RESIZE ON THE PHONE AND NOT THE SERVER
  * A modern Android camera produces 4–8 MB per shot. Two shots per visit ×
  * 40 trees × 5 rounds = 400 photos. At full size that is ~2 GB and would blow
- * the Supabase free-tier storage allowance somewhere around check-in round 2 —
+ * the Supabase free-tier storage allowance somewhere around check-in round 2 -
  * i.e. mid-pilot, unrecoverably. At 800px/q75 the same set is ~40 MB.
  *
  * It also makes the upload survivable on Ghanaian mobile data, which is the
@@ -25,7 +25,7 @@ const QUALITY = 0.75
  *
  * Variance-of-Laplacian scales with resolution, so measuring at the native size
  * would make a 12 MP phone look "sharper" than an 8 MP one for the same actual
- * blur. Fixing the analysis size makes the number comparable across devices —
+ * blur. Fixing the analysis size makes the number comparable across devices -
  * which matters because blur_score ends up in the signals table and gets
  * correlated against verdicts later.
  */
@@ -35,7 +35,7 @@ const ANALYSIS_EDGE = 320
  * Below this, warn the user and offer a retake.
  *
  * PROVISIONAL. Chosen from desktop tests, not from field data. Recalibrate from
- * the T0 blur_score distribution once ~80 real photos exist — the honest way is
+ * the T0 blur_score distribution once ~80 real photos exist - the honest way is
  * to look at the histogram and put the line under the tail we would actually
  * want to reject, not to pick a round number and defend it.
  */
@@ -50,7 +50,7 @@ export interface PreparedPhoto {
   blurScore: number
   /** Object URL for preview. Caller must revokePreview() when done. */
   previewUrl: string
-  /** Bytes, after resize — surfaced in the UI so a slow upload is explicable. */
+  /** Bytes, after resize - surfaced in the UI so a slow upload is explicable. */
   bytes: number
 }
 
@@ -59,7 +59,7 @@ export interface PreparedPhoto {
  *
  * Phones almost always store the sensor's native landscape frame plus an
  * orientation tag rather than physically rotating the pixels. Ignoring the tag
- * gives sideways trees — which breaks the preview, breaks the ghost overlay at
+ * gives sideways trees - which breaks the preview, breaks the ghost overlay at
  * check-in, and quietly degrades image matching because the embedding of a
  * rotated tree is not the embedding of that tree.
  */
@@ -105,12 +105,12 @@ function drawScaled(
 }
 
 /**
- * Variance of the Laplacian — the standard cheap sharpness proxy.
+ * Variance of the Laplacian - the standard cheap sharpness proxy.
  *
  * A sharp photo has strong high-frequency content, so the second derivative
  * varies a lot. A blurred one is smooth, so it barely varies. We report the
  * number rather than silently discarding blurry frames, because "we rejected it
- * for blur" has to be auditable — and because a systematically blurry round
+ * for blur" has to be auditable - and because a systematically blurry round
  * would otherwise show up as a mysterious drop in match scores.
  */
 function varianceOfLaplacian(canvas: HTMLCanvasElement): number {

@@ -16,7 +16,7 @@ import { ErrorNote, HeroCard, StatusChip } from '../components/ui'
  * micro-labels from the check-in result. No new patterns.
  *
  * The photo timeline leads because it is the product's actual claim made
- * visible — identity here is a CHAIN of consistent observations, not a token.
+ * visible - identity here is a CHAIN of consistent observations, not a token.
  * A tree with four aligned photos is far harder to fake than one registration
  * shot, and the only way to show that is to put the four photos next to each
  * other.
@@ -58,7 +58,7 @@ export function TreeDetail() {
     return (
       <Frame title="Tree" onBack={back}>
         {loading ? (
-          /* The shape of what is coming — chips, stat tiles, photo timeline —
+          /* The shape of what is coming - chips, stat tiles, photo timeline -
              rather than a spinner in a void. */
           <div>
             <div className="flex gap-2">
@@ -197,7 +197,7 @@ export function TreeDetail() {
           <p className="font-bold text-on-surface">Not scored yet</p>
           <p className="mt-1 text-label-lg text-on-surface-variant">
             Scored by the verification service after upload. Until then this
-            stays <strong>pending</strong> — nothing counts as verified until it
+            stays <strong>pending</strong> - nothing counts as verified until it
             has been checked.
           </p>
         </div>
@@ -205,7 +205,7 @@ export function TreeDetail() {
 
       {/*
         Registration facts and the tag caveat are reference material, not
-        something a planter reads on every visit — so they sit one tap away
+        something a planter reads on every visit - so they sit one tap away
         instead of adding a third card and a paragraph to the scroll.
       */}
       <details className="disclosure mt-2.5">
@@ -230,7 +230,7 @@ export function TreeDetail() {
             <Row icon="list" label="Tag" value={tree.tag_code || 'none'} />
           </dl>
           <p className="mt-3 border-t border-outline-variant pt-3">
-            A tag helps you find this tree again. It is not the tree's identity —
+            A tag helps you find this tree again. It is not the tree's identity -
             identity is the position, the framing and the photo history above.
           </p>
         </div>
@@ -313,7 +313,7 @@ function Row({
  * Location · Still alive · Not a duplicate · Matches previous photos.
  *
  * Rendered straight from `signals` jsonb and deliberately never collapsed into
- * one number — the breakdown is the debugging tool, the Q&A teaching aid, and
+ * one number - the breakdown is the debugging tool, the Q&A teaching aid, and
  * what makes a confidence score explicable to a farmer.
  */
 function SignalBreakdown({ checkin }: { checkin: Checkin }) {
@@ -333,7 +333,7 @@ function SignalBreakdown({ checkin }: { checkin: Checkin }) {
 
   return (
     <div className="card">
-      {/* The score itself is the page hero now — repeating it here was the
+      {/* The score itself is the page hero now - repeating it here was the
           same number twice within one screen height. */}
       <ul className="space-y-3">
         {rows.map((r) => {
@@ -359,7 +359,7 @@ function SignalBreakdown({ checkin }: { checkin: Checkin }) {
                   {r.score !== undefined
                     ? `${Math.round(r.score)}%`
                     : r.gate === undefined
-                      ? '—'
+                      ? '-'
                       : r.gate
                         ? 'passed'
                         : 'failed'}
@@ -376,7 +376,7 @@ function SignalBreakdown({ checkin }: { checkin: Checkin }) {
         })}
       </ul>
 
-      {/* Kept — it is the honesty claim and the Q&A teaching aid — but as one
+      {/* Kept - it is the honesty claim and the Q&A teaching aid - but as one
           sentence rather than two, on the card it explains. */}
       <p className="mt-3.5 border-t border-outline-variant pt-3 text-label-md text-on-surface-variant">
         Four of these five are deterministic checks. Only "matches previous

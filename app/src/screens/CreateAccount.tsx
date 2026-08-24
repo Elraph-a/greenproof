@@ -7,7 +7,7 @@ import { ErrorNote, Spinner } from '../components/ui'
 
 /**
  * The whole of joining, on one screen: who you are, which side of the product
- * you are on, and a password. Deliberately ONE form — the previous flow split
+ * you are on, and a password. Deliberately ONE form - the previous flow split
  * this into sign-up then a separate profile-setup screen, and nothing forced a
  * new user through the second one, so people could land in the app with no
  * name and the wrong home screen.

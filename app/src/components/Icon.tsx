@@ -3,7 +3,7 @@
  *
  * The Stitch export uses Material Symbols, loaded as a webfont from Google.
  * That is wrong for this app on two counts: the variable font is ~200 KB, and
- * it is a NETWORK FETCH — on a phone at a tree with one bar, an icon font that
+ * it is a NETWORK FETCH - on a phone at a tree with one bar, an icon font that
  * fails to load leaves every button showing its ligature text ("account_balance
  * _wallet") across the screen. Inline SVG is a few hundred bytes, cannot fail
  * separately from the app, and works offline.

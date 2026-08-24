@@ -11,7 +11,7 @@ import type { LeaderboardRow } from '../lib/types'
  * Promised in the submitted description, and the cheapest growth mechanism in
  * the product: one church recruits its whole congregation for free.
  *
- * The default sort is SURVIVAL RATE, not tree count — deliberately. Ranking by
+ * The default sort is SURVIVAL RATE, not tree count - deliberately. Ranking by
  * volume rewards planting and ignores keeping alive, which is the exact failure
  * this project exists to fix. A leaderboard sorted by trees planted would push
  * users toward the behaviour we are trying to price out.

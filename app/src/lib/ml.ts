@@ -3,7 +3,7 @@
  *
  * FIRE AND FORGET, DELIBERATELY.
  *
- * This call sends an id and nothing else. It cannot influence the verdict — the
+ * This call sends an id and nothing else. It cannot influence the verdict - the
  * service re-reads every input from the database and from storage, and holds the
  * only key permitted to write `confidence` / `verdict` / `signals`.
  *
@@ -106,7 +106,7 @@ export function requestScoring(checkinId: string): void {
 }
 
 /**
- * Request scoring and wait for the result — used by the check-in flow, which
+ * Request scoring and wait for the result - used by the check-in flow, which
  * shows the four checks resolving one at a time.
  *
  * The Space sleeps on the free tier and a cold start is ~40 s, so the timeout is

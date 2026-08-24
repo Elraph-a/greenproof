@@ -15,7 +15,7 @@ import { ErrorNote, Spinner } from './ui'
  * `<input type="file" capture="environment">` hands off to the phone's own
  * camera app, which buys autofocus, exposure metering, HDR and full sensor
  * resolution for free on every Android in Ghana. A getUserMedia <video> frame is
- * fixed-exposure, often soft, and lower resolution — and a soft close-up is
+ * fixed-exposure, often soft, and lower resolution - and a soft close-up is
  * exactly what wrecks both the blur gate and the trunk measurement.
  *
  * The cost is that we cannot draw a ghost overlay on the live view. That only
@@ -31,12 +31,12 @@ interface Props {
   label: string
   prompt: string
   subPrompt?: string
-  /** Corner brackets — the close-up frames the trunk plus the marker card. */
+  /** Corner brackets - the close-up frames the trunk plus the marker card. */
   brackets?: boolean
   photo: PreparedPhoto | null
   onChange: (photo: PreparedPhoto | null) => void
   /**
-   * Fired the instant the shutter is tapped, BEFORE the camera app opens — the
+   * Fired the instant the shutter is tapped, BEFORE the camera app opens - the
    * only moment the compass can be trusted, since handing off to the native
    * camera backgrounds the browser and deviceorientation events stop arriving.
    */
@@ -209,7 +209,7 @@ export function PhotoCapture({
   )
 }
 
-/** Framing guides for the close-up — the trunk and the card must both fit. */
+/** Framing guides for the close-up - the trunk and the card must both fit. */
 function Brackets() {
   const c = 'absolute size-7 border-white/45'
   return (

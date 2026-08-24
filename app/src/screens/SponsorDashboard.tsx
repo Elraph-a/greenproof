@@ -8,7 +8,7 @@ import { ErrorNote, Spinner } from '../components/ui'
 
 /**
  * The sponsor's view. A DIFFERENT USER from everyone else in the app: an office
- * worker on a laptop, not a farmer on a phone — so this is the one screen
+ * worker on a laptop, not a farmer on a phone - so this is the one screen
  * designed wide-first.
  *
  * The Stitch export stopped at the stat cards ("complex charts, maps and photo
@@ -33,7 +33,7 @@ interface RecentCheckin {
   tree_id: string
 }
 
-/** Establishment GH₵5 + GH₵2 per later verified visit — see migration 0007. */
+/** Establishment GH₵5 + GH₵2 per later verified visit - see migration 0007. */
 const ESTABLISHMENT_GHS = 5
 
 export function SponsorDashboard() {

@@ -34,7 +34,7 @@ describe('haversine', () => {
     expect(d).toBeLessThan(210)
   })
 
-  it('resolves the scale that matters — trees 3 m apart', () => {
+  it('resolves the scale that matters - trees 3 m apart', () => {
     // If this ever returns ~0, neighbouring trees are indistinguishable and
     // the GPS gate is worthless.
     const d = haversine(5.65, -0.1962, 5.65, -0.19617)
@@ -55,7 +55,7 @@ describe('bearingDelta', () => {
     expect(bearingDelta(10, 350)).toBe(-20)
   })
 
-  it('is signed — positive means turn clockwise', () => {
+  it('is signed - positive means turn clockwise', () => {
     expect(bearingDelta(0, 90)).toBe(90)
     expect(bearingDelta(90, 0)).toBe(-90)
   })

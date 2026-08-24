@@ -15,7 +15,7 @@ if (!url || !anonKey) {
 
 /**
  * The anon key ships inside the browser and is public. That is fine and
- * expected — what stops a user forging a verification result is the
+ * expected - what stops a user forging a verification result is the
  * column-level GRANTs in supabase/migrations/0002_rls_grants.sql, which never
  * give a client write access to confidence / verdict / signals / embeddings.
  */

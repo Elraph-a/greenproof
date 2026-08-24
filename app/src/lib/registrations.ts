@@ -2,7 +2,7 @@
  * Submitting a registration, durably.
  *
  * Registration IS check-in number one: the schema has no photo columns on
- * `trees`, and that is correct — a tree's evidence lives in its chain of visits,
+ * `trees`, and that is correct - a tree's evidence lives in its chain of visits,
  * and the first visit is not special. It also means the T0 photos are scored by
  * exactly the same pipeline as every later round, with no separate code path to
  * keep in sync.
@@ -45,7 +45,7 @@ export interface RegistrationInput {
   close: Blob
   /**
    * Optional. At T0 only a sample of trees is physically measured, so most
-   * registrations carry null — the tree still registers and the visit still
+   * registrations carry null - the tree still registers and the visit still
    * counts, the growth check simply has no baseline for that tree.
    */
   trunkTaps: TrunkTaps | null
@@ -54,7 +54,7 @@ export interface RegistrationInput {
 /**
  * Persist to IndexedDB, then attempt to send.
  *
- * Returns as soon as the item is durably queued — deliberately BEFORE the
+ * Returns as soon as the item is durably queued - deliberately BEFORE the
  * network attempt finishes. Standing at tree 12 of 40, the user should be able
  * to walk to tree 13 while tree 12 uploads in the background. Making them watch
  * a spinner forty times is what turns a one-hour T0 into a three-hour one.
@@ -89,7 +89,7 @@ export async function submitRegistration(
   }
 
   await enqueue(item)
-  // Fire and forget — the queue is the source of truth from here on.
+  // Fire and forget - the queue is the source of truth from here on.
   void flushQueue()
   return { queuedId: item.id }
 }
@@ -157,7 +157,7 @@ async function send(item: PendingRegistration): Promise<void> {
   await dequeue(item.id)
 
   // Ask for scoring, but never depend on it. A failure here leaves the row
-  // `pending`, which is the correct and safe state — /backfill collects it.
+  // `pending`, which is the correct and safe state - /backfill collects it.
   if (created?.id) requestScoring(created.id)
 }
 

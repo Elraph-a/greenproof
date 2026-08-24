@@ -9,7 +9,7 @@ import { Spinner } from './ui'
  *
  * A silent background retry is worse than no retry. If three trees are stuck,
  * the user has to find out ON THE DAY, while still standing near those trees
- * and able to re-register them — not a week later when the data is
+ * and able to re-register them - not a week later when the data is
  * unrecoverable and T0 cannot be repeated.
  *
  * So this is loud, always shows the count, and surfaces the last error verbatim.
@@ -26,7 +26,7 @@ export function PendingBanner() {
         const items = await listPending()
         if (alive) setPending(items)
       } catch {
-        /* IndexedDB unavailable — nothing useful to show */
+        /* IndexedDB unavailable - nothing useful to show */
       }
     }
     void tick()

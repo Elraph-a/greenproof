@@ -21,7 +21,7 @@ import { ErrorNote, Spinner } from '../components/ui'
  * rational, and it is the failure mode of nearly every reforestation grant.
  *
  * Payment goes through `lib/payments`, which is currently a MOCK. It fails
- * about one call in twelve on purpose — a flow that has never rendered its own
+ * about one call in twelve on purpose - a flow that has never rendered its own
  * failure state is a flow that will first render it in front of judges.
  */
 

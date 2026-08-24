@@ -9,7 +9,7 @@ import { ErrorNote, Spinner } from './ui'
  *
  * This is the one screen that has to use getUserMedia rather than the phone's
  * native camera app. Registration uses the native camera because it gives
- * autofocus and full sensor resolution for free (see PhotoCapture) — but the
+ * autofocus and full sensor resolution for free (see PhotoCapture) - but the
  * native camera cannot draw anything on its viewfinder, and the whole point here
  * is to line the new shot up against the old one.
  *
@@ -86,7 +86,7 @@ export function GhostCamera({
         setReady(true)
       } catch (err) {
         // Permission refused, no camera, or insecure context. The file-input
-        // fallback below keeps the check-in possible — we lose the overlay, not
+        // fallback below keeps the check-in possible - we lose the overlay, not
         // the visit. Degrade, don't break.
         setError(
           err instanceof Error && err.name === 'NotAllowedError'
@@ -188,7 +188,7 @@ export function GhostCamera({
         )}
 
         {/* Rule-of-thirds grid. Cheap, and it is what people actually use to
-            reproduce a framing — the ghost tells you what to match, the grid
+            reproduce a framing - the ghost tells you what to match, the grid
             tells you whether you are level. */}
         {ready && (
           <div className="pointer-events-none absolute inset-0" aria-hidden>
