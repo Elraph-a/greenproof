@@ -200,15 +200,6 @@ export function MyGrove() {
             style={{ transform: `scaleX(${survival / 100})` }}
           />
         </div>
-        {dueCount > 0 && (
-          <Link
-            to="/checkin"
-            className="btn btn-block mt-3.5 bg-on-primary text-primary active:scale-[.98]"
-          >
-            <Icon name="camera" size={19} />
-            Start check-in round
-          </Link>
-        )}
       </HeroCard>
 
       {/*
@@ -345,17 +336,40 @@ function TreeRow({ tree, thumb }: { tree: TreeWithLatest; thumb?: string }) {
 
   return (
 
-    <div className="relative">
+    /*
+      THREE COLUMNS, NOT TWO PLUS AN OVERLAY.
+
+      The check-in shortcut used to be absolutely positioned in the top-right
+      corner, so the topmost text row had to reserve 48px of empty padding for
+      it. After the row was reordered to lead with the tree's state, that row
+      never fit: measured at 9px of overflow, ellipsising "Due tomorrow" and
+      "Added 2 weeks" on every card.
+
+      Giving the button its own column removes the overlap instead of
+      negotiating around it, and every text row gets its full width back. Still
+      a SIBLING of the card link and never a child: an anchor inside an anchor
+      is invalid HTML and unpredictable on mobile Safari.
+    */
+    <div className="card flex min-h-[96px] items-stretch overflow-hidden p-0">
             <Link
               to={`/tree/${tree.id}`}
-              className="card flex min-h-[96px] items-stretch overflow-hidden p-0 active:bg-surface-container-low"
+              className="flex min-w-0 flex-1 items-stretch active:bg-surface-container-low"
             >
               {/*
                 The photo IS the product — this app exists to photograph trees,
                 so the evidence runs flush to the card edge at full height
                 rather than sitting as a thumbnail inside the padding.
               */}
-              <div className="w-24 shrink-0 bg-surface-container-high">
+              {/*
+                THE STATUS BADGE SITS ON THE PHOTO.
+
+                In the text column the chip cost 91px of a 180px row, so
+                whichever line it shared got truncated: first the schedule, then
+                the tree's name down to "Aben...". Moving it onto the evidence
+                frees the whole column, and a state badge on a thumbnail is the
+                pattern every listing app already uses, so it needs no learning.
+              */}
+              <div className="relative w-28 shrink-0 bg-surface-container-high">
                 {thumb ? (
                   <img src={thumb} alt="" loading="lazy" className="size-full object-cover" />
                 ) : (
@@ -363,6 +377,9 @@ function TreeRow({ tree, thumb }: { tree: TreeWithLatest; thumb?: string }) {
                     <Icon name="image" size={24} />
                   </div>
                 )}
+                <span className="absolute inset-x-1.5 bottom-1.5 flex justify-center">
+                  <StatusChip status={tree.latest?.verdict ?? 'pending'} />
+                </span>
               </div>
 
               {/*
@@ -372,7 +389,7 @@ function TreeRow({ tree, thumb }: { tree: TreeWithLatest; thumb?: string }) {
                 and eight amber chips in a column destroyed the rule that amber
                 means money — it just meant "a card".
               */}
-              <div className="flex min-w-0 flex-1 flex-col justify-center gap-1.5 py-3.5 pr-3 pl-3.5">
+              <div className="flex min-w-0 flex-1 flex-col justify-center gap-1.5 py-3.5 pr-2 pl-3.5">
                 {/* The name carries the clearance for the check-in button in
                     the top corner. It has the most slack of the three — a long
                     name ellipsises harmlessly next to its own photograph,
@@ -389,17 +406,28 @@ function TreeRow({ tree, thumb }: { tree: TreeWithLatest; thumb?: string }) {
                   making the due label bigger would have cost the photograph
                   its width, and the photograph is the evidence.
                 */}
-                <div className="flex min-w-0 items-center gap-2">
-                  <StatusChip status={tree.latest?.verdict ?? 'pending'} />
-                  <span
-                    className={`truncate text-label-lg font-semibold ${
-                      due?.overdue ? 'text-error' : 'text-on-surface-variant'
-                    }`}
-                  >
-                    {due ? due.label : `Added ${formatAge(tree.created_at)} ago`}
-                  </span>
-                </div>
-                <h3 className="truncate pr-11 font-headline text-headline-lg font-semibold text-on-surface">
+                {/*
+                  THE INSTRUCTION GETS ITS OWN LINE.
+
+                  Chip and schedule shared a row and did not fit: measured, the
+                  text column carries 180px, the status chip takes 91, and "1
+                  day overdue" needs 98. Shaving padding was never going to
+                  close a 17px gap.
+
+                  Giving the schedule the full width fixes the overflow and
+                  sharpens the hierarchy at the same time - the line that says
+                  what to do today is now unshared and unabbreviated. The chip
+                  drops to the second row beside the name, where the name may
+                  ellipsise harmlessly next to its own photograph.
+                */}
+                <span
+                  className={`truncate text-label-lg font-semibold ${
+                    due?.overdue ? 'text-error' : 'text-on-surface-variant'
+                  }`}
+                >
+                  {due ? due.label : `Added ${formatAge(tree.created_at)}`}
+                </span>
+                <h3 className="truncate font-headline text-headline-lg font-semibold text-on-surface">
                   {name}
                 </h3>
               </div>
@@ -418,9 +446,11 @@ function TreeRow({ tree, thumb }: { tree: TreeWithLatest; thumb?: string }) {
             <Link
               to={`/checkin?tree=${tree.id}`}
               aria-label={`Check in on ${name}`}
-              className="absolute top-3 right-3 flex size-9 items-center justify-center rounded-full bg-primary-container text-primary active:scale-95"
+              className="flex w-14 shrink-0 items-center justify-center self-stretch text-primary active:bg-primary-container/60"
             >
-              <Icon name="camera" size={17} />
+              <span className="flex size-9 items-center justify-center rounded-full bg-primary-container">
+                <Icon name="camera" size={17} />
+              </span>
             </Link>
             </div>
   )
