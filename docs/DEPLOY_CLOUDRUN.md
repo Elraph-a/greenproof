@@ -1,115 +1,123 @@
-# Deploying the verification service to Cloud Run
+# Cloud Run — optional, and blocked
 
-For the live demo: registering a tree on stage and watching it score.
-
-**Nothing else needs this.** The service writes verdicts into Supabase and the
-app reads them out of Supabase — they never talk directly except for the
-optional "score this now" request. Every number in the deck came from running
-`tools/score_pilot.py` on a laptop. This buys one thing: live scoring in front
-of an audience.
+> ## ⚠️ This is NOT the document for the pitch.
+>
+> **To bring the live demo up, read [DEMO_RUNBOOK.md](DEMO_RUNBOOK.md).**
+> One command, a pre-flight checklist, and what to do when something breaks.
+>
+> Nothing on this page is needed on 26 August.
 
 ---
 
-## Before anything else: cap the spending
+## Why this page still exists
 
-**Do this first, before you deploy.** A billing account charges automatically
-once you leave the free tier, and there is no prompt.
+Cloud Run would host the verification service so the demo does not depend on a
+laptop. It is genuinely free at our scale.
+
+**It is currently blocked.** Google billing setup fails with `OR_BACR2_44`, a
+risk check Google does not explain and does not reliably lift. Firefox,
+cookies, and creating the payment profile at pay.google.com first were all
+tried.
+
+**Nothing depends on unblocking it.** The service runs fine on the laptop, and
+that path is proven end to end. Hosting buys exactly one thing: not needing the
+laptop awake during the six minutes.
+
+If billing ever clears, the rest of this page is the deployment.
+
+---
+
+## Before deploying: cap the spending
+
+**Do this first.** A billing account charges automatically once you leave the
+free tier, with no prompt.
 
 Budget **alerts do not stop anything** — Google's own docs say they "don't
 automatically prevent the use or billing of your services". They are emails.
-
-Cloud Run is one of the few services that supports a real **spend cap**, which
-pauses the service instead of just emailing you.
+Cloud Run is one of the few services supporting a real **spend cap**, which
+pauses the service instead.
 
 1. Console → **Billing** → **Budgets & alerts** → **Create budget**
-2. Scope it to this project and to **Cloud Run**
-3. Amount: **$1**
+2. Scope to this project and to **Cloud Run**
+3. Amount **$1**
 4. Choose the **spend cap** option, not alerts-only
 
-Caveats worth knowing: enforcement is not instant, in-flight requests finish
-and bill, and lifting the cap is manual and can take an hour.
+Enforcement is not instant, in-flight requests still bill, and lifting the cap
+is manual.
 
-### The one setting that can actually hurt you
+### The setting that can actually hurt you
 
-`min-instances` **must stay 0**. At 0 the container sleeps when idle and costs
-nothing. Set it above 0 and the container runs 24/7, burns the entire free tier
-in about two days, and then bills roughly **$60-70/month**.
-
-`max-instances` of 2 bounds the other direction.
+`min-instances` **must stay 0.** At 0 the container sleeps when idle and costs
+nothing. Above 0 it runs 24/7, burns the free tier in about two days, then
+bills roughly **$60–70/month**.
 
 ---
 
-## What the free tier gives you
+## Free tier, against our actual usage
 
 Per month: 2,000,000 requests · 180,000 vCPU-seconds · 360,000 GiB-seconds.
 
-Scoring a check-in costs about 15 seconds of container time, so **160 check-ins
-uses roughly 1.3% of the compute allowance**. You could re-score the whole pilot
+Scoring a check-in costs about 15 seconds of container time. **160 check-ins is
+roughly 1.3% of the compute allowance** — the whole pilot could be re-scored
 fifty times over and stay inside it.
 
-**Region: `us-central1`.** Google's free-tier page only states a North America
-restriction on egress, but several sources say the compute allowance is limited
-to US regions. `us-central1` is free under either reading. The extra ~150 ms
-from Ghana is irrelevant when scoring takes seconds.
+**Region: `us-central1`.** Google's free-tier page states a North America
+restriction only on egress, but other sources say compute is US-only.
+`us-central1` is free under either reading, and the extra ~150 ms from Ghana is
+irrelevant when scoring takes seconds.
 
 ---
 
-## Deploy from the console
+## Deploy
 
-No CLI to install. Push your code to GitHub first — Cloud Build builds from the
-repository, so anything uncommitted will not be deployed.
+Push to GitHub first — Cloud Build builds from the repository, so anything
+uncommitted will not deploy.
 
-1. Enable the APIs: **Cloud Run**, **Cloud Build**, **Artifact Registry**
-2. **Cloud Run** → **Create service**
-3. Choose **Continuously deploy from a repository** → **Set up with Cloud Build**
-4. Connect GitHub, pick `Elraph-a/greenproof`, branch `main`
-5. Build type: **Dockerfile**, and set the Dockerfile path to **`ml/Dockerfile`**
+1. Enable **Cloud Run**, **Cloud Build**, **Artifact Registry**
+2. **Cloud Run** → **Create service** → **Continuously deploy from a repository**
+3. GitHub → `Elraph-a/greenproof` → branch `main`
+4. Build type **Dockerfile**, path **`ml/Dockerfile`**
 
 | Setting | Value | Why |
 |---|---|---|
 | Region | `us-central1` | the free tier |
-| Authentication | **Allow unauthenticated invocations** | the PWA calls it from a browser with no Google credentials |
+| Authentication | **Allow unauthenticated** | the browser calls it with no Google login |
 | Container port | `8080` | Cloud Run's default; the Dockerfile reads `$PORT` |
 | Memory | **1 GiB** | measured 224 MB steady state, plus headroom |
 | CPU | 1 | |
-| Min instances | **0** | see above — this is the expensive mistake |
+| Min instances | **0** | the expensive mistake above |
 | Max instances | 2 | bounds the cost |
-| Request timeout | 300s | a cold start plus two embeddings |
+| Request timeout | 300s | cold start plus two embeddings |
 
 ### Environment variables
 
-| Name | Type | Value |
-|---|---|---|
-| `SUPABASE_URL` | variable | your project URL |
-| `SUPABASE_SERVICE_KEY` | **secret** | the `service_role` key |
-| `ALLOWED_ORIGINS` | variable | the origin the app is served from |
+| Name | Type |
+|---|---|
+| `SUPABASE_URL` | variable |
+| `SUPABASE_SERVICE_KEY` | **secret** |
+| `ALLOWED_ORIGINS` | variable, or leave unset |
 
-`SUPABASE_SERVICE_KEY` must be a **secret**, not a plain variable. It can write
-any verdict for any tree; it is the one value in this project that must not
-leak.
+`SUPABASE_SERVICE_KEY` must be a **secret**. It can write any verdict for any
+tree; it is the one value here that must not leak.
 
-`ALLOWED_ORIGINS` must match wherever the PWA is actually served from, exactly,
-including `https://`. If it does not match, the browser blocks the call with a
-CORS error and the demo fails in a way that looks like the service is down.
+`ALLOWED_ORIGINS` defaults to `*` if unset, which is safe — the endpoints carry
+no secrets a caller could extract, and every verdict is derived from stored
+photos rather than the request body.
 
----
-
-## Or with the CLI
+### Or with the CLI
 
 ```
 gcloud run deploy greenproof-ml \
   --source ml \
   --region us-central1 \
   --allow-unauthenticated \
-  --memory 1Gi \
-  --cpu 1 \
-  --min-instances 0 \
-  --max-instances 2 \
+  --memory 1Gi --cpu 1 \
+  --min-instances 0 --max-instances 2 \
   --timeout 300 \
-  --set-env-vars "SUPABASE_URL=https://xxxx.supabase.co,ALLOWED_ORIGINS=https://your-app"
+  --set-env-vars "SUPABASE_URL=https://xxxx.supabase.co"
 ```
 
-Then set the secret separately so it never appears in your shell history:
+Set the secret separately so it never enters shell history:
 
 ```
 gcloud run services update greenproof-ml --region us-central1 \
@@ -118,43 +126,30 @@ gcloud run services update greenproof-ml --region us-central1 \
 
 ---
 
-## Verifying it works
+## After it deploys
 
 ```
 curl https://<service-url>/health
 ```
 
-Then score one real check-in end to end:
+Then point the app at it — the same command the tunnel uses, because the app
+reads its scoring URL from the database either way:
 
 ```
-curl -X POST https://<service-url>/score \
-  -H 'Content-Type: application/json' \
-  -d '{"checkin_id":"<an id from your database>"}'
+python tools/set_ml_url.py https://<service-url>
 ```
 
-Finally set `VITE_ML_URL` to the service URL wherever the PWA is deployed, and
-rebuild. Vite inlines env vars at **build** time, so changing the variable
-without redeploying the frontend does nothing.
+That is the whole switchover. No Vercel rebuild, no per-device setup. To go
+back to the laptop, run `python tools/start_demo.py` and it republishes the
+tunnel URL over the top.
 
----
-
-## On the day
-
-**Wake it before you present.** The container sleeps after idle. Open `/health`
-a few minutes beforehand — the first request pays container start plus ONNX
-session init. The model itself is baked into the image, so that is seconds
-rather than the ninety it would otherwise be.
-
-**Have the fallback ready and do not treat it as a fallback.** A check-in that
-stays `pending` and is scored later is documented, intended behaviour — see the
-comment at the top of `app/src/lib/ml.ts`. If the network fails on stage, open a
-tree that was scored during the pilot and walk through its `signals` breakdown.
-That is real data and it demonstrates the "degrade, don't break" claim rather
-than contradicting it.
+**The model is baked into the image**, so a cold start is container boot plus
+session init rather than a 90 MB download. Still open `/health` a few minutes
+before presenting to wake it.
 
 ---
 
 ## What this does not solve
 
-The app itself still has to be reachable from your phone on the day. Cloud Run
-hosts the **verification service** only, not the PWA.
+Cloud Run hosts the **verification service** only. The app itself is on Vercel
+and is unaffected by anything on this page.

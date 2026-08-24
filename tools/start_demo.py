@@ -76,6 +76,16 @@ def wait_for(url: str, label: str, attempts: int, delay: float) -> bool:
 
 
 def main() -> int:
+    # --help must never START the demo. Running it expecting a usage line and
+    # getting a live tunnel instead is a genuinely bad surprise, and the person
+    # most likely to type it is someone under time pressure who has forgotten
+    # what this does.
+    if any(a in ("-h", "--help") for a in sys.argv[1:]):
+        print(__doc__.strip())
+        print()
+        print("Pre-flight checklist and recovery steps: docs/DEMO_RUNBOOK.md")
+        return 0
+
     load_env()
     if not os.environ.get("SUPABASE_SERVICE_KEY"):
         print("SUPABASE_SERVICE_KEY is not set. Check .env.", file=sys.stderr)
