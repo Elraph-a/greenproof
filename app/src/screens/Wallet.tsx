@@ -3,7 +3,7 @@ import { useAuth } from '../auth/AuthProvider'
 import { supabase } from '../lib/supabase'
 import { DEMO, demoLedger } from '../lib/demo'
 import { Icon } from '../components/Icon'
-import { EmptyState, ErrorNote, HeroCard, StatCell, StatStrip } from '../components/ui'
+import { EmptyState, ErrorNote, HeroCard } from '../components/ui'
 import type { LedgerEntry } from '../lib/types'
 
 /**
@@ -20,6 +20,21 @@ import type { LedgerEntry } from '../lib/types'
 
 /** Below this, a transfer fee would eat most of a GH₵2 payment. */
 const MIN_WITHDRAWAL_GHS = 10
+
+/**
+ * Ledger status, in words a planter uses.
+ *
+ * The raw column value was being printed straight to the screen, so the app
+ * told people their money was "accrued" - a database enum, in an app whose
+ * entire subject is being paid. Anything unrecognised falls back to a plain
+ * word rather than leaking the next enum we add.
+ */
+const LEDGER_STATUS: Record<string, string> = {
+  accrued: 'Not yet paid',
+  paid: 'Paid out',
+  pending: 'Pending',
+  reversed: 'Reversed',
+}
 
 export function Wallet() {
   const { userId } = useAuth()
@@ -74,12 +89,30 @@ export function Wallet() {
         />
       )}
 
-      <div className="mt-2.5">
-        <StatStrip>
-          <StatCell label="Earned" value={`GH₵${total.toFixed(2)}`} />
-          <StatCell label="Paid out" value={`GH₵${paid.toFixed(2)}`} />
-        </StatStrip>
-      </div>
+      {/*
+        The stat strip is gone. Earned and Paid out are not two more headline
+        figures - they are the arithmetic BEHIND the balance already stated
+        above, and giving them their own cards made three money numbers of
+        equal weight on a screen whose whole job is to answer one question.
+
+        As a single line they read as the working: earned, minus paid out,
+        leaves the balance in the card above.
+      */}
+      {/* Only once it says something the hero does not. Until a payout has
+          happened, available and earned are the same number, and printing it
+          twice makes the screen look like it is padding. */}
+      {paid > 0 && (
+        <p className="mt-2 text-label-lg text-on-surface-variant">
+          <span className="tnum font-semibold text-on-surface">
+            GH₵{total.toFixed(2)}
+          </span>{' '}
+          earned all time ·{' '}
+          <span className="tnum font-semibold text-on-surface">
+            GH₵{paid.toFixed(2)}
+          </span>{' '}
+          paid out
+        </p>
+      )}
 
       {/* NO window.alert(). This is the most anticipated tap in the app, and
           it used to produce an unstyled browser dialog quoting a file path in
@@ -153,7 +186,7 @@ export function Wallet() {
         />
       )}
 
-      <ul className="flex flex-col gap-2.5">
+      <ul className="rise-stagger flex flex-col gap-2.5">
         {entries?.map((e) => (
           <li key={e.id} className="card flex items-center justify-between gap-3 py-3">
             <div className="min-w-0">
@@ -167,7 +200,7 @@ export function Wallet() {
                   year: 'numeric',
                 })}
                 {' · '}
-                {e.status}
+                {LEDGER_STATUS[e.status] ?? 'Recorded'}
               </p>
             </div>
             <p className="tnum shrink-0 font-headline text-headline-md font-bold text-[var(--color-verified)]">

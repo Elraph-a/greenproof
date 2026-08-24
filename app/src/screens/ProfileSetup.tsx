@@ -80,7 +80,7 @@ export function ProfileSetup() {
             <RoleCard
               icon="wallet"
               title="I want to sponsor trees"
-              body="Fund trees and see verified proof they are still alive — with the photos and the survival rate."
+              body="Fund trees and see verified proof they are still alive, with the photos and the survival rate."
               selected={role === 'sponsor'}
               onSelect={() => setLocalRole('sponsor')}
             />

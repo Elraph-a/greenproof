@@ -427,7 +427,7 @@ export function CheckIn() {
               className="btn btn-primary btn-block"
               onClick={() => setStep(3)}
             >
-              I'm in position — take photo
+              I'm in position. Take photo
             </button>
           )}
           {step === 3 && (

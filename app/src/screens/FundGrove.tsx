@@ -85,7 +85,7 @@ export function FundGrove() {
           <div className="note-warn mt-stack-md text-left">
             <p className="text-label-lg">
               <strong>This was a mock payment.</strong> The MTN MoMo sandbox sits
-              behind the same interface — see <code>src/lib/payments.ts</code>.
+              behind the same interface. See <code>src/lib/payments.ts</code>.
               No real money moved.
             </p>
           </div>

@@ -391,7 +391,7 @@ function buildChecks(c: Checkin): Check[] {
     title: 'GPS accuracy',
     detail:
       gps.distance_m != null
-        ? `±${Math.round(gps.distance_m)} m — within the ${Math.round(gps.allowed_m ?? 10)} m threshold`
+        ? `±${Math.round(gps.distance_m)} m, within the ${Math.round(gps.allowed_m ?? 10)} m threshold`
         : 'Position not recorded',
     passed: gps.passed !== false,
   })
@@ -403,7 +403,7 @@ function buildChecks(c: Checkin): Check[] {
       growth?.trunk_mm != null
         ? `${(growth.trunk_mm / 10).toFixed(1)} cm${
             growth.delta_mm != null
-              ? ` — ${growth.delta_mm >= 0 ? '+' : ''}${(growth.delta_mm / 10).toFixed(1)} cm since last check`
+              ? `, ${growth.delta_mm >= 0 ? '+' : ''}${(growth.delta_mm / 10).toFixed(1)} cm since last check`
               : ''
           }`
         : 'Not measured this visit',

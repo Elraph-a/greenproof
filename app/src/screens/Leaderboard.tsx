@@ -44,7 +44,7 @@ export function Leaderboard() {
       : list.sort((a, b) => b.trees - a.trees)
   }, [rows, sort])
 
-  const medals = ['🥇', '🥈', '🥉']
+
 
   return (
     <div className="px-margin-mobile pt-1 pb-2">
@@ -81,18 +81,31 @@ export function Leaderboard() {
         />
       )}
 
-      <ol className="flex flex-col gap-2.5">
+      {/*
+        TWO THINGS CHANGED HERE AND BOTH WERE MEANING, NOT DECORATION.
+
+        The podium used the AMBER ACCENT. Amber means money in this app and
+        nothing else - that rule is what lets a planter read a cedi figure
+        without reading the label. Spending it on "you came third" quietly
+        broke the one colour convention the product actually enforces. Rank now
+        reads through the rank number itself, which is what a rank is.
+
+        And the medals were emoji. Emoji render as a different typeface at a
+        different weight on every Android in the field, so the first three rows
+        used a font nothing else on the screen uses. A filled rank chip is the
+        same type as the rest of the app and scales with it.
+      */}
+      <ol className="rise-stagger flex flex-col gap-2.5">
         {sorted.map((r, i) => (
-          <li
-            key={r.id}
-            /* The podium is marked with the gold accent rather than a heavier
-               border — a thicker outline reads as "selected", not "winning". */
-            className={`card flex items-center gap-3 ${
-              i < 3 ? 'ring-1 ring-[var(--color-accent)]/45' : ''
-            }`}
-          >
-            <span className="w-8 shrink-0 text-center font-headline text-headline-md font-bold text-on-surface">
-              {medals[i] ?? i + 1}
+          <li key={r.id} className="card flex items-center gap-3">
+            <span
+              className={`flex size-8 shrink-0 items-center justify-center rounded-full font-headline text-label-lg font-bold ${
+                i < 3
+                  ? 'bg-primary text-on-primary'
+                  : 'bg-surface-container-high text-on-surface-variant'
+              }`}
+            >
+              {i + 1}
             </span>
             <div className="min-w-0 flex-1">
               <p className="truncate font-bold text-on-surface">{r.name}</p>
@@ -116,7 +129,7 @@ export function Leaderboard() {
         <Icon name="trophy" size={16} className="mt-0.5 shrink-0 text-on-surface-variant" />
         <p className="text-label-lg text-on-surface-variant">
           Ranked by the share of trees still alive, not by how many were
-          planted. Planting is the easy part — a leaderboard that rewarded
+          planted. Planting is the easy part. A leaderboard that rewarded
           volume would work against the whole product.
         </p>
       </div>

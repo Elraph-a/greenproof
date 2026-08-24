@@ -231,7 +231,7 @@ export function Register() {
               Register a Tree
             </h1>
             <p className="text-label-md text-on-surface-variant">
-              Step {step} of {TOTAL} — {STEP_NAMES[step - 1]}
+              Step {step} of {TOTAL} · {STEP_NAMES[step - 1]}
             </p>
           </div>
         </div>
@@ -279,7 +279,7 @@ export function Register() {
             <InfoPanel
               icon="camera"
               title="Wide photo"
-              body="Step back so the whole tree fits. Include the surroundings — sky, ground, and nearby plants."
+              body="Step back so the whole tree fits. Include the surroundings: sky, ground, and nearby plants."
             />
             <div className="mt-3">
               <PhotoCapture
@@ -400,7 +400,7 @@ export function Register() {
                   the user actually is rather than buried in a slide. */}
               <p className="mb-2 text-label-lg text-on-surface-variant">
                 If you placed a physical tag on the tree, enter its number here.
-                This helps you find the tree again — it is not how the tree is
+                This helps you find the tree again. It is not how the tree is
                 identified.
               </p>
               <div className="flex items-center gap-2">
@@ -454,7 +454,7 @@ export function Register() {
               // it does not stop the registration.
               <div className="note-warn mt-stack-md">
                 <p className="text-label-lg font-medium">
-                  No compass reading on this device. The tree still registers —
+                  No compass reading on this device. The tree still registers.
                   the next visit just won't be able to say "face this way".
                 </p>
               </div>
@@ -573,7 +573,7 @@ function CollisionWarning({
       </p>
       <p className="mt-1.5 text-label-lg">
         Look at the last photo. If it is the tree in front of you, check it in
-        instead — registering it again would pay for one tree twice.
+        instead. Registering it again would pay for one tree twice.
       </p>
 
       <ul className="mt-2.5 space-y-2">
@@ -640,7 +640,7 @@ function CollisionWarning({
       {acked && (
         <p className="mt-2.5 flex items-center gap-2 text-label-lg font-semibold text-on-surface">
           <Icon name="check-circle" size={16} />
-          Marked as a different tree — this registration is flagged for review.
+          Marked as a different tree. This registration is flagged for review.
         </p>
       )}
       <p className="mt-1.5 text-label-md text-on-surface-variant">
@@ -684,12 +684,12 @@ function GpsStep({
       {geoState === 'denied' && !DEMO && (
         <ErrorNote>
           Location permission was refused. A tree cannot be registered without
-          it — allow location in your browser settings and reload.
+          it. Allow location in your browser settings and reload.
         </ErrorNote>
       )}
       {geoState === 'unavailable' && !DEMO && (
         <ErrorNote>
-          This device can't provide location. It needs an HTTPS page — check you
+          This device can't provide location. It needs an HTTPS page. Check you
           are on the real site address.
         </ErrorNote>
       )}
@@ -720,10 +720,10 @@ function GpsStep({
             }`}
           >
             {tone === 'good'
-              ? 'Good — position recorded'
+              ? 'Good. Position recorded'
               : tone === 'warn'
-                ? 'Marginal — move to open sky'
-                : 'Too poor — wait or move to open sky'}
+                ? 'Marginal. Move to open sky'
+                : 'Too poor. Move to open sky'}
           </span>
 
           <p className="mt-2.5 text-label-lg text-on-surface-variant">

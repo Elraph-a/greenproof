@@ -65,14 +65,14 @@ export function Landing() {
         </h1>
 
         <p className="mt-4 max-w-sm text-body-lg text-white/70">
-          Photograph the trees you plant. We check they are still alive — and
+          Photograph the trees you plant. We check they are still alive, and
           you earn for every one that survives.
         </p>
 
         {/*
           The three claims, as numbers, before the fold. A judge reads this
           screen for four seconds; prose does not survive that, a number does.
-          Values are the measured ones from spike/FINDINGS.md — when the pilot
+          Values are the measured ones from spike/FINDINGS.md. When the pilot
           lands, they get replaced with pilot figures, not inflated.
         */}
         <div className="mt-stack-md grid grid-cols-3 gap-px overflow-hidden rounded-xl bg-white/10">
