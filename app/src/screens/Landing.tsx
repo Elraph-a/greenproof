@@ -84,14 +84,20 @@ export function Landing() {
 
       <div className="safe-bottom relative z-10 px-margin-mobile pt-stack-md">
         {/*
-          A WHITE pill, not `btn-primary`. The theme's primary is #14432c, which
-          on this near-black scrim is barely a shape at all. This is the one
-          screen in the app with a dark ground, so it is the one place the
+          A WHITE pill, not `btn-primary`. The primary is a very dark green,
+          which on this near-black scrim is barely a shape at all. This is the
+          one screen in the app with a dark ground, so it is the one place the
           button has to be inverted by hand.
+
+          `text-primary`, not a hex. This read `text-[#14432c]` - the primary
+          from the palette we replaced - so after the retheme the one button on
+          the first screen was still wearing the old colour. That is exactly
+          the failure hardcoding a token value causes: it does not break, it
+          just quietly stops matching.
         */}
         <Link
           to="/signup"
-          className="btn btn-block bg-white text-[#14432c] active:bg-white/90"
+          className="btn btn-block bg-white text-primary active:bg-white/90"
         >
           Get started
           <Icon name="arrow-right" size={20} />

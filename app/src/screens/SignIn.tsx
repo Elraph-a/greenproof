@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
-import { Icon } from '../components/Icon'
+import { AuthShell } from '../components/AuthShell'
 import { ErrorNote, Spinner } from '../components/ui'
 
 /**
@@ -37,22 +37,26 @@ export function SignIn() {
   }
 
   return (
-    <div className="screen-in safe-top safe-bottom flex min-h-dvh flex-col justify-center px-margin-mobile">
-      <div className="mb-stack-md flex items-center gap-2.5">
-        <span className="flex size-9 items-center justify-center rounded-lg bg-primary text-on-primary">
-          <Icon name="tree" size={20} />
-        </span>
-        <span className="font-headline text-headline-md font-bold text-on-surface">
-          GreenProof
-        </span>
-      </div>
-
-      <h1 className="font-headline text-display-md font-bold text-on-surface">
-        Welcome back
-      </h1>
-      <p className="mt-2 text-on-surface-variant">Sign in to your trees.</p>
-
-      <form onSubmit={submit} className="mt-stack-md">
+    <AuthShell
+      title="Welcome back"
+      sub="Sign in to your trees."
+      /* Pinned rather than trailing the form. Two fields do not fill a phone,
+         so this sat mid-screen with a third of the sheet empty beneath it.
+         At the base it reads as the way out of this screen, which is what it
+         is, and the emptiness stops looking like something failed to load. */
+      footer={
+        <p className="pb-1 text-center">
+          <span className="text-on-surface-variant">First time here?</span>{' '}
+          <Link
+            to="/signup"
+            className="font-semibold text-primary underline underline-offset-4"
+          >
+            Create an account
+          </Link>
+        </p>
+      }
+    >
+      <form onSubmit={submit}>
         <label className="label" htmlFor="email">
           Email address
         </label>
@@ -106,15 +110,6 @@ export function SignIn() {
         {error && <ErrorNote>{error}</ErrorNote>}
       </form>
 
-      <div className="mt-stack-md text-center">
-        <span className="text-on-surface-variant">First time here?</span>{' '}
-        <Link
-          to="/signup"
-          className="font-semibold text-primary underline underline-offset-4"
-        >
-          Create an account
-        </Link>
-      </div>
-    </div>
+    </AuthShell>
   )
 }

@@ -225,6 +225,26 @@ export function CheckIn() {
               </div>
             )}
 
+            {/*
+              THE PREVIOUS PHOTO IS THE CONTROL, SO IT GETS THE CARD.
+
+              This was a 62px thumbnail beside three lines of text - and the
+              comment on its own alt attribute said that confirming the tree
+              against this photo IS the identity step. A person standing in a
+              grove is being asked to judge "is this the same tree", and 62px
+              of a palm trunk cannot answer that; every young palm in the pilot
+              looks like every other one at that size.
+
+              It is also the exact comparison the model is about to make. Ours
+              scores rank-1 retrieval at 54% on this data and is near-zero in a
+              dense same-species stand (spike/FINDINGS.md). The human is the
+              layer that covers that gap, and we were handing them a worse look
+              at the evidence than the machine gets.
+
+              Distance rides on the image rather than sitting under it: at this
+              step it qualifies the photo ("the one 4 m away"), it is not a
+              fact about the tree.
+            */}
             <div className="flex flex-col gap-2.5">
               {nearby?.map((t) => (
                 <button
@@ -232,9 +252,9 @@ export function CheckIn() {
                   type="button"
                   onClick={() => void choose(t)}
                   disabled={!gpsUsable}
-                  className="card flex w-full items-center gap-3 text-left active:bg-surface-container-low disabled:opacity-50"
+                  className="card w-full overflow-hidden p-0 text-left active:bg-surface-container-low disabled:opacity-50"
                 >
-                  <div className="size-[62px] shrink-0 overflow-hidden rounded-lg bg-surface-container-high">
+                  <div className="relative aspect-[4/3] bg-surface-container-high">
                     {t.last_wide_url ? (
                       <img
                         src={t.last_wide_url}
@@ -248,22 +268,25 @@ export function CheckIn() {
                       />
                     ) : (
                       <div className="flex size-full items-center justify-center text-on-surface-variant">
-                        <Icon name="image" size={22} />
+                        <Icon name="image" size={26} />
                       </div>
                     )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-headline text-headline-md font-bold text-on-surface">
-                      {demoCommonName.get(t.id) ?? treeLabel(t)}
-                    </p>
-                    <p className="truncate text-label-lg text-on-surface-variant italic">
-                      {t.species || 'Species not recorded'}
-                    </p>
-                    <p className="tnum mt-1 text-label-lg font-semibold text-[var(--color-verified)]">
+                    <span className="tnum absolute top-2.5 right-2.5 inline-flex items-center gap-1 rounded-full bg-black/65 px-2.5 py-1 text-label-md font-bold text-white backdrop-blur">
+                      <Icon name="target" size={12} />
                       {Math.round(t.distance_m)} m away
-                    </p>
+                    </span>
                   </div>
-                  <Icon name="chevron-right" size={18} className="text-on-surface-variant" />
+                  <div className="flex items-center gap-3 px-3.5 py-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-headline text-headline-md font-bold text-on-surface">
+                        {demoCommonName.get(t.id) ?? treeLabel(t)}
+                      </p>
+                      <p className="truncate text-label-lg text-on-surface-variant italic">
+                        {t.species || 'Species not recorded'}
+                      </p>
+                    </div>
+                    <Icon name="chevron-right" size={18} className="shrink-0 text-on-surface-variant" />
+                  </div>
                 </button>
               ))}
             </div>

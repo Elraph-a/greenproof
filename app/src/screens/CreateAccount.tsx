@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
-import { Icon } from '../components/Icon'
+import { AuthShell } from '../components/AuthShell'
 import { RoleCard } from '../components/RoleCard'
 import { ErrorNote, Spinner } from '../components/ui'
 
@@ -58,26 +58,33 @@ export function CreateAccount() {
   }
 
   return (
-    <div className="screen-in flex min-h-dvh flex-col bg-background">
-      <header className="safe-top px-margin-mobile pt-4">
-        <div className="flex items-center gap-2.5">
-          <span className="flex size-9 items-center justify-center rounded-lg bg-primary text-on-primary">
-            <Icon name="tree" size={20} />
-          </span>
-          <span className="font-headline text-headline-md font-bold text-on-surface">
-            GreenProof
-          </span>
-        </div>
-        <h1 className="mt-stack-sm font-headline text-display-md font-bold text-on-surface">
-          Join GreenProof
-        </h1>
-        <p className="mt-1 text-on-surface-variant">
-          One minute, and your trees are on the record.
-        </p>
-      </header>
-
-      <main className="flex-1 px-margin-mobile pt-stack-md pb-3">
-        <form id="join-form" onSubmit={submit}>
+    /* `short` band: this form is six fields plus a role choice, and on a 640px
+       phone a tall photograph would push the first question below the fold.
+       Sign-in has two fields and can afford the taller one. */
+    <AuthShell
+      band="short"
+      title="Join GreenProof"
+      sub="One minute, and your trees are on the record."
+      footer={
+        <>
+          <button
+            type="submit"
+            form="join-form"
+            className="btn btn-primary btn-block btn-cta"
+            disabled={busy || !ready}
+          >
+            {busy ? <Spinner /> : role === 'sponsor' ? 'Start sponsoring' : 'Start planting'}
+          </button>
+          <p className="mt-2.5 pb-1 text-center text-on-surface-variant">
+            Already have an account?{' '}
+            <Link to="/signin" className="font-semibold text-primary underline underline-offset-4">
+              Sign in
+            </Link>
+          </p>
+        </>
+      }
+    >
+      <form id="join-form" onSubmit={submit}>
           <h2 className="mb-2 text-label-lg font-semibold text-on-surface">
             How will you use GreenProof?
           </h2>
@@ -191,25 +198,7 @@ export function CreateAccount() {
           </div>
 
           {error && <ErrorNote>{error}</ErrorNote>}
-        </form>
-      </main>
-
-      <footer className="safe-bottom sticky bottom-0 bg-background px-margin-mobile pt-2">
-        <button
-          type="submit"
-          form="join-form"
-          className="btn btn-primary btn-block btn-cta"
-          disabled={busy || !ready}
-        >
-          {busy ? <Spinner /> : role === 'sponsor' ? 'Start sponsoring' : 'Start planting'}
-        </button>
-        <p className="mt-2.5 pb-1 text-center text-on-surface-variant">
-          Already have an account?{' '}
-          <Link to="/signin" className="font-semibold text-primary underline underline-offset-4">
-            Sign in
-          </Link>
-        </p>
-      </footer>
-    </div>
+      </form>
+    </AuthShell>
   )
 }
