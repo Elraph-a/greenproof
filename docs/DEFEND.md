@@ -203,18 +203,39 @@ dying-tree detector.
 
 ---
 
-## 10 · Native camera for registration, live camera for check-in
+## 10 · Both capture screens use an in-app camera, with a three-tier fallback
 
-**What.** Registration uses `<input capture>`; check-in uses `getUserMedia`.
+**What.** Registration and check-in both capture inside the app. One engine,
+degrading in image quality but never in the ability to finish a visit:
 
-**Why both.** The native camera gives autofocus, exposure metering, HDR and full
-sensor resolution for free — and a soft close-up wrecks both the blur gate and
-the trunk measurement. But it cannot draw on its viewfinder, and the ghost
-overlay is the whole point of the check-in screen. Registration has no previous
-photo to align against, so it takes the quality; check-in takes the overlay.
+1. `getUserMedia` + `ImageCapture.takePhoto()` — in-app, still quality (Chrome/Android)
+2. `getUserMedia` + canvas frame — in-app, preview quality (Safari/iOS)
+3. `<input type=file capture>` — leaves the app, best quality (no camera,
+   permission refused, or insecure context)
 
-**Where it fails.** `getUserMedia` gives a softer frame. If permission is
-refused we fall back to the native camera and lose the overlay, not the visit.
+**Why this changed.** Registration used to be tier 3 by choice, for autofocus,
+exposure and full sensor resolution. **That argument no longer holds on the
+resolution half:** `lib/image.ts` downscales every photo to 800px on the long
+edge at q75 before upload, and DINOv2 sees 224px. A 12 MP still and a 1920×1080
+frame reach the model as the same 800px JPEG, so we were paying a whole flow
+interruption for pixels we delete. Focus and exposure are real, and
+`takePhoto()` recovers them by asking the camera for an actual still on the live
+track rather than scraping a preview frame.
+
+**The compass is the side effect that is actually the point.** Handing off to
+the native camera backgrounds the browser, so `deviceorientation` stops firing
+and the heading we stored was read *before* the camera opened — a guess about
+where the phone would end up pointing. Capturing in-app means the heading is
+read at the moment of capture, which is what rule 4 has always claimed we do.
+
+**Where it fails.** Tier 2 gives a softer frame than the native camera would.
+The blur gate is untouched and remains the safety net: it reads the stored
+photo, so it does not care which tier produced it. Tier 3 still loses the ghost
+overlay, but loses the overlay and not the visit.
+
+> *"We measured what the model actually sees. Full sensor resolution was being
+> thrown away by our own downscaler, so the native camera was costing us a
+> broken flow and a fabricated compass heading in exchange for nothing."*
 
 ---
 

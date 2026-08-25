@@ -95,7 +95,10 @@ Walk outside and register three real trees. Check each of these:
 - [ ] Accuracy is **different for each tree** — if all three show identical
       coordinates, the reset-per-tree logic is broken and every tree would land
       on the same pin
-- [ ] Camera opens the **real camera app**, not a file picker
+- [ ] Camera opens **a live viewfinder inside the app**, not the phone's camera
+      app and not a file picker. Registration used to hand off to the native
+      camera; it no longer does, so a hand-off here means `getUserMedia` failed
+      and we have silently dropped to the tier-3 fallback
 - [ ] Photos come back **the right way up**, not rotated 90°
 - [ ] The **sharpness number** is shown, and deliberately shaking the phone
       during a shot triggers the blur warning
