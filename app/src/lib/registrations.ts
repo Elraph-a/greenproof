@@ -107,6 +107,32 @@ export async function submitRegistration(
   return { queuedId: item.id }
 }
 
+/**
+ * Is this error "the database will not accept that column", as opposed to a
+ * genuine problem with the data?
+ *
+ * Three distinct shapes mean the same thing to us, and all three have bitten
+ * this project or one like it:
+ *
+ *   PGRST204  PostgREST's cached schema has not caught up with a migration
+ *   42501     the column exists but is not granted to this role
+ *   42703     the column does not exist at all
+ *
+ * Matched on code first and message second, because Supabase surfaces these
+ * inconsistently depending on whether PostgREST or Postgres rejected it.
+ */
+export function isMissingColumn(error: { code?: string; message?: string }): boolean {
+  if (error.code && ['PGRST204', '42501', '42703'].includes(error.code)) return true
+  const m = (error.message ?? '').toLowerCase()
+  return (
+    m.includes('leaf_photo') &&
+    (m.includes('schema cache') ||
+      m.includes('does not exist') ||
+      m.includes('permission denied') ||
+      m.includes('column'))
+  )
+}
+
 /** Push one queued registration as far as it will go. Throws on failure. */
 async function send(item: PendingRegistration): Promise<void> {
   // --- 1. photos -----------------------------------------------------------
@@ -175,7 +201,7 @@ async function send(item: PendingRegistration): Promise<void> {
   }
 
   // --- 3. check-in ---------------------------------------------------------
-  const { data: created, error } = await supabase.from('checkins').insert({
+  const base = {
     tree_id: item.treeId,
     submitted_by: item.userId,
     wide_photo: item.uploaded.wide!,
@@ -188,8 +214,36 @@ async function send(item: PendingRegistration): Promise<void> {
     blur_score: item.checkin.blur_score,
     // ?? null so items queued before this field existed insert cleanly.
     trunk_taps: item.checkin.trunk_taps ?? null,
-    leaf_photo: item.uploaded.leaf ?? null,
-  }).select('id').single()
+  }
+
+  let { data: created, error } = await supabase
+    .from('checkins')
+    .insert({ ...base, leaf_photo: item.uploaded.leaf ?? null })
+    .select('id')
+    .single()
+
+  // THE LEAF COLUMN MUST NEVER COST SOMEONE THEIR TREE.
+  //
+  // The upload was already allowed to fail silently, on the grounds that an
+  // ADVISORY photo must not block a visit. But the INSERT was not: if
+  // `leaf_photo` is missing from the schema, or not granted to the client, or
+  // absent from PostgREST's cached schema, the whole registration failed and
+  // sat in the queue as "waiting to upload" - the tree, the two evidence
+  // photographs and the payment all held hostage by a column that feeds
+  // guidance nobody is paid on. That was an inconsistency in our own rule.
+  //
+  // So a schema-shaped rejection retries once WITHOUT the leaf. The visit
+  // completes, the evidence is saved, and the only thing lost is advice.
+  // Degrade, don't break - applied to the column and not just the upload.
+  if (error && isMissingColumn(error)) {
+    console.warn('leaf_photo rejected, retrying without it:', error.message)
+    ;({ data: created, error } = await supabase
+      .from('checkins')
+      .insert(base)
+      .select('id')
+      .single())
+  }
+
   if (error) throw new Error(`Could not save the first check-in: ${error.message}`)
 
   await dequeue(item.id)

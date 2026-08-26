@@ -9,6 +9,7 @@
  */
 
 import { supabase } from './supabase'
+import { isMissingColumn } from './registrations'
 import { newCaptureId, photoUrls, uploadPhoto } from './photos'
 import { requestScoring } from './ml'
 import { haversine } from './geo'
@@ -153,26 +154,41 @@ export async function submitCheckin(input: CheckinInput): Promise<string> {
     }
   }
 
-  const { data, error } = await supabase
+  const base = {
+    tree_id: input.treeId,
+    submitted_by: input.userId,
+    wide_photo: widePath,
+    close_photo: closePath,
+    captured_at: input.capturedAt.toISOString(),
+    lat: input.lat,
+    lng: input.lng,
+    gps_accuracy_m: input.accuracy,
+    heading_deg: input.heading,
+    blur_score: input.blurScore,
+    trunk_taps: input.trunkTaps,
+  }
+
+  let { data, error } = await supabase
     .from('checkins')
-    .insert({
-      tree_id: input.treeId,
-      submitted_by: input.userId,
-      wide_photo: widePath,
-      close_photo: closePath,
-      captured_at: input.capturedAt.toISOString(),
-      lat: input.lat,
-      lng: input.lng,
-      gps_accuracy_m: input.accuracy,
-      heading_deg: input.heading,
-      blur_score: input.blurScore,
-      trunk_taps: input.trunkTaps,
-      leaf_photo: leafPath,
-    })
+    .insert({ ...base, leaf_photo: leafPath })
     .select('id')
     .single()
 
+  // Same rule as registration: an ADVISORY column must never cost someone their
+  // visit. If the database will not accept `leaf_photo` - not granted, not in
+  // PostgREST's cached schema, not there at all - retry once without it. The
+  // check-in is evidence and gets saved; only the advice is lost.
+  if (error && isMissingColumn(error)) {
+    console.warn('leaf_photo rejected, retrying without it:', error.message)
+    ;({ data, error } = await supabase
+      .from('checkins')
+      .insert(base)
+      .select('id')
+      .single())
+  }
+
   if (error) throw new Error(`Could not save the check-in: ${error.message}`)
+  if (!data) throw new Error('Could not save the check-in: no row returned')
 
   requestScoring(data.id)
   return data.id
