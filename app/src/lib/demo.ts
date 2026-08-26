@@ -16,7 +16,14 @@
  * collecting.
  */
 
-import type { Checkin, LedgerEntry, Profile, Sponsorship } from './types'
+import type {
+  Advice,
+  Checkin,
+  LedgerEntry,
+  Profile,
+  SpeciesGuess,
+  Sponsorship,
+} from './types'
 import type { TreeWithLatest } from './trees'
 
 export const DEMO = import.meta.env.VITE_DEMO === '1'
@@ -214,6 +221,7 @@ export function demoCheckinsFor(treeId: string): Checkin[] {
     wide_photo: P(((seed.n - 1 + back) % 6) + 1),
     close_photo: P(((seed.n + 1 + back) % 6) + 1),
     tag_photo: null,
+    leaf_photo: null,
     captured_at: ago(seed.lastDays + (seed.visits - 1 - k) * 5),
     server_received_at: ago(seed.lastDays + (seed.visits - 1 - k) * 5),
     lat: 5.6505,
@@ -242,8 +250,75 @@ export function demoCheckinsFor(treeId: string): Checkin[] {
     audit_sample: false,
     reviewed_by: null,
     reviewed_at: null,
+    /*
+     * ADVISORY FIXTURES. Only on the LATEST visit, because that is where the
+     * app shows advice and because a tree carrying identical advice on every
+     * historical visit would look fabricated to anyone scrolling the timeline.
+     *
+     * CLAUDE.md: "Every screen needs a DEMO branch. MapScreen and
+     * SponsorDashboard were both missed and both rendered 'permission denied
+     * for table trees' in front of an audience." The advice card is a new
+     * screen region and gets the same treatment before it ever reaches a stage.
+     */
+    species_guess: k === seed.visits - 1 ? demoSpecies(seed) : null,
+    advice: k === seed.visits - 1 ? demoAdvice(seed) : null,
     }
   })
+}
+
+/**
+ * Demo advice, varied by the seed's condition.
+ *
+ * The struggling tree gets genuinely different guidance from the healthy one.
+ * A demo where every tree returns the same cheerful paragraph teaches a judge
+ * that the feature is a template, which is the opposite of the point.
+ */
+function demoAdvice(seed: Seed): Advice {
+  const declining = seed.status === 'flagged' || (seed.confidence ?? 100) < 60
+  return declining
+    ? {
+        health: 'stressed',
+        observations: [
+          'Leaf tips are browning on the lower branches, and several leaves have dropped.',
+          'The soil around the base looks compacted and dry.',
+          'Grass is growing right up to the trunk and competing for water.',
+        ],
+        actions: [
+          'Water deeply twice a week rather than lightly every day - deep watering pushes roots down.',
+          'Clear grass and weeds in a circle about one metre around the trunk.',
+          'Lay dry leaves or straw as mulch over that cleared circle, keeping it clear of the trunk itself.',
+        ],
+        limitations:
+          'The photographs cannot show root condition, soil depth, or whether the browning is drought or a pest. Check the underside of a few leaves for insects in person.',
+        model: 'claude-opus-5',
+        advisory_only: true,
+      }
+    : {
+        health: 'healthy',
+        observations: [
+          'Full, evenly green canopy with new growth visible at the branch tips.',
+          'The trunk is straight and the bark is undamaged.',
+        ],
+        actions: [
+          'Keep the base clear of competing grass.',
+          'Continue watering through the dry spell; this one needs no intervention.',
+        ],
+        limitations:
+          'A photograph cannot show root health or soil moisture below the surface. Nothing visible here suggests a problem.',
+        model: 'claude-opus-5',
+        advisory_only: true,
+      }
+}
+
+function demoSpecies(seed: Seed): SpeciesGuess {
+  return {
+    common: seed.common.split("'s ")[1] ?? seed.common,
+    scientific: seed.species,
+    // Not 1.0, deliberately. A demo that shows perfect confidence in a species
+    // call teaches the wrong thing about a signal that is genuinely uncertain.
+    self_reported_confidence: 0.82,
+    model: 'claude-opus-5',
+  }
 }
 
 /**

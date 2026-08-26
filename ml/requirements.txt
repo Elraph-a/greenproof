@@ -19,3 +19,8 @@ opencv-contrib-python-headless>=4.10,<5
 
 supabase>=2.9,<3
 httpx>=0.27,<1
+
+# Advisory layer only: species identification and care advice for the planter.
+# NOT on the scoring path - pipeline.py never imports the advisor, so a slow or
+# failed API call cannot affect a verdict.
+anthropic>=0.40

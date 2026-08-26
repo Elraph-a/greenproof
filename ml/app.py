@@ -129,6 +129,43 @@ def score(req: ScoreRequest) -> ScoreResponse:
     )
 
 
+@app.post("/advise")
+def advise(req: ScoreRequest) -> dict:
+    """Species identification and care advice for one check-in.
+
+    SEPARATE FROM /score ON PURPOSE, and the separation is the design.
+
+    Scoring is fast, local, offline-capable and replayable - it re-runs over the
+    whole pilot dataset whenever a threshold moves, and it must never acquire a
+    dependency on an external API that can be slow, rate-limited or down. This
+    endpoint is none of those things: it makes a paid network call to a model
+    whose error rate we have not measured.
+
+    So they share a service and nothing else. This writes only `species_guess`
+    and `advice`; it cannot move a confidence or a verdict, and a failure here
+    leaves the check-in exactly as scoring left it.
+
+    Note it does NOT require the DINOv2 model to be loaded - the two paths have
+    no components in common, so a cold model should not block advice.
+    """
+    from greenproof_ml import advisor
+
+    try:
+        result = advisor.advise_checkin(req.checkin_id)
+    except LookupError as e:
+        raise HTTPException(404, str(e)) from e
+    except Exception as e:  # noqa: BLE001
+        log.exception("advice failed for %s", req.checkin_id)
+        raise HTTPException(500, f"Advice failed: {e}") from e
+
+    if result is None:
+        # Not an error. Either the tree shows no decline and the policy skipped
+        # it, or the model declined to answer. Both leave the row untouched.
+        return {"checkin_id": req.checkin_id, "written": False}
+
+    return {"checkin_id": req.checkin_id, "written": True, **result}
+
+
 @app.post("/backfill")
 def backfill(limit: int = 50) -> dict:
     """Score everything still pending.

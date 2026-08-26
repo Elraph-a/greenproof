@@ -57,6 +57,8 @@ export type Checkin = {
   wide_photo: string
   close_photo: string
   tag_photo: string | null
+  /** Optional foliage close-up. Never scored — used only by the advisory layer. */
+  leaf_photo: string | null
   captured_at: string
   server_received_at: string
   lat: number
@@ -73,6 +75,46 @@ export type Checkin = {
   audit_sample: boolean
   reviewed_by: string | null
   reviewed_at: string | null
+  /**
+   * ADVISORY ONLY. Neither of these is part of verification.
+   *
+   * They are written by the ML service to their own columns, deliberately not
+   * into `signals`, so that "this did not affect the verdict" is provable from
+   * the schema rather than promised in a comment.
+   */
+  species_guess: SpeciesGuess | null
+  advice: Advice | null
+}
+
+/**
+ * An independent species identification from the photos.
+ *
+ * `self_reported_confidence` is named at length on purpose: it is the model's
+ * own opinion of itself, NOT a measured accuracy like `Checkin.confidence`.
+ * Shortening it to `confidence` would put two very different kinds of number
+ * side by side under the same word.
+ */
+export type SpeciesGuess = {
+  common: string | null
+  scientific: string | null
+  self_reported_confidence: number
+  model: string
+}
+
+/**
+ * Care guidance for the planter. Read by a person, acted on by a person, and
+ * never an input to a payment decision.
+ *
+ * `limitations` is required rather than optional: an assessment that cannot say
+ * what it failed to see is indistinguishable from one that saw everything.
+ */
+export type Advice = {
+  health: 'healthy' | 'stressed' | 'declining' | 'cannot_tell'
+  observations: string[]
+  actions: string[]
+  limitations: string
+  model: string
+  advisory_only: true
 }
 
 /** Only the columns granted by `grant insert (...) on checkins to authenticated`. */
@@ -82,6 +124,13 @@ export type CheckinInsert = {
   wide_photo: string
   close_photo: string
   tag_photo?: string | null
+  /**
+   * Granted to clients; `species_guess` and `advice` deliberately are not.
+   * Species is the natural next verification signal — a species that changes
+   * between visits is evidence of a swapped tree — and a client that could
+   * write its own guess would defeat that check before we built it.
+   */
+  leaf_photo?: string | null
   captured_at: string
   lat: number
   lng: number

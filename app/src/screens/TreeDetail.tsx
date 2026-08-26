@@ -4,7 +4,7 @@ import { photoUrls } from '../lib/photos'
 import { compassPoint } from '../lib/geo'
 import { formatAge, getTree, listCheckins, treeLabel } from '../lib/trees'
 import { demoCommonName, demoEarnings } from '../lib/demo'
-import type { Checkin, Tree } from '../lib/types'
+import type { Advice, Checkin, SpeciesGuess, Tree } from '../lib/types'
 import { Icon, type IconName } from '../components/Icon'
 import { ErrorNote, PhotoHero, StatusChip } from '../components/ui'
 
@@ -102,6 +102,17 @@ export function TreeDetail() {
   const latest = checkins[checkins.length - 1]
   const name = demoCommonName.get(tree.id) ?? treeLabel(tree)
   const earned = demoEarnings.get(tree.id)
+
+  /*
+   * Advice comes from the most recent visit that HAS any, not strictly the
+   * latest visit. A check-in scored before this feature existed carries none,
+   * and every one of the pilot's rows is in that position — falling back keeps
+   * the card useful on real historical data instead of showing nothing on the
+   * exact trees we want to demonstrate.
+   */
+  const advised = [...checkins].reverse().find((c) => c.advice)
+  const advice = advised?.advice ?? null
+  const species = advised?.species_guess ?? null
 
   return (
     <Frame
@@ -223,6 +234,25 @@ export function TreeDetail() {
         </div>
       )}
 
+      {/* ---- care advice ------------------------------------------------
+        DELIBERATELY BELOW "Why this score", AND DELIBERATELY DIFFERENT.
+
+        Everything above this point is verification: measured detectors whose
+        error rate we publish. This is not that. It is guidance from a language
+        model, and the design has to make that unmissable rather than rely on
+        the reader knowing — hence the separate heading, the plain surface
+        instead of a scored card, and the model named in the footer.
+
+        The score above answers "should this be paid". This answers "how do I
+        keep the tree alive", which nothing else in the app has ever addressed.
+      */}
+      {advice && (
+        <>
+          <h2 className="section-h">Care advice</h2>
+          <CareAdvice advice={advice} species={species} />
+        </>
+      )}
+
       {/*
         Registration facts and the tag caveat are reference material, not
         something a planter reads on every visit — so they sit one tap away
@@ -336,6 +366,102 @@ function Row({
  * one number — the breakdown is the debugging tool, the Q&A teaching aid, and
  * what makes a confidence score explicable to a farmer.
  */
+/**
+ * Care advice, and the visual separation is the point.
+ *
+ * WHY THIS DOES NOT LOOK LIKE THE SIGNAL BREAKDOWN ABOVE IT
+ *
+ * Everything in "Why this score" is a measured detector with a published error
+ * rate. This is a language model's opinion. Those deserve different amounts of
+ * trust, so they must not share a visual language — no percentages, no score
+ * bars, no confidence figure at the top. A reader who skims must still come
+ * away knowing which of the two carries the payment decision.
+ *
+ * The model is named in the footer for the same reason `dinov2-small` is named
+ * in the signals breakdown: a system that will not say what produced a number
+ * is asking to be trusted rather than checked.
+ */
+function CareAdvice({
+  advice,
+  species,
+}: {
+  advice: Advice
+  species: SpeciesGuess | null
+}) {
+  // `tertiary` is the "needs review" orange, NOT the gold accent. CLAUDE.md:
+  // gold means money and nothing else, so a health warning must not borrow it.
+  const tone: Record<Advice['health'], { label: string; cls: string }> = {
+    healthy: { label: 'Looks healthy', cls: 'text-primary' },
+    stressed: { label: 'Under stress', cls: 'text-tertiary' },
+    declining: { label: 'Declining', cls: 'text-error' },
+    cannot_tell: {
+      label: 'Cannot tell from these photos',
+      cls: 'text-on-surface-variant',
+    },
+  }
+  const t = tone[advice.health]
+
+  return (
+    <div className="card">
+      <p className={`font-bold ${t.cls}`}>{t.label}</p>
+
+      {species && (species.common || species.scientific) && (
+        <p className="mt-1 text-label-lg text-on-surface-variant">
+          Appears to be <strong className="text-on-surface">{species.common ?? species.scientific}</strong>
+          {species.common && species.scientific ? ` (${species.scientific})` : ''}
+        </p>
+      )}
+
+      {advice.observations.length > 0 && (
+        <>
+          <p className="mt-3 text-label-md font-semibold text-on-surface-variant">
+            What the photos show
+          </p>
+          <ul className="mt-1.5 space-y-1.5">
+            {advice.observations.map((o) => (
+              <li key={o} className="flex gap-2 text-on-surface">
+                <Icon name="dots" size={13} className="mt-1 shrink-0 text-on-surface-variant" />
+                <span>{o}</span>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+
+      {advice.actions.length > 0 && (
+        <>
+          <p className="mt-3 text-label-md font-semibold text-on-surface-variant">
+            What to do
+          </p>
+          <ul className="mt-1.5 space-y-1.5">
+            {advice.actions.map((a) => (
+              <li key={a} className="flex gap-2 text-on-surface">
+                <Icon name="check" size={13} className="mt-1 shrink-0 text-primary" />
+                <span>{a}</span>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+
+      {/*
+        The limitations line is REQUIRED in the data and shown unconditionally
+        here. An assessment that cannot say what it failed to see is
+        indistinguishable from one that saw everything, and hiding that behind a
+        disclosure would be choosing to make it easy to miss.
+      */}
+      <p className="mt-3 border-t border-outline-variant pt-3 text-label-lg text-on-surface-variant">
+        {advice.limitations}
+      </p>
+
+      <p className="mt-2.5 text-label-md text-on-surface-variant">
+        Advice from {advice.model}. Guidance for you only — it is not part of
+        verification and does not affect this tree&rsquo;s score or payment.
+      </p>
+    </div>
+  )
+}
+
 function SignalBreakdown({ checkin }: { checkin: Checkin }) {
   const s = checkin.signals
   const rows: { name: string; icon: IconName; score?: number; gate?: boolean }[] = [
