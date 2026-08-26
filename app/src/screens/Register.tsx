@@ -150,14 +150,28 @@ export function Register() {
   }, [fix, gpsUsable, collisions])
 
   async function submit() {
-    if (!userId) return
+    // GUARD AGAINST A SECOND TAP, and this is not theoretical.
+    //
+    // submitRegistration() returns as soon as the item is durably queued, so
+    // `submitting` is true for a few milliseconds only. That is by design - the
+    // planter should walk to the next tree rather than watch a spinner. But it
+    // means the button is live again almost immediately, and any reason the
+    // screen does not visibly advance turns every impatient tap into ANOTHER
+    // TREE. It did: one registration became eight rows.
+    if (!userId || submitting) return
     setSubmitting(true)
     setError(null)
     try {
       // Demo mode never writes. The flow still completes so the design can be
       // reviewed end to end without touching Supabase or its storage quota.
       if (!DEMO) {
-        if (!fix || !wide || !close || !leaf) return
+        if (!fix || !wide || !close || !leaf) {
+          // Was a bare `return`: it left the screen on Details with no spinner,
+          // no error and no advance, which is indistinguishable from a dead
+          // button and invites exactly the repeat-tapping described above.
+          setError('Missing GPS or a photo. Go back and check each step.')
+          return
+        }
         await submitRegistration({
           userId,
           species: species.trim() || null,
@@ -177,7 +191,13 @@ export function Register() {
         })
       }
       setCount((n) => n + 1)
-      setStep(5)
+      // STEP 6 IS "Done". This said 5, which is "Details" - the screen the user
+      // was already on. The tree registered correctly and the flow appeared to
+      // do nothing, so it got tapped again, and again. Eight trees from one.
+      //
+      // The number is derived from STEP_NAMES rather than written out, so
+      // inserting a step can never desynchronise this again.
+      setStep(TOTAL)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not save this tree')
     } finally {
