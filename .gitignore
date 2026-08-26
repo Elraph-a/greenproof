@@ -69,3 +69,11 @@ docs/design/New folder/
 # Loose drop folders. The design PNGs live in docs/design/v2/ under real names;
 # a copy inside app/ would also sit in Vercel's root directory for no reason.
 **/New folder/
+
+# The standalone technical reference and its diagrams. Deliberately NOT in the
+# repo: Raphael asked for it in the project folder only. Regenerate the .docx
+# with  python tools/md_to_docx.py GreenProof_Technical_Reference.md
+GreenProof_Technical_Reference.md
+arch-system.png
+arch-path.png
+arch-scoring.png

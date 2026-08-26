@@ -131,6 +131,38 @@ def convert(src, dst):
             r.font.size = Pt(9)
             continue
 
+        # image: ![alt](path) alone on a line
+        #
+        # Sized to the printable width rather than the image's own pixels, so a
+        # 1800px diagram does not arrive four pages wide. Width is taken from
+        # the section rather than hardcoded, because the margins are set above
+        # and the two must not drift apart.
+        m = re.match(r"!\[([^\]]*)\]\(([^)]+)\)", stripped)
+        if m:
+            alt, path = m.group(1), m.group(2)
+            if not os.path.isabs(path):
+                path = os.path.join(os.path.dirname(os.path.abspath(src)), path)
+            if os.path.exists(path):
+                sec = doc.sections[0]
+                usable = sec.page_width - sec.left_margin - sec.right_margin
+                doc.add_picture(path, width=usable)
+                doc.paragraphs[-1].alignment = WD_ALIGN_PARAGRAPH.CENTER
+                if alt:
+                    cap = doc.add_paragraph()
+                    cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                    r = cap.add_run(alt)
+                    r.italic = True
+                    r.font.size = Pt(9)
+                    r.font.color.rgb = RGBColor(0x60, 0x60, 0x60)
+            else:
+                # Say so in the document rather than silently dropping it. A
+                # missing diagram you cannot see is worse than a visible gap.
+                p = doc.add_paragraph()
+                r = p.add_run(f"[missing image: {path}]")
+                r.font.color.rgb = RGBColor(0xB0, 0x30, 0x30)
+            i += 1
+            continue
+
         # heading
         m = re.match(r"(#{1,6})\s+(.*)", stripped)
         if m:
