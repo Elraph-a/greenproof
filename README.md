@@ -46,6 +46,7 @@ data/      pilot and spike photos
 | [docs/DEPLOY.md](docs/DEPLOY.md) | deploy, field-test checklist, T0 plan |
 | [docs/ROADMAP.md](docs/ROADMAP.md) | week by week, and what each week produces |
 | [docs/DEFEND.md](docs/DEFEND.md) | one note per subsystem, written for Q&A |
+| [docs/ROLLBACK.md](docs/ROLLBACK.md) | **if something breaks** — how to get back, cheapest first |
 | [spike/FINDINGS.md](spike/FINDINGS.md) | what we measured, including what failed |
 | [docs/STITCH_PROMPT.md](docs/STITCH_PROMPT.md) | design prompts, batched by priority |
 
