@@ -59,9 +59,18 @@ export interface PendingRegistration {
   photos: {
     wide: Blob
     close: Blob
+    /**
+     * OPTIONAL, AND THE OPTIONALITY IS LOAD-BEARING.
+     *
+     * A leaf photo feeds the advisory layer only - it is never scored and never
+     * gated on. A visit must complete without it, both because the planter may
+     * skip it and because every item queued before this field existed has it
+     * undefined. No IndexedDB migration, same as trunk_taps.
+     */
+    leaf?: Blob
   }
   /** Storage paths already uploaded, so a retry doesn't re-send both photos. */
-  uploaded: Partial<Record<'wide' | 'close', string>>
+  uploaded: Partial<Record<'wide' | 'close' | 'leaf', string>>
 
   /**
    * Set once the trees row exists.

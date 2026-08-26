@@ -341,6 +341,52 @@ common mobile-in-sunlight failure, and this app is used at midday in a field.
 
 ---
 
+## 16 · Care advice is advisory, and structurally cannot be anything else
+
+**What.** One call to Claude Opus 5 per check-in returns the apparent species and
+a short health assessment with actions for the planter. It writes `species_guess`
+and `advice` and nothing else.
+
+**Why at all.** Every other part of this system decides whether to *believe* a
+planter. Nothing helped them keep the tree alive — which is precisely the gap the
+Auditor-General named: *"No funding allocated for post-planting care at all."*
+The same photograph they already take now returns something useful to them.
+
+**Why an LLM and not a disease classifier.** A PlantVillage-trained CNN is lab
+images of single leaves on plain backgrounds; published cross-domain accuracy
+collapses to roughly 30-50% on field photos. It covers fourteen crops, none of
+them ours. And we could not publish an error rate for it — which is the one thing
+this project claims to do. **We already made that mistake once**, with the plant
+check that scored AUC 1.000 and then flagged five of nine real check-ins; it is
+documented as one of our strongest slides, and repeating it would be worse than
+not shipping the feature.
+
+**Why it cannot leak into a verdict.** Four independent locks, not one:
+
+- separate columns, **not** inside `signals` — which is rewritten wholesale on
+  every re-score, and is exactly how we once destroyed our own attack provenance
+- service-role grants, identical to `confidence` and `verdict`
+- `pipeline.py` never imports `advisor.py`, so there is no code path at all
+- the UI names the model and states the boundary on screen
+
+**Where it fails.** It is an unmeasured component and we say so out loud. It can
+be confidently wrong about a species; the `limitations` field is required so it
+must state what the photograph could not show; and it costs about 3 cents a call,
+which is why the decline-only policy exists for scale.
+
+**More time.** Move species identification to **Pl@ntNet**, which is free for
+non-commercial use, purpose-built on 20,000+ species and returns ranked
+candidates — a specialist beats a generalist here. Then make a species *change*
+between visits a review flag: it catches a swapped tree independently of
+`scene_match`, our weakest measured signal. That changes verdict behaviour, which
+is why it was not done the day before a pitch.
+
+> *"It tells the planter what to do about a sick tree. It has no vote on whether
+> they get paid — and it could not have one, because we cannot publish its error
+> rate and we only report numbers we have measured."*
+
+---
+
 ## Known weaknesses, volunteered
 
 - One site, one season, four weeks, ~40 trees.
@@ -355,3 +401,6 @@ common mobile-in-sunlight failure, and this app is used at midday in a field.
 - **TIST already pays per living tree at 265,000 farmers. We are not first.**
 - Greenstand has an ML repo — research-stage, not deployed. They are not purely
   manual.
+- The care advice and species identification are **unmeasured**. They are
+  advisory, they cannot affect a verdict or a payment, and we do not report an
+  accuracy for them because we have not measured one.

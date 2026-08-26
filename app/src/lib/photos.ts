@@ -2,7 +2,8 @@
  * THE ONLY FILE THAT KNOWS WHERE PHOTOS LIVE.
  *
  * Everything else in the app deals in an opaque `string` path stored in
- * checkins.wide_photo / close_photo / tag_photo. Swapping Supabase Storage for
+ * checkins.wide_photo / close_photo / tag_photo / leaf_photo. Swapping Supabase
+ * Storage for
  * S3, Cloudflare R2 or anything else is a rewrite of this file and nothing more.
  *
  * That is a deliberate hedge: Supabase's free storage allowance is the most
@@ -16,7 +17,12 @@ import { DEMO, refuseWriteInDemo } from './demo'
 
 const BUCKET = 'tree-photos'
 
-export type PhotoRole = 'wide' | 'close' | 'tag'
+/**
+ * 'leaf' is ADVISORY ONLY and never scored. Species identification and health
+ * assessment want foliage, and the two scored photos are a whole tree and a
+ * trunk - neither is what those models want.
+ */
+export type PhotoRole = 'wide' | 'close' | 'tag' | 'leaf'
 
 /**
  * Photos are keyed by a client-generated capture id, NOT by tree id.

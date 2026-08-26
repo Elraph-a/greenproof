@@ -44,6 +44,11 @@ export interface RegistrationInput {
   wide: Blob
   close: Blob
   /**
+   * Optional foliage close-up for the advisory layer. Never scored, never
+   * gated on, and a registration completes perfectly well without it.
+   */
+  leaf?: Blob | null
+  /**
    * Optional. At T0 only a sample of trees is physically measured, so most
    * registrations carry null — the tree still registers and the visit still
    * counts, the growth check simply has no baseline for that tree.
@@ -84,7 +89,13 @@ export async function submitRegistration(
       blur_score: input.blurScore,
       trunk_taps: input.trunkTaps,
     },
-    photos: { wide: input.wide, close: input.close },
+    photos: {
+      wide: input.wide,
+      close: input.close,
+      // Only stored when actually captured. `undefined` rather than `null`
+      // keeps items identical in shape to those queued before this existed.
+      ...(input.leaf ? { leaf: input.leaf } : {}),
+    },
     uploaded: {},
   }
 
@@ -114,6 +125,24 @@ async function send(item: PendingRegistration): Promise<void> {
       item.photos.close,
     )
     await update(item)
+  }
+
+  // The leaf photo is uploaded LAST of the three and its failure is swallowed.
+  // The other two are evidence; this one is a convenience for the advisory
+  // layer, and losing a whole registration because an optional photo would not
+  // upload would be a straight downgrade on the thing T0 exists to protect.
+  if (item.photos.leaf && !item.uploaded.leaf) {
+    try {
+      item.uploaded.leaf = await uploadPhoto(
+        item.userId,
+        item.captureId,
+        'leaf',
+        item.photos.leaf,
+      )
+      await update(item)
+    } catch {
+      /* advisory only - the visit proceeds without it */
+    }
   }
 
   // --- 2. tree -------------------------------------------------------------
@@ -151,6 +180,7 @@ async function send(item: PendingRegistration): Promise<void> {
     blur_score: item.checkin.blur_score,
     // ?? null so items queued before this field existed insert cleanly.
     trunk_taps: item.checkin.trunk_taps ?? null,
+    leaf_photo: item.uploaded.leaf ?? null,
   }).select('id').single()
   if (error) throw new Error(`Could not save the first check-in: ${error.message}`)
 

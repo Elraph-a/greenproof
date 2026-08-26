@@ -112,6 +112,8 @@ export interface CheckinInput {
   capturedAt: Date
   wide: Blob
   close: Blob
+  /** Optional foliage close-up for the advisory layer. Never scored. */
+  leaf?: Blob | null
   trunkTaps: TrunkTaps | null
 }
 
@@ -134,6 +136,18 @@ export async function submitCheckin(input: CheckinInput): Promise<string> {
   const widePath = await uploadPhoto(input.userId, captureId, 'wide', input.wide)
   const closePath = await uploadPhoto(input.userId, captureId, 'close', input.close)
 
+  // Uploaded last, and its failure is swallowed. The two scored photos are
+  // evidence; this one only feeds advice, so it must never be the reason a
+  // planter standing at a tree cannot complete their visit.
+  let leafPath: string | null = null
+  if (input.leaf) {
+    try {
+      leafPath = await uploadPhoto(input.userId, captureId, 'leaf', input.leaf)
+    } catch {
+      /* advisory only - carry on without it */
+    }
+  }
+
   const { data, error } = await supabase
     .from('checkins')
     .insert({
@@ -148,6 +162,7 @@ export async function submitCheckin(input: CheckinInput): Promise<string> {
       heading_deg: input.heading,
       blur_score: input.blurScore,
       trunk_taps: input.trunkTaps,
+      leaf_photo: leafPath,
     })
     .select('id')
     .single()

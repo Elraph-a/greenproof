@@ -49,6 +49,12 @@ export function CheckIn() {
 
   const [wide, setWide] = useState<PreparedPhoto | null>(null)
   const [close, setClose] = useState<PreparedPhoto | null>(null)
+
+  /**
+   * Optional foliage close-up for the ADVISORY layer. Never scored, never gated
+   * on, and it cannot block a visit - see the disclosure in step 4.
+   */
+  const [leaf, setLeaf] = useState<PreparedPhoto | null>(null)
   const [taps, setTaps] = useState<TrunkTaps | null>(null)
   const [capturedHeading, setCapturedHeading] = useState<number | null>(null)
 
@@ -74,6 +80,7 @@ export function CheckIn() {
     return () => {
       if (wide) revokePreview(wide)
       if (close) revokePreview(close)
+      if (leaf) revokePreview(leaf)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -104,6 +111,7 @@ export function CheckIn() {
         capturedAt: new Date(),
         wide: wide?.blob ?? new Blob(),
         close: close?.blob ?? new Blob(),
+        leaf: leaf?.blob ?? null,
         trunkTaps: taps,
       })
       const row = await waitForVerdict(id)
@@ -139,6 +147,7 @@ export function CheckIn() {
           setTree(null)
           setWide(null)
           setClose(null)
+          setLeaf(null)
           setTaps(null)
           setVerdict(null)
         }}
@@ -428,6 +437,47 @@ export function CheckIn() {
                     </p>
                   </div>
                 )}
+
+                {/* Advisory only. Collapsed, and worded so nobody thinks
+                    skipping it costs them - because it does not. It feeds
+                    species identification and care advice, and no verdict
+                    changes because it is missing. */}
+                <details className="disclosure mt-3">
+                  <summary>
+                    Photograph a leaf{' '}
+                    <span className="font-normal text-on-surface-variant">
+                      {leaf ? '· added' : '· optional'}
+                    </span>
+                  </summary>
+                  <div className="disclosure-body">
+                    <p className="mb-2.5 text-label-lg text-on-surface-variant">
+                      One leaf filling the frame lets us name the species and
+                      spot early signs of stress, so we can tell you how to look
+                      after this tree. Not part of verification - skipping it
+                      changes nothing about your score or your earnings.
+                    </p>
+                    {leaf ? (
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-block"
+                        onClick={() => {
+                          revokePreview(leaf)
+                          setLeaf(null)
+                        }}
+                      >
+                        <Icon name="refresh" size={17} />
+                        Retake leaf photo
+                      </button>
+                    ) : (
+                      <GhostCamera
+                        ghostUrl={null}
+                        label="Leaf"
+                        instruction="One leaf, filling the frame"
+                        onCapture={setLeaf}
+                      />
+                    )}
+                  </div>
+                </details>
               </>
             ) : (
               <GhostCamera

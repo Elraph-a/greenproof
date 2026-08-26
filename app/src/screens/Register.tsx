@@ -72,6 +72,21 @@ export function Register() {
   const [taps, setTaps] = useState<TrunkTaps | null>(null)
 
   /**
+   * Optional foliage close-up, for the ADVISORY layer only.
+   *
+   * NOT a sixth step, and for exactly the reason the trunk measurement is not:
+   * this flow is run forty times in a session and adding a mandatory tap to all
+   * forty to serve an optional feature is the wrong trade. It also must never be
+   * able to block a registration - it is never scored, never gated on, and the
+   * capture screens are what run live on stage.
+   *
+   * It buys species identification and a health assessment worth reading. The
+   * two scored photos are a whole tree and a trunk; neither is what those models
+   * want, which is a leaf.
+   */
+  const [leaf, setLeaf] = useState<PreparedPhoto | null>(null)
+
+  /**
    * Frozen when the WIDE shutter is TAPPED — see PhotoCapture.onCaptureStart.
    * Reading it at submit time would record the direction the user happened to
    * be facing while typing, and the next visit would send them the wrong way.
@@ -96,6 +111,7 @@ export function Register() {
     return () => {
       if (wide) revokePreview(wide)
       if (close) revokePreview(close)
+      if (leaf) revokePreview(leaf)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -150,6 +166,7 @@ export function Register() {
           capturedAt: new Date(),
           wide: wide.blob,
           close: close.blob,
+          leaf: leaf?.blob ?? null,
           trunkTaps: taps,
         })
       }
@@ -165,8 +182,10 @@ export function Register() {
   function again() {
     if (wide) revokePreview(wide)
     if (close) revokePreview(close)
+    if (leaf) revokePreview(leaf)
     setWide(null)
     setClose(null)
+    setLeaf(null)
     // Must reset, or tree N+1 silently inherits tree N's trunk edges — the same
     // class of bug as the GPS fix below, and far harder to spot afterwards
     // because a plausible-looking width would be attached to the wrong tree.
@@ -448,6 +467,35 @@ export function Register() {
                 </div>
               </details>
             )}
+
+            {/* Advisory only, and deliberately worded so nobody believes
+                skipping it costs them anything. It feeds species
+                identification and care advice; it is never scored, never
+                gated on, and no verdict changes because it is missing. */}
+            <details className="disclosure mt-stack-md">
+              <summary>
+                Photograph a leaf{' '}
+                <span className="font-normal text-on-surface-variant">
+                  {leaf ? '· added' : '· optional'}
+                </span>
+              </summary>
+              <div className="disclosure-body">
+                <p className="mb-2.5 text-label-lg text-on-surface-variant">
+                  A single leaf filling the frame lets us name the species and
+                  spot early signs of stress, so we can tell you how to care for
+                  this tree. It is not part of verification - skipping it
+                  changes nothing about your score or your earnings.
+                </p>
+                <PhotoCapture
+                  label="Leaf"
+                  prompt="Tap to photograph a leaf"
+                  subPrompt="One leaf, filling the frame"
+                  photo={leaf}
+                  onChange={setLeaf}
+                  demoPhoto={2}
+                />
+              </div>
+            </details>
 
             {capturedHeading === null && !DEMO && (
               // Degrade, don't break: a missing signal lowers confidence later,

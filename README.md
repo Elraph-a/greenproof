@@ -85,6 +85,10 @@ Full write-ups in [spike/FINDINGS.md](spike/FINDINGS.md).
   Postgres column grants, not application code
 - Two scored photos per visit, **no tag in either** — a numbered card in frame
   means the model may match the card
+- A third **leaf photo is optional and never scored** — it feeds care advice
+  only, and a visit completes without it
+- Advice and species identification are **advisory, never verification** — they
+  cannot move a confidence, a verdict or a payment
 - Tags are field convenience, **never identity**
 - Gates run **before** scoring; a gate failure is disqualifying
 - NDVI is **never** folded into a per-tree score
@@ -93,8 +97,8 @@ Full write-ups in [spike/FINDINGS.md](spike/FINDINGS.md).
 ## Stack
 
 React PWA · Supabase (Postgres + pgvector + PostGIS + Storage + Auth), called
-directly from the client · one FastAPI service on Hugging Face Spaces · DINOv2
-ViT-S/14 via **onnxruntime** · Leaflet · Sentinel-2 · MTN MoMo sandbox behind a
-mock adapter.
+directly from the client · one FastAPI service **on a laptop behind a Cloudflare
+tunnel** · DINOv2 ViT-S/14 via **onnxruntime** · Claude Opus 5 for the advisory
+layer only · Leaflet · Sentinel-2 · MTN MoMo sandbox behind a mock adapter.
 
 **Free tiers only.**

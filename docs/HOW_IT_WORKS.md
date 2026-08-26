@@ -330,6 +330,94 @@ replaced by fitted weights once enough check-in rounds exist.
 
 ---
 
+## 7b. Care advice, and why it is not a signal
+
+Everything above this point decides whether to *believe* a planter. None of it
+helps them keep the tree alive. That gap is the one Ghana's Auditor-General
+named in the same report we open the pitch with:
+
+> **"No funding allocated for post-planting care at all."**
+
+So a check-in now also produces two advisory outputs: **what species the tree
+appears to be**, and **what condition it is in and what to do about it**, written
+in plain language for the person standing in front of it. Both come from one
+call to **Claude Opus 5** with the visit's photographs.
+
+### It is advisory, and the separation is structural
+
+> **Advice never touches `confidence`, `verdict` or `signals`.**
+
+That is not a promise in a comment. It is enforced in four places:
+
+| Where | How |
+|---|---|
+| Schema | Its own `species_guess` / `advice` columns, **not** inside `signals` — which is replaced wholesale on every re-score, and is what once destroyed our attack-row provenance |
+| Grants | Service-role only, exactly like `confidence`. The client is granted the leaf photo and nothing else |
+| Imports | `pipeline.py` never imports `advisor.py`, so no slow or wrong advisory call can reach a verdict. `grep -rn "advisor" ml/greenproof_ml/pipeline.py` must stay empty |
+| UI | A separate card that names the model and says the advice is not part of verification |
+
+**Why so much care about a helpful feature.** This project's entire claim is that
+we measure and publish our own error rate. We cannot publish one for this — there
+is no agronomist-labelled ground truth for our trees. A component we cannot
+measure therefore must not be able to move a number we report, and the honest
+way to hold that line is to make it impossible rather than discouraged.
+
+### Why not a disease classifier
+
+The obvious build is a CNN trained on PlantVillage. We rejected it, and the first
+reason is disqualifying:
+
+1. **PlantVillage is single leaves on uniform lab backgrounds.** Published
+   cross-domain results collapse from ~99% to roughly 30-50% on real field
+   photographs. **We have already made this exact mistake once** — the plant
+   check that scored a perfect AUC of 1.000 and then flagged five of nine real
+   check-ins, because it had learned photo *style* rather than subject (§8.2).
+   Shipping it would be repeating a documented lesson.
+2. **It covers fourteen crops** — tomato, potato, corn, grape. None of them Odum,
+   Wawa, Ofram or Ceiba.
+3. **We could not publish its error rate**, which is the one thing we claim.
+
+An LLM's output is hedged natural language a person reads and judges, not a
+number that authorises a payment — so it clears a much lower bar, and it says so.
+The `limitations` field is **required**, not optional: an assessment that cannot
+state what it failed to see is indistinguishable from one that saw everything.
+
+### The leaf photo
+
+Species identification and health assessment both want foliage, and our two
+scored photos are a whole tree and a trunk. So a visit may carry an optional
+third photo of a single leaf.
+
+**Optional is load-bearing.** It is never scored, never gated on, its upload
+failure is swallowed, and no step in either capture screen can be blocked by its
+absence. It sits collapsed inside the details step, exactly where the optional
+trunk measurement already sits, so the forty-tree flow does not grow a mandatory
+tap to serve an optional feature.
+
+It also means the feature works on **check-ins captured before the column
+existed** — every pilot row — because the assessment sends whatever photographs
+are present.
+
+### What it costs, and when we spend it
+
+About **3 cents a check-in**. The designed production policy is to call it only
+when the deterministic canopy signal already shows decline, which is a
+`ADVISE_ON_EVERY_CHECKIN` constant away:
+
+| Policy | One million trees, four visits a year |
+|---|---|
+| Every visit | ~$120k |
+| On detected decline only | ~$6-12k |
+
+It currently runs on every check-in, because at 6 trees and 9 check-ins most
+visits are the first — where the growth score is a neutral 0.5 and a
+decline-only trigger would fire zero times.
+
+> Files: `ml/greenproof_ml/advisor.py`, `supabase/migrations/0011_advice.sql`,
+> `tools/advise_pilot.py`
+
+---
+
 ## 8. Three times our own tests lied to us
 
 This is not an apology. The project's central claim is a system that knows and
