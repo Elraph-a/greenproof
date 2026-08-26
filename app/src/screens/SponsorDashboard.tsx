@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { DEMO, demoCheckinsFor, demoLedger, demoTrees } from '../lib/demo'
+import { survivalCurve } from '../lib/sponsor'
 import { photoUrls } from '../lib/photos'
 import { Icon } from '../components/Icon'
 import { SurvivalCurve, type SurvivalPoint } from '../components/SurvivalCurve'
@@ -31,10 +33,60 @@ interface RecentCheckin {
   captured_at: string
   confidence: number | null
   tree_id: string
+  verdict: string
 }
 
 /** Establishment GH₵5 + GH₵2 per later verified visit — see migration 0007. */
 const ESTABLISHMENT_GHS = 5
+
+/** What both loaders return: trees, verified check-ins newest first, GH₵ paid. */
+type DashboardData = [Row[], RecentCheckin[], number]
+
+async function liveDashboard(): Promise<DashboardData> {
+  const [{ data: t, error: te }, { data: c }, { data: led }] = await Promise.all([
+    supabase.from('trees').select('id, status, created_at, current_confidence'),
+    supabase
+      .from('checkins')
+      .select('id, tree_id, wide_photo, captured_at, confidence, verdict')
+      // Unfiltered on purpose - see survivalCurve in lib/sponsor.ts.
+      .order('captured_at', { ascending: false })
+      .limit(400),
+    supabase.from('ledger_entries').select('amount_ghs'),
+  ])
+  if (te) throw new Error(te.message)
+  return [
+    (t ?? []) as unknown as Row[],
+    (c ?? []) as unknown as RecentCheckin[],
+    (led ?? []).reduce((s, e) => s + Number(e.amount_ghs ?? 0), 0),
+  ]
+}
+
+function demoDashboard(): DashboardData {
+  const trees: Row[] = demoTrees.map((t) => ({
+    id: t.id,
+    status: t.status,
+    created_at: t.created_at,
+    current_confidence: t.current_confidence,
+  }))
+
+  // Same ordering the live query applies, and like it, UNFILTERED: the
+  // survival curve needs to see a verdict change. The photo wall filters
+  // separately.
+  const checkins: RecentCheckin[] = demoTrees
+    .flatMap((t) => demoCheckinsFor(t.id))
+    .sort((a, b) => b.captured_at.localeCompare(a.captured_at))
+    .map((c) => ({
+      id: c.id,
+      tree_id: c.tree_id,
+      wide_photo: c.wide_photo,
+      captured_at: c.captured_at,
+      confidence: c.confidence,
+      verdict: c.verdict,
+    }))
+
+  const invested = demoLedger.reduce((s, e) => s + Number(e.amount_ghs), 0)
+  return [trees, checkins, invested]
+}
 
 export function SponsorDashboard() {
   const [trees, setTrees] = useState<Row[] | null>(null)
@@ -47,42 +99,28 @@ export function SponsorDashboard() {
   useEffect(() => {
     ;(async () => {
       try {
-        const [{ data: t, error: te }, { data: c }, { data: led }] =
-          await Promise.all([
-            supabase.from('trees').select('id, status, created_at, current_confidence'),
-            supabase
-              .from('checkins')
-              .select('id, tree_id, wide_photo, captured_at, confidence, verdict')
-              .eq('verdict', 'verified')
-              .order('captured_at', { ascending: false })
-              .limit(200),
-            supabase.from('ledger_entries').select('amount_ghs'),
-          ])
+        // THIS SCREEN HAD NO DEMO BRANCH and queried Supabase directly, so
+        // under VITE_DEMO=1 the anon key was refused and the whole dashboard
+        // rendered "permission denied for table trees". Every other screen has
+        // one; this was missed, exactly as MapScreen was. It is the desktop
+        // view a funder is shown, so the failure was maximally visible.
+        //
+        // Deliberately built from the same seeds as the rest of demo mode
+        // rather than its own fixtures: two sets of demo numbers that disagree
+        // is worse than none, and a sponsor screen contradicting the planter
+        // screen beside it is the one inconsistency a judge would catch.
+        const [t, checkins, invested] = DEMO
+          ? demoDashboard()
+          : await liveDashboard()
 
-        if (te) throw new Error(te.message)
-        setTrees((t ?? []) as unknown as Row[])
-        setInvested(
-          (led ?? []).reduce((s, e) => s + Number(e.amount_ghs ?? 0), 0),
-        )
+        setTrees(t)
+        setInvested(invested)
 
-        const checkins = (c ?? []) as unknown as (RecentCheckin & { verdict: string })[]
+        setCurve(survivalCurve(checkins, t.length))
 
-        // Survival curve: group verified check-ins by day, and count how many
-        // DISTINCT trees were confirmed alive on each round.
-        const byDay = new Map<string, Set<string>>()
-        for (const row of checkins) {
-          const day = row.captured_at.slice(0, 10)
-          if (!byDay.has(day)) byDay.set(day, new Set())
-          byDay.get(day)!.add(row.tree_id)
-        }
-        const total = (t ?? []).length
-        setCurve(
-          [...byDay.entries()]
-            .map(([date, set]) => ({ date, alive: set.size, total }))
-            .sort((a, b) => a.date.localeCompare(b.date)),
-        )
-
-        const top = checkins.slice(0, 12)
+        // The wall promises "Recently verified", so it filters even though the
+        // curve above deliberately does not.
+        const top = checkins.filter((c) => c.verdict === 'verified').slice(0, 12)
         setRecent(top)
         if (top.length) setUrls(await photoUrls(top.map((r) => r.wide_photo)))
       } catch (err) {

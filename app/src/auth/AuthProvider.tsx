@@ -8,9 +8,10 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import { useLocation } from 'react-router-dom'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
-import { DEMO, demoProfile, demoUserId } from '../lib/demo'
+import { DEMO, demoProfile, demoProfileFor, demoUserId } from '../lib/demo'
 import type { Profile } from '../lib/types'
 
 /**
@@ -61,6 +62,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(DEMO ? demoSession : null)
   const [profile, setProfile] = useState<Profile | null>(DEMO ? demoProfile : null)
   const [loading, setLoading] = useState(!DEMO)
+
+  /*
+   * DEMO ONLY: the demo identity follows the route, so /sponsor is browsed as a
+   * sponsor and everything else as a planter.
+   *
+   * Without this, demo mode had a single planter profile and `Shell` picks its
+   * tabs by role, so every sponsor screen rendered with My Grove, Register and
+   * Check-in underneath it - controls a sponsor never uses. The sponsor
+   * experience could be reached but not demonstrated.
+   *
+   * The hook runs unconditionally because hooks must; the effect returns
+   * immediately when VITE_DEMO is unset, so no production path is touched. A
+   * real role comes from `profiles.role`, which no client can write.
+   */
+  const location = useLocation()
+  useEffect(() => {
+    if (!DEMO) return
+    setProfile(demoProfileFor(location.pathname))
+  }, [location.pathname])
 
   /**
    * True while signUp is writing the profile. The instant the session appears,

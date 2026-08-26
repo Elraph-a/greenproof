@@ -19,6 +19,45 @@ import type { Sponsorship } from './types'
 
 export const PILOT_PLOT_ID = '00000000-0000-4000-9000-000000000001'
 
+/**
+ * Survival at each round: distinct trees whose most recent verdict AS OF that
+ * date is `verified`.
+ *
+ * THE OBVIOUS VERSION IS WRONG AND IT SHIPPED. Both sponsor screens grouped
+ * verified check-ins by day and plotted `set.size` - the number of trees
+ * checked in THAT DAY. Rounds are days apart and a round is walked over
+ * several sessions, so that plots attendance, not survival. On the dashboard
+ * it read 13% directly beneath a headline card reading 50.0%, which is the
+ * kind of contradiction a judge finds in five seconds.
+ *
+ * Carrying each tree's last known verdict forward is what "as of" means: a
+ * tree verified on Monday still counts on Tuesday, and stops counting the
+ * moment a later check-in says otherwise. That makes the final point of the
+ * curve equal the headline survival figure by construction, and lets the line
+ * fall when trees die - which is the entire purpose of the chart.
+ *
+ * Needs ALL check-ins, not just verified ones, or a tree can never be seen to
+ * stop being alive.
+ */
+export function survivalCurve(
+  checkins: { tree_id: string; captured_at: string; verdict: string }[],
+  total: number,
+): { date: string; alive: number; total: number }[] {
+  const days = [...new Set(checkins.map((c) => c.captured_at.slice(0, 10)))].sort()
+  const latest = new Map<string, string>()
+  const out: { date: string; alive: number; total: number }[] = []
+
+  for (const day of days) {
+    for (const c of checkins) {
+      if (c.captured_at.slice(0, 10) === day) latest.set(c.tree_id, c.verdict)
+    }
+    let alive = 0
+    for (const v of latest.values()) if (v === 'verified') alive++
+    out.push({ date: day, alive, total })
+  }
+  return out
+}
+
 export interface SponsorPortfolio {
   trees: number
   alive: number
@@ -44,9 +83,11 @@ export async function loadPortfolio(userId: string): Promise<SponsorPortfolio> {
       supabase
         .from('checkins')
         .select('id, tree_id, wide_photo, captured_at, confidence, verdict')
-        .eq('verdict', 'verified')
+        // NOT filtered to verified: survivalCurve needs to see a tree's verdict
+        // CHANGE, and a query that only returns successes can never show a
+        // death. The photo wall filters to verified separately, below.
         .order('captured_at', { ascending: false })
-        .limit(200),
+        .limit(400),
       supabase.from('ledger_entries').select('amount_ghs'),
       supabase.from('sponsorships').select('*').eq('sponsor_id', userId),
     ])
@@ -59,21 +100,17 @@ export async function loadPortfolio(userId: string): Promise<SponsorPortfolio> {
   const paidOut = (led ?? []).reduce((s, e) => s + Number(e.amount_ghs ?? 0), 0)
   const pledges = (sp ?? []) as unknown as Sponsorship[]
 
-  const verified = (checkins ?? []) as unknown as {
+  const all = (checkins ?? []) as unknown as {
     id: string
     tree_id: string
     wide_photo: string
     captured_at: string
     confidence: number | null
+    verdict: string
   }[]
 
-  const byDay = new Map<string, Set<string>>()
-  for (const row of verified) {
-    const day = row.captured_at.slice(0, 10)
-    if (!byDay.has(day)) byDay.set(day, new Set())
-    byDay.get(day)!.add(row.tree_id)
-  }
-
+  // The wall promises "Recently verified", so it filters; the curve does not.
+  const verified = all.filter((c) => c.verdict === 'verified')
   const top = verified.slice(0, 12)
   const urls = top.length ? await photoUrls(top.map((r) => r.wide_photo)) : new Map()
 
@@ -86,9 +123,7 @@ export async function loadPortfolio(userId: string): Promise<SponsorPortfolio> {
     committedGhs: pledges.reduce((s, p) => s + Number(p.amount_ghs), 0),
     committedTrees: pledges.reduce((s, p) => s + p.trees_committed, 0),
     costPerSurvivingGhs: alive ? paidOut / alive : 0,
-    curve: [...byDay.entries()]
-      .map(([date, set]) => ({ date, alive: set.size, total: rows.length }))
-      .sort((a, b) => a.date.localeCompare(b.date)),
+    curve: survivalCurve(all, rows.length),
     recent: top.map((r) => ({
       id: r.id,
       treeId: r.tree_id,

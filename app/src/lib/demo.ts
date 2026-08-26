@@ -40,6 +40,38 @@ export const demoProfile: Profile = {
 }
 
 /**
+ * The sponsor demo identity.
+ *
+ * WHY THE ROLE FOLLOWS THE ROUTE
+ * Demo mode had exactly one profile, a planter, and `Shell` picks its tabs by
+ * role - so every sponsor screen rendered with My Grove, Register and Check-in
+ * underneath it. A sponsor never does any of those; Shell's own comment says
+ * showing them a camera button would be wrong. The sponsor experience could be
+ * navigated to but never actually demonstrated.
+ *
+ * Deriving the role from the path means walking to /sponsor IS being a sponsor,
+ * with no toggle to remember and no restart. An env var would have needed the
+ * dev server bounced to switch role, which is the wrong property to have on
+ * stage; a query string is one more thing to type correctly under pressure.
+ *
+ * DEMO ONLY. Nothing here runs when VITE_DEMO is unset, and it cannot: a real
+ * role comes from `profiles.role`, which no client can write.
+ */
+export const demoSponsorProfile: Profile = {
+  id: '00000000-0000-4000-8000-000000000002',
+  full_name: 'Akosua Mensah',
+  phone: '024 111 1111',
+  role: 'sponsor',
+  story: 'Funding the Legon campus perimeter planting on behalf of our alumni fund.',
+  photo_path: null,
+  created_at: ago(45),
+}
+
+export function demoProfileFor(pathname: string): Profile {
+  return pathname.startsWith('/sponsor') ? demoSponsorProfile : demoProfile
+}
+
+/**
  * Eight trees, matching the reference screen: 4 verified, 1 needing review,
  * 1 flagged, 2 not yet checked. Deliberately NOT all healthy — a grove of
  * uniformly verified trees demonstrates nothing about detecting death, and the
