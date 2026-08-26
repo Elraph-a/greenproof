@@ -120,9 +120,23 @@ GEMINI_FALLBACKS = [
 ]
 ANTHROPIC_MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-opus-5")
 
-# Generous. The call is fire-and-forget from the caller's perspective and a slow
-# response costs nothing, whereas a truncated one wastes the whole request.
-MAX_TOKENS = 2000
+# Generous, and it has to be - see below. The call is fire-and-forget from the
+# caller's perspective and a slow response costs nothing, whereas a truncated one
+# wastes the whole request.
+#
+# THINKING TOKENS COUNT AGAINST THIS, which is not obvious and cost us a whole
+# debugging round. At 2000 a real call came back:
+#
+#     finish_reason      MAX_TOKENS
+#     thoughts_token_count   1916
+#     candidates_token_count   69   <- the actual answer
+#
+# The model spent the budget reasoning and had 69 tokens left for the JSON, so
+# it truncated mid-string and parsed to None. The failure looks like "the model
+# returned nothing", which points nowhere near the real cause.
+#
+# The answer itself is only a few hundred tokens; the headroom is for thinking.
+MAX_TOKENS = 8000
 
 
 def provider() -> str | None:
@@ -299,7 +313,25 @@ def _assess_gemini(photos, prompt: str) -> PlantAssessment | None:
     from google import genai
     from google.genai import types
 
-    client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
+    # DO NOT LET THE SDK RETRY THE 429 FOR US.
+    #
+    # By default it retries rate limits internally with backoff, so a call
+    # against an exhausted model sits there for minutes before raising - a full
+    # pass appeared to hang rather than fail. We have a better answer than
+    # waiting: a different model with its own quota. Surface the 429 on the
+    # first response so the fallback below can act on it immediately.
+    #
+    # 5xx and 503 are still worth one retry - those are transient in a way a
+    # daily quota is not.
+    client = genai.Client(
+        api_key=os.environ["GEMINI_API_KEY"],
+        http_options=types.HttpOptions(
+            timeout=90_000,  # ms
+            retry_options=types.HttpRetryOptions(
+                attempts=2, http_status_codes=[500, 502, 503, 504]
+            ),
+        ),
+    )
 
     parts = []
     for label, data in photos:
@@ -441,7 +473,10 @@ def assess(
     if parsed is None:
         log.warning("advisory assessment returned no parsed output (%s)", which)
         if strict:
-            raise AdvisorError(f"{which}: returned no parsed output")
+            raise AdvisorError(
+                f"{which}: returned no parsed output - most likely the response "
+                "was truncated, check finish_reason and MAX_TOKENS"
+            )
         return None
 
     return parsed
