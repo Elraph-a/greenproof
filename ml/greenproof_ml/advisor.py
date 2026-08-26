@@ -70,9 +70,16 @@ from pydantic import BaseModel, Field
 
 log = logging.getLogger(__name__)
 
-# Opus 5. The images are small and the call is off the critical path, so there
-# is no reason to trade quality away here - this is the output a planter reads
-# and acts on, and bad advice about a real tree is worse than no advice.
+
+class AdvisorError(RuntimeError):
+    """The provider was asked and could not answer.
+
+    Distinct from "there was nothing to do". Raised only when strict=True, so
+    batch tools can report a dead provider loudly while the HTTP endpoint keeps
+    failing soft.
+    """
+
+
 # ---------------------------------------------------------------------------
 # Which model writes the advice
 # ---------------------------------------------------------------------------
@@ -89,7 +96,28 @@ log = logging.getLogger(__name__)
 # Auto-detected from whichever key exists, overridable with ADVISOR_PROVIDER.
 # Neither key set is a supported state: advice is disabled and every other part
 # of the system carries on unaffected.
-GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
+# VERIFY A MODEL ID BY CALLING IT, NOT BY LISTING IT. `models.list()` returned
+# gemini-2.5-flash as available while generate_content refused it with "no longer
+# available to new users" - the listing describes the catalogue, not what this
+# key may actually invoke. Overridable with GEMINI_MODEL, so a future retirement
+# is an environment variable rather than a deploy.
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.6-flash")
+
+# Free-tier quota is PER MODEL, and that is the whole reason this list exists.
+# A full pilot pass exhausted gemini-3.6-flash's daily allowance after 20 of 37
+# check-ins, while the other two still answered immediately - so a 429 on one
+# model is not "we are out of quota", it is "we are out of quota HERE".
+#
+# Tried in order on a rate-limit only. Never on a 404, a refusal or a bad
+# request: those mean the call was wrong, and silently re-issuing a wrong call
+# against three models just produces the same failure three times.
+GEMINI_FALLBACKS = [
+    m.strip()
+    for m in os.environ.get(
+        "GEMINI_FALLBACKS", "gemini-3-flash-preview,gemini-3.1-flash-lite"
+    ).split(",")
+    if m.strip()
+]
 ANTHROPIC_MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-opus-5")
 
 # Generous. The call is fire-and-forget from the caller's perspective and a slow
@@ -114,8 +142,17 @@ def provider() -> str | None:
 
 
 def model_name() -> str | None:
+    """The model that answered, falling back to the one we would ask.
+
+    Prefers the ACTUAL model once a call has been made, so a row records what
+    wrote it rather than what we hoped would write it.
+    """
     p = provider()
-    return {"gemini": GEMINI_MODEL, "anthropic": ANTHROPIC_MODEL}.get(p) if p else None
+    if p is None:
+        return None
+    if p in _used_model:
+        return _used_model[p]
+    return {"gemini": GEMINI_MODEL, "anthropic": ANTHROPIC_MODEL}[p]
 
 # Images are re-encoded to this before sending. The photos in storage are
 # already 800px/q75 (the client downscales before upload), so this is a ceiling
@@ -126,7 +163,11 @@ JPEG_QUALITY = 75
 
 
 class PlantAssessment(BaseModel):
-    """What we ask Claude to return, and what we store.
+    """What we ask the model to return, and what we store.
+
+    One schema for both providers, enforced by schema-constrained decoding on
+    each - so the stored shape is identical whichever wrote it, and switching
+    provider cannot quietly change the data.
 
     Every field is chosen so that a reader can tell how much to trust it.
     `species_confidence` is SELF-REPORTED and labelled as such in the UI - it is
@@ -199,6 +240,26 @@ phone, outdoors, by someone standing in front of the tree.
 different part of this system and not your concern."""
 
 
+# Which model actually answered, as opposed to which one we asked first. Read by
+# split() so the row records the truth rather than the intention - a fallback
+# that is not written down is a result nobody can reproduce.
+_used_model: dict[str, str] = {}
+
+
+def _is_rate_limit(e: Exception) -> bool:
+    """A quota error, as opposed to a wrong request.
+
+    Matched on the response rather than the exception class: the SDK raises the
+    same ClientError for 404 and 429, and retrying a 404 across three models
+    just produces the same failure three times.
+    """
+    code = getattr(e, "code", None) or getattr(e, "status_code", None)
+    if code == 429:
+        return True
+    s = str(e)
+    return "429" in s or "RESOURCE_EXHAUSTED" in s
+
+
 def _jpeg(img: Image.Image) -> bytes:
     """One photo, normalised to what we actually send.
 
@@ -246,19 +307,38 @@ def _assess_gemini(photos, prompt: str) -> PlantAssessment | None:
         parts.append(types.Part.from_bytes(data=data, mime_type="image/jpeg"))
     parts.append(types.Part.from_text(text=prompt))
 
-    resp = client.models.generate_content(
-        model=GEMINI_MODEL,
-        contents=[types.Content(role="user", parts=parts)],
-        config=types.GenerateContentConfig(
-            system_instruction=SYSTEM,
-            max_output_tokens=MAX_TOKENS,
-            # Schema-constrained decoding, so the answer is valid JSON in the
-            # shape we asked for rather than prose we have to parse.
-            response_mime_type="application/json",
-            response_schema=PlantAssessment,
-        ),
+    config = types.GenerateContentConfig(
+        system_instruction=SYSTEM,
+        max_output_tokens=MAX_TOKENS,
+        # Schema-constrained decoding, so the answer is valid JSON in the shape
+        # we asked for rather than prose we have to parse.
+        response_mime_type="application/json",
+        response_schema=PlantAssessment,
     )
-    return resp.parsed
+
+    last: Exception | None = None
+    for i, model in enumerate([GEMINI_MODEL, *GEMINI_FALLBACKS]):
+        try:
+            resp = client.models.generate_content(
+                model=model,
+                contents=[types.Content(role="user", parts=parts)],
+                config=config,
+            )
+            if i:
+                # Record it: a run that quietly changed model halfway is a run
+                # whose output nobody can explain later.
+                log.warning("gemini fell back to %s after quota on %s", model, GEMINI_MODEL)
+                _used_model["gemini"] = model
+            else:
+                _used_model["gemini"] = model
+            return resp.parsed
+        except Exception as e:  # noqa: BLE001
+            last = e
+            if not _is_rate_limit(e):
+                raise  # a 404 or a bad request will fail identically on every model
+            log.info("quota exhausted on %s, trying next", model)
+
+    raise last if last else AdvisorError("gemini: no model available")
 
 
 def _assess_anthropic(photos, prompt: str) -> PlantAssessment | None:
@@ -295,6 +375,7 @@ def assess(
     close: Image.Image | None = None,
     leaf: Image.Image | None = None,
     recorded_species: str | None = None,
+    strict: bool = False,
 ) -> PlantAssessment | None:
     """Identify the species and assess the tree's health. None on any failure.
 
@@ -336,8 +417,22 @@ def assess(
             if which == "gemini"
             else _assess_anthropic(photos, prompt)
         )
-    except Exception:  # noqa: BLE001 - advisory only, must never break a caller
+    except Exception as e:  # noqa: BLE001 - advisory only, must never break a caller
         log.exception("advisory assessment failed (%s)", which)
+        # A DEAD PROVIDER MUST NOT LOOK LIKE A QUIET SKIP.
+        #
+        # This returned None on failure, and the pilot tool counted None as
+        # "skipped - no decline detected, or the model declined". A 404 on a
+        # retired model id therefore reported as a clean run over every
+        # check-in, which is precisely the false pass this project has been
+        # caught by three times before.
+        #
+        # The endpoint still fails soft (strict=False) because a broken advisory
+        # call must never take verification down. Batch tools pass strict=True,
+        # because a tool that cannot tell "nothing to do" from "nothing worked"
+        # is worse than no tool.
+        if strict:
+            raise AdvisorError(f"{which}: {e}") from e
         return None
 
     # A refusal or a safety block is a successful call with nothing parsed.
@@ -345,6 +440,8 @@ def assess(
     # never to raise.
     if parsed is None:
         log.warning("advisory assessment returned no parsed output (%s)", which)
+        if strict:
+            raise AdvisorError(f"{which}: returned no parsed output")
         return None
 
     return parsed
@@ -420,7 +517,7 @@ def should_advise(checkin: dict) -> bool:
     return score is not None and score <= DECLINE_GROWTH_SCORE
 
 
-def advise_checkin(checkin_id: str) -> dict | None:
+def advise_checkin(checkin_id: str, strict: bool = False) -> dict | None:
     """Assess one check-in and store the result. None if nothing was written.
 
     Fetches its own photos from storage, exactly as scoring does, so the request
@@ -453,6 +550,7 @@ def advise_checkin(checkin_id: str) -> dict | None:
         close=_photo(row.get("close_photo")),
         leaf=_photo(row.get("leaf_photo")),
         recorded_species=(tree or {}).get("species"),
+        strict=strict,
     )
     if assessment is None:
         return None

@@ -18,21 +18,24 @@ components at all.
     python tools/advise_pilot.py --dry-run       # count them, spend nothing
     python tools/advise_pilot.py --redo          # re-assess rows already done
 
-COST. Roughly 3 cents per check-in (three 800px photos in, a short structured
-answer out, at Opus 5 rates). The 9-check-in pilot costs about 26 cents. The
---dry-run flag exists so you can confirm the count before spending anything.
+COST. Free on Gemini, which is the default provider. On Anthropic it is roughly
+3 cents per check-in (three 800px photos in, a short structured answer out).
+--dry-run reports the count and the provider before anything is spent.
 
-CREDENTIALS. Needs SUPABASE_URL, SUPABASE_SERVICE_KEY and ANTHROPIC_API_KEY,
-from the environment or a .env at the repo root or in ml/.
+CREDENTIALS. Needs SUPABASE_URL, SUPABASE_SERVICE_KEY, and ONE of
+GEMINI_API_KEY (free, aistudio.google.com) or ANTHROPIC_API_KEY - from the
+environment or a .env at the repo root or in ml/.
 
 This calls the pipeline IN-PROCESS rather than over HTTP, so it needs no
 ADVISE_TOKEN and works whether or not the service is deployed anywhere. That is
 the same property score_pilot.py has, and for the same reason: the photos are in
 Supabase, so any machine with the keys can do this work.
 
-    A Claude Pro subscription is NOT API access. Pro is the claude.ai chat
-    product; the API bills separately. Buy credits and create a key at
-    console.anthropic.com -> Billing.
+    Gemini keys come from aistudio.google.com -> Get API key, and the free
+    tier covers a pilot this size many times over.
+
+    If using Anthropic instead: a Claude Pro subscription is NOT API access.
+    Pro is the claude.ai chat product and the API bills separately.
 """
 
 from __future__ import annotations
@@ -84,22 +87,27 @@ def main() -> int:
     load_env()
 
     missing = [
-        name
-        for name in ("SUPABASE_URL", "SUPABASE_SERVICE_KEY", "ANTHROPIC_API_KEY")
-        if not os.environ.get(name)
+        n for n in ("SUPABASE_URL", "SUPABASE_SERVICE_KEY") if not os.environ.get(n)
     ]
     if missing:
         print(f"Missing: {', '.join(missing)}", file=sys.stderr)
-        if "ANTHROPIC_API_KEY" in missing:
-            print(
-                "\nANTHROPIC_API_KEY is an API key from console.anthropic.com.\n"
-                "A Claude Pro subscription does NOT provide one - Pro is the\n"
-                "claude.ai chat product and the API bills separately.",
-                file=sys.stderr,
-            )
         return 2
 
     from greenproof_ml import advisor, store
+
+    # Which provider, decided by whichever key is present. Printed rather than
+    # assumed: "why is the advice different today" is a question you only get to
+    # answer if the run said which model wrote it.
+    which = advisor.provider()
+    if which is None:
+        print(
+            "No advisory provider configured.\n\n"
+            "Set GEMINI_API_KEY - free, from aistudio.google.com -> Get API key -\n"
+            "or ANTHROPIC_API_KEY to use Claude instead (that one bills).",
+            file=sys.stderr,
+        )
+        return 2
+    print(f"provider: {which} ({advisor.model_name()})")
 
     if args.redo:
         r = (
@@ -114,8 +122,8 @@ def main() -> int:
     else:
         rows = store.list_checkins_without_advice(args.limit or 10_000)
 
-    est = len(rows) * 0.03
-    print(f"{len(rows)} check-in(s) to assess  (~${est:.2f} at ~3c each)")
+    cost = "free" if which == "gemini" else f"~${len(rows) * 0.03:.2f} at ~3c each"
+    print(f"{len(rows)} check-in(s) to assess  ({cost})")
     if args.dry_run or not rows:
         return 0
 
@@ -128,7 +136,7 @@ def main() -> int:
     for i, row in enumerate(rows, 1):
         cid = row["id"]
         try:
-            result = advisor.advise_checkin(cid)
+            result = advisor.advise_checkin(cid, strict=True)
             if result is None:
                 # Either the decline policy skipped it or the model declined to
                 # answer. Neither is an error and neither wrote anything.
@@ -143,8 +151,14 @@ def main() -> int:
         except Exception as e:  # noqa: BLE001
             # One bad row must never abandon the rest. A missing photo is a fact
             # about that check-in, not a reason to stop.
-            failures.append((cid, str(e)[:120]))
-            mark = f"ERROR {str(e)[:60]}"
+            failures.append((cid, str(e)[:160]))
+            mark = f"ERROR {str(e)[:70]}"
+            # A provider that is down fails identically on every row. Stop after
+            # three rather than printing the same 404 thirty-eight times.
+            if len(failures) >= 3 and not health:
+                print("\n  Three failures and no successes - stopping.")
+                print(f"  {failures[-1][1]}")
+                break
 
         print(f"  [{i:>3}/{len(rows)}] {cid[:8]}  {mark}", flush=True)
 
@@ -171,8 +185,12 @@ def main() -> int:
         for cid, err in failures[:10]:
             print(f"  {cid[:8]}  {err}")
 
-    spent = sum(health.values()) * 0.03
-    print(f"\n{(time.time()-started)/60:.1f} minutes, roughly ${spent:.2f} spent")
+    spent = (
+        "free (Gemini)"
+        if which == "gemini"
+        else f"roughly ${sum(health.values()) * 0.03:.2f} spent"
+    )
+    print(f"\n{(time.time()-started)/60:.1f} minutes, {spent}")
     print(
         "\nThis wrote species_guess and advice ONLY. No confidence, verdict or\n"
         "signal breakdown was touched - run tools/score_pilot.py and compare if\n"
