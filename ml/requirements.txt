@@ -23,4 +23,10 @@ httpx>=0.27,<1
 # Advisory layer only: species identification and care advice for the planter.
 # NOT on the scoring path - pipeline.py never imports the advisor, so a slow or
 # failed API call cannot affect a verdict.
+#
+# TWO PROVIDERS, picked at runtime from whichever key is set. Gemini is the
+# default because its free tier costs nothing; Anthropic stays available because
+# free tiers have closed under this project three times already and a second
+# provider is the cheapest insurance against a fourth.
+google-genai>=1.0
 anthropic>=0.40

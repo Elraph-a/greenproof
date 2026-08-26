@@ -86,17 +86,24 @@ Space → Settings → Variables and secrets:
 |---|---|---|
 | `SUPABASE_URL` | variable | your project URL |
 | `SUPABASE_SERVICE_KEY` | **secret** | the `service_role` key |
-| `ANTHROPIC_API_KEY` | **secret** | for `/advise` only — omit and advice is simply disabled |
+| `GEMINI_API_KEY` | **secret** | for `/advise` — free tier, the default provider |
+| `ANTHROPIC_API_KEY` | **secret** | alternative provider, used only if no Gemini key |
+| `ADVISOR_PROVIDER` | variable | optional: pin to `gemini` or `anthropic` |
 | `ADVISE_TOKEN` | **secret** | any random string; required in `X-Advise-Token` on `/advise` |
 | `ALLOWED_ORIGINS` | variable | your Vercel URL |
 
 **The service key must never appear in the frontend.** It can write any verdict
 for any tree, and it is the value the whole security model rests on.
 
-**`ANTHROPIC_API_KEY` is billable.** A leak is someone else's spending. Omitting
-it is a supported state, not a failure: `/score` is unaffected and `/advise`
-returns `{"written": false}` — the advisory layer fails soft by design so it can
-never take verification down with it.
+**Two providers, one interface.** Advice runs on Gemini's free tier by default,
+and falls back to Anthropic if only that key is present. Free tiers have closed
+under this project three times mid-build, so a second provider is the cheapest
+insurance against a fourth — and switching is one environment variable, not a
+code change.
+
+**Setting neither is a supported state, not a failure:** `/score` is unaffected
+and `/advise` returns `{"written": false}`. The advisory layer fails soft by
+design so it can never take verification down with it.
 
 **`ADVISE_TOKEN` matters on a public Space.** Without it, anyone who finds this
 URL and a valid check-in id can spend your Anthropic credit three cents at a

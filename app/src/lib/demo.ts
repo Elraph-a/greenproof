@@ -290,7 +290,7 @@ function demoAdvice(seed: Seed): Advice {
         ],
         limitations:
           'The photographs cannot show root condition, soil depth, or whether the browning is drought or a pest. Check the underside of a few leaves for insects in person.',
-        model: 'claude-opus-5',
+        model: 'gemini-2.5-flash',
         advisory_only: true,
       }
     : {
@@ -305,7 +305,7 @@ function demoAdvice(seed: Seed): Advice {
         ],
         limitations:
           'A photograph cannot show root health or soil moisture below the surface. Nothing visible here suggests a problem.',
-        model: 'claude-opus-5',
+        model: 'gemini-2.5-flash',
         advisory_only: true,
       }
 }
@@ -317,7 +317,7 @@ function demoSpecies(seed: Seed): SpeciesGuess {
     // Not 1.0, deliberately. A demo that shows perfect confidence in a species
     // call teaches the wrong thing about a signal that is genuinely uncertain.
     self_reported_confidence: 0.82,
-    model: 'claude-opus-5',
+    model: 'gemini-2.5-flash',
   }
 }
 

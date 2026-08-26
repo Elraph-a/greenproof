@@ -343,9 +343,15 @@ common mobile-in-sunlight failure, and this app is used at midday in a field.
 
 ## 16 · Care advice is advisory, and structurally cannot be anything else
 
-**What.** One call to Claude Opus 5 per check-in returns the apparent species and
-a short health assessment with actions for the planter. It writes `species_guess`
-and `advice` and nothing else.
+**What.** One call to a vision model per check-in returns the apparent species
+and a short health assessment with actions for the planter. It writes
+`species_guess` and `advice` and nothing else.
+
+**Two providers behind one function.** Gemini on the free tier by default,
+Claude when only that key is set, chosen at runtime from whichever key exists.
+Free tiers have closed under this project three times mid-build - Hugging Face,
+Koyeb, Fly - so a second provider is the cheapest possible insurance against a
+fourth, and switching is an environment variable rather than a code change.
 
 **Why at all.** Every other part of this system decides whether to *believe* a
 planter. Nothing helped them keep the tree alive — which is precisely the gap the
@@ -367,8 +373,8 @@ not shipping the feature.
   every re-score, and is exactly how we once destroyed our own attack provenance
 - service-role grants, identical to `confidence` and `verdict`
 - `pipeline.py` never imports `advisor.py`, so there is no code path at all
-- the UI keeps it under its own heading, visually unlike the score, footed
-  "Powered by Claude"
+- the UI keeps it under its own heading, visually unlike the score, footed with
+  whichever model actually wrote it
 
 **On the leaf photo being required.** It began optional, on the argument that a
 flow run forty times at T0 should not grow a mandatory tap to serve an optional

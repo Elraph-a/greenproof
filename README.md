@@ -98,7 +98,8 @@ Full write-ups in [spike/FINDINGS.md](spike/FINDINGS.md).
 
 React PWA · Supabase (Postgres + pgvector + PostGIS + Storage + Auth), called
 directly from the client · one FastAPI service **on a laptop behind a Cloudflare
-tunnel** · DINOv2 ViT-S/14 via **onnxruntime** · Claude Opus 5 for the advisory
-layer only · Leaflet · Sentinel-2 · MTN MoMo sandbox behind a mock adapter.
+tunnel** · DINOv2 ViT-S/14 via **onnxruntime** · Gemini (or Claude) for the
+advisory layer only · Leaflet · Sentinel-2 · MTN MoMo sandbox behind a mock
+adapter.
 
 **Free tiers only.**

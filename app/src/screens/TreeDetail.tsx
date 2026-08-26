@@ -381,6 +381,19 @@ function Row({
  * breakdown: a system that will not say what produced an output is asking to be
  * trusted rather than checked.
  */
+/**
+ * Model id -> the name a person recognises.
+ *
+ * Falls back to the raw id rather than to a guess: an unknown model is a fact
+ * worth showing, and inventing a friendly name for it would hide a provider
+ * change from the only people who would notice.
+ */
+function providerLabel(model: string): string {
+  if (model.startsWith('gemini')) return 'Gemini'
+  if (model.startsWith('claude')) return 'Claude'
+  return model
+}
+
 function CareAdvice({
   advice,
   species,
@@ -451,8 +464,15 @@ function CareAdvice({
         not rendered: a paragraph of caveats on every card is noise to someone
         standing in front of a tree in the sun.
       */}
+      {/*
+        Reads the model out of the row rather than hardcoding a provider. The
+        advisory layer sits behind a two-provider interface (Gemini on the free
+        tier, Claude when only that key is set), so a hardcoded name would go
+        stale the moment the provider is switched - and a label naming the wrong
+        model is worse than no label.
+      */}
       <p className="mt-3 border-t border-outline-variant pt-3 text-label-md text-on-surface-variant">
-        Powered by Claude
+        Powered by {providerLabel(advice.model)}
       </p>
     </div>
   )

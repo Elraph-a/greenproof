@@ -73,11 +73,49 @@ log = logging.getLogger(__name__)
 # Opus 5. The images are small and the call is off the critical path, so there
 # is no reason to trade quality away here - this is the output a planter reads
 # and acts on, and bad advice about a real tree is worse than no advice.
-MODEL = "claude-opus-5"
+# ---------------------------------------------------------------------------
+# Which model writes the advice
+# ---------------------------------------------------------------------------
+#
+# TWO PROVIDERS BEHIND ONE FUNCTION, the same shape as photos (one upload
+# function, one URL column) and payments (a mock adapter behind an interface).
+# The advisory layer is the only part of this system that talks to an outside
+# API, so it is the part most likely to be swapped under us - free tiers have
+# already closed on this project three times mid-build.
+#
+#   GEMINI     free tier, and the default when a key is present
+#   ANTHROPIC  paid, used when only that key is set
+#
+# Auto-detected from whichever key exists, overridable with ADVISOR_PROVIDER.
+# Neither key set is a supported state: advice is disabled and every other part
+# of the system carries on unaffected.
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
+ANTHROPIC_MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-opus-5")
 
 # Generous. The call is fire-and-forget from the caller's perspective and a slow
 # response costs nothing, whereas a truncated one wastes the whole request.
 MAX_TOKENS = 2000
+
+
+def provider() -> str | None:
+    """Which provider to use, or None if advice is unavailable.
+
+    An explicit ADVISOR_PROVIDER wins, so a demo can be pinned to one provider
+    regardless of which keys happen to be present in the environment.
+    """
+    explicit = os.environ.get("ADVISOR_PROVIDER", "").strip().lower()
+    if explicit in ("gemini", "anthropic"):
+        return explicit
+    if os.environ.get("GEMINI_API_KEY"):
+        return "gemini"
+    if os.environ.get("ANTHROPIC_API_KEY"):
+        return "anthropic"
+    return None
+
+
+def model_name() -> str | None:
+    p = provider()
+    return {"gemini": GEMINI_MODEL, "anthropic": ANTHROPIC_MODEL}.get(p) if p else None
 
 # Images are re-encoded to this before sending. The photos in storage are
 # already 800px/q75 (the client downscales before upload), so this is a ceiling
@@ -161,44 +199,94 @@ phone, outdoors, by someone standing in front of the tree.
 different part of this system and not your concern."""
 
 
-def _client():
-    """Constructed per call, deliberately.
+def _jpeg(img: Image.Image) -> bytes:
+    """One photo, normalised to what we actually send.
 
-    The API key is read from the environment at call time rather than import
-    time, so the module imports cleanly on a machine that has no key - which is
-    every machine running the scoring path, since scoring must never acquire a
-    dependency on this file.
-    """
-    import anthropic  # imported here so a missing SDK cannot break scoring
-
-    if not os.environ.get("ANTHROPIC_API_KEY"):
-        raise RuntimeError(
-            "ANTHROPIC_API_KEY is not set. Note that a Claude Pro subscription "
-            "is NOT API access - the API bills separately at console.anthropic.com."
-        )
-    return anthropic.Anthropic()
-
-
-def _image_block(img: Image.Image, label: str) -> list[dict]:
-    """One photo as a labelled pair of content blocks.
-
-    The text label matters: without it the model cannot tell a trunk close-up
-    from a leaf close-up, and will describe bark as foliage.
+    Storage photos are already 800px/q75 (the client downscales before upload),
+    so this is a ceiling rather than a resize in the normal case. It bounds the
+    cost of a photo that arrived by some other route, and it makes the bytes
+    identical whichever provider is called - so switching provider cannot
+    silently change what the model saw.
     """
     im = img.convert("RGB")
     im.thumbnail((MAX_EDGE_PX, MAX_EDGE_PX))
-
     buf = io.BytesIO()
     im.save(buf, format="JPEG", quality=JPEG_QUALITY)
-    data = base64.standard_b64encode(buf.getvalue()).decode("utf-8")
+    return buf.getvalue()
 
-    return [
-        {"type": "text", "text": label},
-        {
-            "type": "image",
-            "source": {"type": "base64", "media_type": "image/jpeg", "data": data},
-        },
-    ]
+
+def _labelled(wide, close, leaf) -> list[tuple[str, bytes]]:
+    """Photos with the labels the model needs to tell them apart.
+
+    The labels matter: without them the model cannot distinguish a trunk
+    close-up from a leaf close-up, and will confidently describe bark as
+    foliage.
+    """
+    out = []
+    if wide is not None:
+        out.append(("Wide shot: the whole tree and its surroundings.", _jpeg(wide)))
+    if close is not None:
+        out.append(("Close-up of the trunk.", _jpeg(close)))
+    if leaf is not None:
+        out.append(("Close-up of a leaf.", _jpeg(leaf)))
+    return out
+
+
+def _assess_gemini(photos, prompt: str) -> PlantAssessment | None:
+    """Google's free tier. SDK imported here so a missing package cannot break
+    scoring, which must never depend on this module."""
+    from google import genai
+    from google.genai import types
+
+    client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
+
+    parts = []
+    for label, data in photos:
+        parts.append(types.Part.from_text(text=label))
+        parts.append(types.Part.from_bytes(data=data, mime_type="image/jpeg"))
+    parts.append(types.Part.from_text(text=prompt))
+
+    resp = client.models.generate_content(
+        model=GEMINI_MODEL,
+        contents=[types.Content(role="user", parts=parts)],
+        config=types.GenerateContentConfig(
+            system_instruction=SYSTEM,
+            max_output_tokens=MAX_TOKENS,
+            # Schema-constrained decoding, so the answer is valid JSON in the
+            # shape we asked for rather than prose we have to parse.
+            response_mime_type="application/json",
+            response_schema=PlantAssessment,
+        ),
+    )
+    return resp.parsed
+
+
+def _assess_anthropic(photos, prompt: str) -> PlantAssessment | None:
+    from anthropic import Anthropic
+
+    blocks: list[dict] = []
+    for label, data in photos:
+        blocks.append({"type": "text", "text": label})
+        blocks.append(
+            {
+                "type": "image",
+                "source": {
+                    "type": "base64",
+                    "media_type": "image/jpeg",
+                    "data": base64.standard_b64encode(data).decode("utf-8"),
+                },
+            }
+        )
+    blocks.append({"type": "text", "text": prompt})
+
+    resp = Anthropic().messages.parse(
+        model=ANTHROPIC_MODEL,
+        max_tokens=MAX_TOKENS,
+        system=SYSTEM,
+        messages=[{"role": "user", "content": blocks}],
+        output_format=PlantAssessment,
+    )
+    return getattr(resp, "parsed_output", None)
 
 
 def assess(
@@ -220,16 +308,16 @@ def assess(
     as CONTEXT TO DISAGREE WITH, never as an answer to confirm: the whole value
     of an independent identification is lost if we tell the model what to say.
     """
-    blocks: list[dict] = []
-    if wide is not None:
-        blocks += _image_block(wide, "Wide shot: the whole tree and its surroundings.")
-    if close is not None:
-        blocks += _image_block(close, "Close-up of the trunk.")
-    if leaf is not None:
-        blocks += _image_block(leaf, "Close-up of a leaf.")
-
-    if not blocks:
+    photos = _labelled(wide, close, leaf)
+    if not photos:
         log.warning("advisor.assess called with no photographs")
+        return None
+
+    which = provider()
+    if which is None:
+        # Not an error. No key configured means advice is switched off, and
+        # everything else in the system is unaffected.
+        log.info("no advisory provider configured (set GEMINI_API_KEY)")
         return None
 
     prompt = "Identify this tree and assess its condition."
@@ -241,28 +329,22 @@ def assess(
             "when they registered it. Treat that as an unverified claim, not as "
             "the answer. If the photographs show something else, say so."
         )
-    blocks.append({"type": "text", "text": prompt})
 
     try:
-        response = _client().messages.parse(
-            model=MODEL,
-            max_tokens=MAX_TOKENS,
-            system=SYSTEM,
-            messages=[{"role": "user", "content": blocks}],
-            output_format=PlantAssessment,
+        parsed = (
+            _assess_gemini(photos, prompt)
+            if which == "gemini"
+            else _assess_anthropic(photos, prompt)
         )
     except Exception:  # noqa: BLE001 - advisory only, must never break a caller
-        log.exception("advisory assessment failed")
+        log.exception("advisory assessment failed (%s)", which)
         return None
 
-    # A refusal is a successful HTTP call with no parsed output. Guard before
-    # reading rather than raising out of a function documented never to raise.
-    parsed = getattr(response, "parsed_output", None)
+    # A refusal or a safety block is a successful call with nothing parsed.
+    # Guard before reading rather than raising out of a function documented
+    # never to raise.
     if parsed is None:
-        log.warning(
-            "advisory assessment returned no parsed output (stop_reason=%s)",
-            getattr(response, "stop_reason", None),
-        )
+        log.warning("advisory assessment returned no parsed output (%s)", which)
         return None
 
     return parsed
@@ -284,14 +366,14 @@ def split(assessment: PlantAssessment) -> tuple[dict, dict]:
         # field `confidence` next to a column that genuinely IS a measured
         # confidence would be actively misleading.
         "self_reported_confidence": assessment.species_confidence,
-        "model": MODEL,
+        "model": model_name(),
     }
     advice = {
         "health": assessment.health,
         "observations": assessment.observations,
         "actions": assessment.actions,
         "limitations": assessment.limitations,
-        "model": MODEL,
+        "model": model_name(),
         "advisory_only": True,
     }
     return species, advice

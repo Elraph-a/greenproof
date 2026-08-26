@@ -95,21 +95,23 @@ uncommitted will not deploy.
 |---|---|---|
 | `SUPABASE_URL` | variable | everything |
 | `SUPABASE_SERVICE_KEY` | **secret** | everything |
-| `ANTHROPIC_API_KEY` | **secret** | `/advise` only |
+| `GEMINI_API_KEY` | **secret** | `/advise` - free tier, the default |
+| `ANTHROPIC_API_KEY` | **secret** | `/advise` - alternative provider |
 | `ALLOWED_ORIGINS` | variable, or leave unset | CORS |
 
 **Two secrets, not one.** Both must be secrets rather than plain variables:
 
 - `SUPABASE_SERVICE_KEY` can write any verdict for any tree. It is the value the
   entire security model rests on.
-- `ANTHROPIC_API_KEY` is a billable credential. A leaked key is someone else's
-  spending on your card.
+- `GEMINI_API_KEY` / `ANTHROPIC_API_KEY` are API credentials, and the Anthropic
+  one is billable - a leak is someone else's spending on your card. Advice runs
+  on whichever is set, Gemini first.
 
 Cloud Run is actually a **better** home for both than a laptop, since Secret
 Manager keeps them out of the filesystem and out of shell history. That is worth
 saying out loud if a judge asks what hosting bought you.
 
-**`ANTHROPIC_API_KEY` is optional in the deployment sense.** Leave it unset and
+**Both advisory keys are optional in the deployment sense.** Leave it unset and
 `/score` still works perfectly — `/advise` simply logs and returns
 `{"written": false}`, writing nothing. The advisory layer was built to fail soft
 precisely so it could never take verification down with it, and that property

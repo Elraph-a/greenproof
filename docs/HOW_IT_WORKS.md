@@ -341,7 +341,9 @@ named in the same report we open the pitch with:
 So a check-in now also produces two advisory outputs: **what species the tree
 appears to be**, and **what condition it is in and what to do about it**, written
 in plain language for the person standing in front of it. Both come from one
-call to **Claude Opus 5** with the visit's photographs.
+call to a vision model with the visit's photographs - **Gemini** on its free
+tier by default, **Claude** if only that key is set. One interface, two
+providers, chosen at runtime from whichever key exists.
 
 ### It is advisory, and the separation is structural
 
@@ -354,7 +356,7 @@ That is not a promise in a comment. It is enforced in four places:
 | Schema | Its own `species_guess` / `advice` columns, **not** inside `signals` — which is replaced wholesale on every re-score, and is what once destroyed our attack-row provenance |
 | Grants | Service-role only, exactly like `confidence`. The client is granted the leaf photo and nothing else |
 | Imports | `pipeline.py` never imports `advisor.py`, so no slow or wrong advisory call can reach a verdict. `grep -rn "advisor" ml/greenproof_ml/pipeline.py` must stay empty |
-| UI | A separate card under its own heading, visually unlike the score, footed "Powered by Claude" |
+| UI | A separate card under its own heading, visually unlike the score, footed with the model that wrote it |
 
 **Why so much care about a helpful feature.** This project's entire claim is that
 we measure and publish our own error rate. We cannot publish one for this — there
@@ -411,7 +413,9 @@ present.
 
 ### What it costs, and when we spend it
 
-About **3 cents a check-in**. The designed production policy is to call it only
+**Free on Gemini's tier**, about 3 cents a check-in on Claude. The figures below
+are the Claude case, which is the one worth planning against - a free tier is not
+a costing. The designed production policy is to call it only
 when the deterministic canopy signal already shows decline, which is a
 `ADVISE_ON_EVERY_CHECKIN` constant away:
 
