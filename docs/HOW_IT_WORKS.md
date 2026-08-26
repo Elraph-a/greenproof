@@ -385,18 +385,25 @@ state what it failed to see is indistinguishable from one that saw everything.
 ### The leaf photo
 
 Species identification and health assessment both want foliage, and our two
-scored photos are a whole tree and a trunk. So a visit may carry an optional
-third photo of a single leaf.
+scored photos are a whole tree and a trunk. So every visit now captures a third
+photograph of a single leaf, as its own step in both capture flows.
 
-**Optional is load-bearing.** It is never scored, never gated on, its upload
-failure is swallowed, and no step in either capture screen can be blocked by its
-absence. It sits collapsed inside the details step, exactly where the optional
-trunk measurement already sits, so the forty-tree flow does not grow a mandatory
-tap to serve an optional feature.
+**Required to capture, never scored.** Those sit together deliberately. It is
+required because advice from a leaf is much better than advice from a piece of
+bark — species identification especially. It is not scored because it is
+advisory: no verdict, confidence or payment moves because of what is in it.
 
-It also means the feature works on **check-ins captured before the column
-existed** — every pilot row — because the assessment sends whatever photographs
-are present.
+**Required to capture, tolerant on upload.** Once the photo has been taken the
+planter has done what was asked, so a failed upload of an advisory photo must not
+cost them the visit and the payment behind it. It uploads last and its failure is
+swallowed — degrade, don't break.
+
+`checkins.leaf_photo` is **nullable** regardless, because the nine pilot
+check-ins predate the column and a `NOT NULL` would have failed the migration
+outright. The requirement lives in the capture flow, which is the only place that
+can enforce it without invalidating data already collected — and it is why the
+assessment still works on **every pilot row**, sending whatever photographs are
+present.
 
 ### What it costs, and when we spend it
 

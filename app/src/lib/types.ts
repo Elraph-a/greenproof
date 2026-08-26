@@ -57,7 +57,12 @@ export type Checkin = {
   wide_photo: string
   close_photo: string
   tag_photo: string | null
-  /** Optional foliage close-up. Never scored — used only by the advisory layer. */
+  /**
+   * Foliage close-up, used only by the advisory layer and never scored.
+   *
+   * NULLABLE even though the capture flow requires it: the nine pilot check-ins
+   * predate the column, so a NOT NULL would have failed the migration outright.
+   */
   leaf_photo: string | null
   captured_at: string
   server_received_at: string

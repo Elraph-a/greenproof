@@ -31,7 +31,7 @@ import { ErrorNote, Spinner } from '../components/ui'
  * about what they are about to be asked to do.
  */
 
-const STAGES = ['Position', 'Photo', 'Measure'] as const
+const STAGES = ['Position', 'Photo', 'Measure', 'Leaf'] as const
 
 export function CheckIn() {
   const { userId } = useAuth()
@@ -51,8 +51,14 @@ export function CheckIn() {
   const [close, setClose] = useState<PreparedPhoto | null>(null)
 
   /**
-   * Optional foliage close-up for the ADVISORY layer. Never scored, never gated
-   * on, and it cannot block a visit - see the disclosure in step 4.
+   * Foliage close-up. REQUIRED to submit, and still NEVER SCORED.
+   *
+   * Required because species identification and health advice are far better
+   * from a leaf than from a whole-tree shot and a piece of bark. Not scored
+   * because it is advisory: no verdict, confidence or payment moves because of
+   * it. `checkins.leaf_photo` stays nullable, since the nine pilot check-ins
+   * predate the column - the requirement lives here, in the only place that can
+   * enforce it without invalidating data already collected.
    */
   const [leaf, setLeaf] = useState<PreparedPhoto | null>(null)
   const [taps, setTaps] = useState<TrunkTaps | null>(null)
@@ -98,7 +104,7 @@ export function CheckIn() {
     if (!userId || !tree) return
     setSubmitting(true)
     setError(null)
-    setStep(5)
+    setStep(6)
     try {
       const id = await submitCheckin({
         userId,
@@ -129,7 +135,7 @@ export function CheckIn() {
   const distance = tree ? Math.round(tree.distance_m) : null
 
   /* ---- the verdict reveal is its own full screen ---------------------- */
-  if (step === 5) {
+  if (step === 6) {
     return (
       <VerdictReveal
         checkin={verdict}
@@ -437,47 +443,6 @@ export function CheckIn() {
                     </p>
                   </div>
                 )}
-
-                {/* Advisory only. Collapsed, and worded so nobody thinks
-                    skipping it costs them - because it does not. It feeds
-                    species identification and care advice, and no verdict
-                    changes because it is missing. */}
-                <details className="disclosure mt-3">
-                  <summary>
-                    Photograph a leaf{' '}
-                    <span className="font-normal text-on-surface-variant">
-                      {leaf ? '· added' : '· optional'}
-                    </span>
-                  </summary>
-                  <div className="disclosure-body">
-                    <p className="mb-2.5 text-label-lg text-on-surface-variant">
-                      One leaf filling the frame lets us name the species and
-                      spot early signs of stress, so we can tell you how to look
-                      after this tree. Not part of verification - skipping it
-                      changes nothing about your score or your earnings.
-                    </p>
-                    {leaf ? (
-                      <button
-                        type="button"
-                        className="btn btn-secondary btn-block"
-                        onClick={() => {
-                          revokePreview(leaf)
-                          setLeaf(null)
-                        }}
-                      >
-                        <Icon name="refresh" size={17} />
-                        Retake leaf photo
-                      </button>
-                    ) : (
-                      <GhostCamera
-                        ghostUrl={null}
-                        label="Leaf"
-                        instruction="One leaf, filling the frame"
-                        onCapture={setLeaf}
-                      />
-                    )}
-                  </div>
-                </details>
               </>
             ) : (
               <GhostCamera
@@ -485,6 +450,59 @@ export function CheckIn() {
                 label="Close-up"
                 instruction="Trunk at chest height, marker card flat against it"
                 onCapture={setClose}
+              />
+            )}
+          </div>
+        )}
+
+        {/* --- 5 · leaf ---------------------------------------------- */}
+        {step === 5 && (
+          <div className="pt-1">
+            <h2 className="font-headline text-headline-lg font-bold text-on-surface">
+              Photograph one leaf
+            </h2>
+            <p className="mt-1 mb-3 text-on-surface-variant">
+              Hold a single leaf flat and fill the frame with it
+            </p>
+
+            {/* Says plainly what this photo is FOR, and what it is not. The
+                three before it are evidence used to decide whether this visit
+                is genuine; this one is not scored and cannot change the
+                verdict. A planter is owed that distinction rather than left to
+                assume every photo counts against them. */}
+            <div className="note mb-3">
+              <p className="text-label-lg text-on-surface-variant">
+                Used for care advice only - it tells us the species and shows
+                early signs of stress. Not part of verification, and it does not
+                affect your score or your earnings.
+              </p>
+            </div>
+
+            {leaf ? (
+              <>
+                <img
+                  src={leaf.previewUrl}
+                  alt="The leaf you photographed"
+                  className="w-full rounded-xl"
+                />
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-block mt-3"
+                  onClick={() => {
+                    revokePreview(leaf)
+                    setLeaf(null)
+                  }}
+                >
+                  <Icon name="refresh" size={17} />
+                  Retake photo
+                </button>
+              </>
+            ) : (
+              <GhostCamera
+                ghostUrl={null}
+                label="Leaf"
+                instruction="One leaf, filling the frame"
+                onCapture={setLeaf}
               />
             )}
           </div>
@@ -517,7 +535,17 @@ export function CheckIn() {
             <button
               type="button"
               className="btn btn-primary btn-block"
-              disabled={!close || submitting}
+              disabled={!close}
+              onClick={() => setStep(5)}
+            >
+              Continue to leaf photo
+            </button>
+          )}
+          {step === 5 && (
+            <button
+              type="button"
+              className="btn btn-primary btn-block"
+              disabled={!leaf || submitting}
               onClick={() => void submit()}
             >
               {submitting ? <Spinner /> : 'Submit check-in'}

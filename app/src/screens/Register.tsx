@@ -26,7 +26,7 @@ import { ErrorNote, Spinner } from '../components/ui'
 /**
  * Register a tree — built to docs/design/v2/02-08.
  *
- * Five steps, each with the same frame: a title bar carrying "Step N of 5 —
+ * Six steps, each with the same frame: a title bar carrying "Step N of 6 —
  * <name>", a segmented progress bar, and a single primary action pinned to the
  * bottom where a thumb reaches.
  */
@@ -38,8 +38,8 @@ const COMMON_SPECIES = [
   'Oil palm', 'Papaya', 'Odum', 'Wawa', 'Ofram', 'Onyina',
 ]
 
-const TOTAL = 5
-const STEP_NAMES = ['GPS', 'Wide photo', 'Close-up', 'Details', 'Done']
+const TOTAL = 6
+const STEP_NAMES = ['GPS', 'Wide photo', 'Close-up', 'Leaf', 'Details', 'Done']
 
 /** Establishment GH₵5 + GH₵2 per later verified visit — see migration 0007. */
 const POTENTIAL_FIRST_YEAR_GHS = 12
@@ -72,17 +72,23 @@ export function Register() {
   const [taps, setTaps] = useState<TrunkTaps | null>(null)
 
   /**
-   * Optional foliage close-up, for the ADVISORY layer only.
+   * Foliage close-up. REQUIRED to advance, but still NEVER SCORED.
    *
-   * NOT a sixth step, and for exactly the reason the trunk measurement is not:
-   * this flow is run forty times in a session and adding a mandatory tap to all
-   * forty to serve an optional feature is the wrong trade. It also must never be
-   * able to block a registration - it is never scored, never gated on, and the
-   * capture screens are what run live on stage.
+   * Those two facts sit together deliberately, and the distinction is the whole
+   * design: this photo is required because species identification and health
+   * advice are much better with a leaf than with a whole-tree shot and a piece
+   * of bark. It is not scored because it is advisory - no verdict, confidence or
+   * payment moves because of what is in it, or because it is missing.
    *
-   * It buys species identification and a health assessment worth reading. The
-   * two scored photos are a whole tree and a trunk; neither is what those models
-   * want, which is a leaf.
+   * It was optional in the first cut, on the argument that a flow run forty
+   * times at T0 should not grow a mandatory tap to serve an optional feature.
+   * That argument expired with the pilot: T0 and all four check-in rounds are
+   * done, so consistent input quality is now worth more than a saved tap.
+   *
+   * `checkins.leaf_photo` stays NULLABLE regardless - the nine pilot check-ins
+   * predate this column and a NOT NULL would fail the migration outright. The
+   * requirement lives in this flow, which is the only place that can enforce it
+   * without invalidating data we already collected.
    */
   const [leaf, setLeaf] = useState<PreparedPhoto | null>(null)
 
@@ -151,7 +157,7 @@ export function Register() {
       // Demo mode never writes. The flow still completes so the design can be
       // reviewed end to end without touching Supabase or its storage quota.
       if (!DEMO) {
-        if (!fix || !wide || !close) return
+        if (!fix || !wide || !close || !leaf) return
         await submitRegistration({
           userId,
           species: species.trim() || null,
@@ -166,7 +172,7 @@ export function Register() {
           capturedAt: new Date(),
           wide: wide.blob,
           close: close.blob,
-          leaf: leaf?.blob ?? null,
+          leaf: leaf.blob,
           trunkTaps: taps,
         })
       }
@@ -220,12 +226,15 @@ export function Register() {
         ? Boolean(wide)
         : step === 3
           ? Boolean(close)
-          : true
+          : step === 4
+            ? Boolean(leaf)
+            : true
 
   const PRIMARY: { label: string; go: () => void }[] = [
     { label: 'Record this position', go: () => setStep(2) },
     { label: 'Use this photo', go: () => setStep(3) },
     { label: 'Use this close-up', go: () => setStep(4) },
+    { label: 'Use this leaf photo', go: () => setStep(5) },
     { label: 'Register this tree', go: () => void submit() },
   ]
   const primary = PRIMARY[step - 1] ?? PRIMARY[0]!
@@ -237,13 +246,13 @@ export function Register() {
         <div className="flex items-center gap-3">
           <button
             type="button"
-            aria-label={step === 1 || step === 5 ? 'Close' : 'Go back'}
+            aria-label={step === 1 || step === 6 ? 'Close' : 'Go back'}
             onClick={() =>
-              step === 1 || step === 5 ? navigate('/grove') : setStep((s) => s - 1)
+              step === 1 || step === 6 ? navigate('/grove') : setStep((s) => s - 1)
             }
             className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-surface-container text-on-surface active:bg-surface-container-high"
           >
-            <Icon name={step === 1 || step === 5 ? 'x' : 'arrow-left'} size={18} />
+            <Icon name={step === 1 || step === 6 ? 'x' : 'arrow-left'} size={18} />
           </button>
           <div className="min-w-0">
             <h1 className="font-headline text-headline-lg font-bold text-on-surface">
@@ -352,8 +361,41 @@ export function Register() {
           </>
         )}
 
-        {/* ---- 4 · details ------------------------------------------- */}
+        {/* ---- 4 · leaf ---------------------------------------------- */}
         {step === 4 && (
+          <>
+            <InfoPanel
+              icon="camera"
+              title="Photograph one leaf"
+              body="Hold a single healthy leaf flat and fill the frame with it. This is what identifies the species and shows early signs of stress."
+            />
+            {/* Says plainly what this photo is and is not FOR. The two photos
+                before it are evidence used to decide whether this visit is
+                genuine; this one is not scored and cannot change the verdict,
+                and a planter is owed that distinction rather than left to
+                assume every photo counts against them. */}
+            <div className="note mt-2.5">
+              <p className="text-label-lg text-on-surface-variant">
+                Used for care advice only. It is not part of verification and
+                does not affect your score or your earnings.
+              </p>
+            </div>
+            <div className="mt-3">
+              <PhotoCapture
+                label="Leaf"
+                prompt="Tap to photograph a leaf"
+                subPrompt="One leaf, filling the frame"
+                brackets
+                photo={leaf}
+                onChange={setLeaf}
+                demoPhoto={2}
+              />
+            </div>
+          </>
+        )}
+
+        {/* ---- 5 · details ------------------------------------------- */}
+        {step === 5 && (
           <>
             <div className="note-good">
               <p className="flex items-center gap-2 font-headline text-headline-md font-bold">
@@ -468,35 +510,6 @@ export function Register() {
               </details>
             )}
 
-            {/* Advisory only, and deliberately worded so nobody believes
-                skipping it costs them anything. It feeds species
-                identification and care advice; it is never scored, never
-                gated on, and no verdict changes because it is missing. */}
-            <details className="disclosure mt-stack-md">
-              <summary>
-                Photograph a leaf{' '}
-                <span className="font-normal text-on-surface-variant">
-                  {leaf ? '· added' : '· optional'}
-                </span>
-              </summary>
-              <div className="disclosure-body">
-                <p className="mb-2.5 text-label-lg text-on-surface-variant">
-                  A single leaf filling the frame lets us name the species and
-                  spot early signs of stress, so we can tell you how to care for
-                  this tree. It is not part of verification - skipping it
-                  changes nothing about your score or your earnings.
-                </p>
-                <PhotoCapture
-                  label="Leaf"
-                  prompt="Tap to photograph a leaf"
-                  subPrompt="One leaf, filling the frame"
-                  photo={leaf}
-                  onChange={setLeaf}
-                  demoPhoto={2}
-                />
-              </div>
-            </details>
-
             {capturedHeading === null && !DEMO && (
               // Degrade, don't break: a missing signal lowers confidence later,
               // it does not stop the registration.
@@ -512,8 +525,8 @@ export function Register() {
           </>
         )}
 
-        {/* ---- 5 · done ---------------------------------------------- */}
-        {step === 5 && (
+        {/* ---- 6 · done ---------------------------------------------- */}
+        {step === 6 && (
           <div className="flex flex-col items-center pt-stack-lg text-center">
             <span className="flex size-[72px] items-center justify-center rounded-full bg-[var(--color-verified-container)] text-[var(--color-verified)]">
               <Icon name="check-circle" size={40} />
@@ -551,7 +564,7 @@ export function Register() {
 
       {/* ---- pinned action ------------------------------------------ */}
       <footer className="safe-bottom sticky bottom-0 bg-background px-margin-mobile pt-2">
-        {step === 5 ? (
+        {step === 6 ? (
           <>
             {/* Primary, because they are standing in a field with 39 to go. */}
             <button type="button" className="btn btn-primary btn-block" onClick={again}>

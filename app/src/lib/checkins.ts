@@ -112,7 +112,10 @@ export interface CheckinInput {
   capturedAt: Date
   wide: Blob
   close: Blob
-  /** Optional foliage close-up for the advisory layer. Never scored. */
+  /**
+   * Foliage close-up for the advisory layer. Required by the capture flow,
+   * optional here - a failed upload must not cost the planter the visit.
+   */
   leaf?: Blob | null
   trunkTaps: TrunkTaps | null
 }
@@ -136,9 +139,11 @@ export async function submitCheckin(input: CheckinInput): Promise<string> {
   const widePath = await uploadPhoto(input.userId, captureId, 'wide', input.wide)
   const closePath = await uploadPhoto(input.userId, captureId, 'close', input.close)
 
-  // Uploaded last, and its failure is swallowed. The two scored photos are
-  // evidence; this one only feeds advice, so it must never be the reason a
-  // planter standing at a tree cannot complete their visit.
+  // REQUIRED TO CAPTURE, TOLERANT ON UPLOAD. The flow will not let you submit
+  // without taking it, because advice is much better from a leaf. But once it is
+  // taken the planter has done what was asked, and a failed upload of an
+  // ADVISORY photo must never be the reason someone standing at a tree cannot
+  // complete their visit. The scored photos are evidence; this one is not.
   let leafPath: string | null = null
   if (input.leaf) {
     try {

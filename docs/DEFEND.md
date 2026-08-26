@@ -369,6 +369,13 @@ not shipping the feature.
 - `pipeline.py` never imports `advisor.py`, so there is no code path at all
 - the UI names the model and states the boundary on screen
 
+**On the leaf photo being required.** It began optional, on the argument that a
+flow run forty times at T0 should not grow a mandatory tap to serve an optional
+feature. That argument expired with the pilot — T0 and all four rounds are done,
+so consistent input quality now costs nothing. Required to *capture*; still
+tolerant of a failed *upload*, because the planter has already done what was
+asked and an advisory photo must not cost them a payment.
+
 **Where it fails.** It is an unmeasured component and we say so out loud. It can
 be confidently wrong about a species; the `limitations` field is required so it
 must state what the photograph could not show; and it costs about 3 cents a call,

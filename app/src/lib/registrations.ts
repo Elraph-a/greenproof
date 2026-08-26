@@ -44,8 +44,10 @@ export interface RegistrationInput {
   wide: Blob
   close: Blob
   /**
-   * Optional foliage close-up for the advisory layer. Never scored, never
-   * gated on, and a registration completes perfectly well without it.
+   * Foliage close-up for the advisory layer. The capture flow now REQUIRES it,
+   * but this stays optional at the type level on purpose - see the upload note
+   * in send(), and note that queue items written before this field existed have
+   * it undefined.
    */
   leaf?: Blob | null
   /**
@@ -127,10 +129,16 @@ async function send(item: PendingRegistration): Promise<void> {
     await update(item)
   }
 
-  // The leaf photo is uploaded LAST of the three and its failure is swallowed.
-  // The other two are evidence; this one is a convenience for the advisory
-  // layer, and losing a whole registration because an optional photo would not
-  // upload would be a straight downgrade on the thing T0 exists to protect.
+  // REQUIRED TO CAPTURE, TOLERANT ON UPLOAD - and the difference is deliberate.
+  //
+  // The capture flow will not let you past the leaf step, because advice from a
+  // whole-tree shot and a piece of bark is much weaker than advice from a leaf.
+  // But once the photo has been taken, the planter has done what was asked, and
+  // a failed upload of an ADVISORY photo must not cost them the registration and
+  // the payment that follows it. The other two photos are evidence; this one
+  // feeds guidance nobody is paid on.
+  //
+  // So it uploads last and its failure is swallowed. Degrade, don't break.
   if (item.photos.leaf && !item.uploaded.leaf) {
     try {
       item.uploaded.leaf = await uploadPhoto(

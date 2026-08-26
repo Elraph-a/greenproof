@@ -60,12 +60,13 @@ export interface PendingRegistration {
     wide: Blob
     close: Blob
     /**
-     * OPTIONAL, AND THE OPTIONALITY IS LOAD-BEARING.
+     * Required by the capture flow, optional in this type - and that is not a
+     * contradiction.
      *
-     * A leaf photo feeds the advisory layer only - it is never scored and never
-     * gated on. A visit must complete without it, both because the planter may
-     * skip it and because every item queued before this field existed has it
-     * undefined. No IndexedDB migration, same as trunk_taps.
+     * The leaf feeds the advisory layer only: never scored, never gated on. The
+     * flow requires it so advice has a decent photograph to work from, but an
+     * item queued before this field existed has it undefined and must still
+     * flush cleanly. No IndexedDB migration, same as trunk_taps.
      */
     leaf?: Blob
   }

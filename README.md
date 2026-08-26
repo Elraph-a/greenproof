@@ -85,8 +85,8 @@ Full write-ups in [spike/FINDINGS.md](spike/FINDINGS.md).
   Postgres column grants, not application code
 - Two scored photos per visit, **no tag in either** — a numbered card in frame
   means the model may match the card
-- A third **leaf photo is optional and never scored** — it feeds care advice
-  only, and a visit completes without it
+- A third **leaf photo is captured every visit but never scored** — it feeds
+  care advice only, and a failed upload never costs a planter the visit
 - Advice and species identification are **advisory, never verification** — they
   cannot move a confidence, a verdict or a payment
 - Tags are field convenience, **never identity**
