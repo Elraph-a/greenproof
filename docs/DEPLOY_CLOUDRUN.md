@@ -91,14 +91,29 @@ uncommitted will not deploy.
 
 ### Environment variables
 
-| Name | Type |
-|---|---|
-| `SUPABASE_URL` | variable |
-| `SUPABASE_SERVICE_KEY` | **secret** |
-| `ALLOWED_ORIGINS` | variable, or leave unset |
+| Name | Type | Required for |
+|---|---|---|
+| `SUPABASE_URL` | variable | everything |
+| `SUPABASE_SERVICE_KEY` | **secret** | everything |
+| `ANTHROPIC_API_KEY` | **secret** | `/advise` only |
+| `ALLOWED_ORIGINS` | variable, or leave unset | CORS |
 
-`SUPABASE_SERVICE_KEY` must be a **secret**. It can write any verdict for any
-tree; it is the one value here that must not leak.
+**Two secrets, not one.** Both must be secrets rather than plain variables:
+
+- `SUPABASE_SERVICE_KEY` can write any verdict for any tree. It is the value the
+  entire security model rests on.
+- `ANTHROPIC_API_KEY` is a billable credential. A leaked key is someone else's
+  spending on your card.
+
+Cloud Run is actually a **better** home for both than a laptop, since Secret
+Manager keeps them out of the filesystem and out of shell history. That is worth
+saying out loud if a judge asks what hosting bought you.
+
+**`ANTHROPIC_API_KEY` is optional in the deployment sense.** Leave it unset and
+`/score` still works perfectly — `/advise` simply logs and returns
+`{"written": false}`, writing nothing. The advisory layer was built to fail soft
+precisely so it could never take verification down with it, and that property
+survives the move to Cloud Run.
 
 `ALLOWED_ORIGINS` defaults to `*` if unset, which is safe — the endpoints carry
 no secrets a caller could extract, and every verdict is derived from stored
@@ -131,6 +146,16 @@ gcloud run services update greenproof-ml --region us-central1 \
 ```
 curl https://<service-url>/health
 ```
+
+Expect `{"ok":true,"model_ready":true,"supabase_configured":true}`. Then check
+the advisory path separately, because `/health` does not cover it:
+
+```
+curl -X POST https://<service-url>/advise   -H 'Content-Type: application/json'   -d '{"checkin_id":"<a real check-in id>"}'
+```
+
+`{"written": true, ...}` means the Anthropic key is wired up. `{"written":
+false}` means it is not — and note that this is **not an error**, by design.
 
 Then point the app at it — the same command the tunnel uses, because the app
 reads its scoring URL from the database either way:
