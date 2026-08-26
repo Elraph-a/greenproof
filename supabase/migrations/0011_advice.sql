@@ -103,3 +103,18 @@ create view review_queue as
 -- reviewer screen work at all, and forgetting it is a "permission denied for
 -- table review_queue" in front of an audience.
 grant select on review_queue to authenticated;
+
+-- AND EXPLICITLY CLOSE IT TO anon AGAIN.
+--
+-- 0008 revoked anon's access across the schema and warned in its own comment
+-- that "if a table is added later it inherits the default grant again and would
+-- silently reopen this hole". Dropping and recreating this view makes it a
+-- later-added object, which is precisely that case.
+--
+-- 0008's `alter default privileges` should already cover it, but only for
+-- objects created by the same role that ran the ALTER - which is an assumption
+-- about who runs a migration, not a guarantee. This view joins every check-in to
+-- its tree, so an anon SELECT would expose the whole pilot dataset including
+-- GPS positions. One redundant line is the correct price for removing that
+-- dependency on who happened to paste the SQL.
+revoke all on review_queue from anon;
