@@ -10,6 +10,8 @@ the TeProD Ulysseus Innovation Challenge final (University of Ghana).
 - [docs/HOW_IT_WORKS.md](docs/HOW_IT_WORKS.md) — **start here for the technical side.** What
   every part is and what it does, in plain language. Written for the team
 - [docs/DEFEND.md](docs/DEFEND.md) — why each choice beat the alternatives. Read after HOW_IT_WORKS
+- [docs/THE_STORY.md](docs/THE_STORY.md) — **the narrative for the deck.** Problem to close,
+  in the order to tell it, with every external claim sourced
 - [docs/DEMO_RUNBOOK.md](docs/DEMO_RUNBOOK.md) — **read before the pitch.** How the live
   demo comes up, the pre-flight list, and what to say if the network fails
 
@@ -49,11 +51,11 @@ Four claims, all true of what we're building:
 |---|---|
 | Frontend | React PWA on Vercel |
 | Data / auth / storage | Supabase, called **directly from the client** (Postgres + pgvector + PostGIS + Storage + Auth) |
-| ML | One FastAPI service on **Hugging Face Spaces** (16 GB free) — the only new surface |
+| ML | One FastAPI service, **on a laptop behind a Cloudflare tunnel** — the only new surface. Hugging Face, Koyeb and Fly all closed their free tiers mid-build and GCP billing is blocked; `tools/start_demo.py` brings it up in ~23s and rebuilds the tunnel when it dies |
 | Model | DINOv2 ViT-S/14 (384-dim) + ORB/RANSAC + pHash + excess-green + ArUco |
 | Map | Leaflet |
 | Satellite | Sentinel-2 (free, 10 m). Also check **Planet NICFI** — free high-resolution imagery for the tropics, covers Ghana, much sharper than Sentinel-2 |
-| Payments | MTN MoMo sandbox, behind an interface with a mock adapter |
+| Payments | Verified check-ins pay **credits** (1 credit = GH₵1), redeemable into trees or cashed out via MTN MoMo sandbox, behind an interface with a mock adapter |
 | Cost | **Free tiers only.** No paid APIs, hosting or training |
 
 **onnxruntime, not PyTorch, in production** — memory. Torch is a dev-only dependency.
@@ -158,6 +160,19 @@ the trees without it.
 - Spike and pilot photos in `data/`
 - A short **"defend this"** note per subsystem as it is built: what it does, why this choice over
   the alternatives, where it fails, what we would do with more time
+- **Palette is `canopy` paper and green, `gold` for money** — chosen from the real CSS of veritree,
+  Sylvera, Wren, Ecologi and Farmerline. Gold not orange because every warm accent in that survey
+  is golden and because money on a phone in Ghana is MTN MoMo yellow
+- **Gold means money and nothing else.** Enforced structurally: the accent tokens sit outside every
+  palette block so they cannot drift. Use the "needs review" amber for statuses
+- **Secondary text is measured against the PAGE, not white** — that is where most of it sits, and a
+  pale grey is unreadable on a phone in Ghanaian midday sun
+- **The photograph is the interface.** My Grove leads with the overdue tree's own last photo, the
+  tree list is a photo grid, and the tree page puts the confidence score on the image
+- **Every screen needs a `DEMO` branch.** MapScreen and SponsorDashboard were both missed and both
+  rendered "permission denied for table trees" in front of an audience
+- **When behaviour changes, grep the docs for the old behaviour** before moving on. DEFEND.md and
+  DEPLOY.md both described a camera flow that no longer existed
 
 ## Working with Raphael
 
