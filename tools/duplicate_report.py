@@ -176,7 +176,7 @@ def main() -> int:
     # Reference points from our own measurements, so the numbers above mean
     # something to whoever reads this at 1am.
     print(
-        "\ncosine reference (spike/FINDINGS.md): same tree mean 0.62 · different tree mean 0.41"
+        "\ncosine reference (spike/FINDINGS.md): same tree mean 0.62, different tree mean 0.41"
         "\nAUC 0.77 and bimodal - strong evidence, NOT proof. Open the photos."
     )
 
