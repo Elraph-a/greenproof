@@ -1,10 +1,15 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useAuth } from '../auth/AuthProvider'
-import { supabase } from '../lib/supabase'
-import { DEMO, demoLedger } from '../lib/demo'
 import { Icon } from '../components/Icon'
 import { EmptyState, ErrorNote, HeroCard } from '../components/ui'
-import type { LedgerEntry } from '../lib/types'
+import {
+  CREDITS_PER_TREE,
+  MIN_WITHDRAWAL,
+  loadCredits,
+  redeemForTrees,
+  type CreditBalance,
+} from '../lib/credits'
+import { PILOT_PLOT_ID } from '../lib/sponsor'
 
 /**
  * Earnings.
@@ -17,9 +22,6 @@ import type { LedgerEntry } from '../lib/types'
  * only route to money is passing verification, and verification is the one thing
  * the client also cannot touch. Two independent locks, both in the database.
  */
-
-/** Below this, a transfer fee would eat most of a GH₵2 payment. */
-const MIN_WITHDRAWAL_GHS = 10
 
 /**
  * Ledger status, in words a planter uses.
@@ -38,32 +40,45 @@ const LEDGER_STATUS: Record<string, string> = {
 
 export function Wallet() {
   const { userId } = useAuth()
-  const [entries, setEntries] = useState<LedgerEntry[] | null>(null)
+  const [credits, setCredits] = useState<CreditBalance | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [payoutNote, setPayoutNote] = useState(false)
+  const [redeeming, setRedeeming] = useState(false)
+  const [redeemTrees, setRedeemTrees] = useState(1)
+  const [redeemed, setRedeemed] = useState<number | null>(null)
+  const [busy, setBusy] = useState(false)
 
-  useEffect(() => {
+  const refresh = useCallback(() => {
     if (!userId) return
-    if (DEMO) {
-      setEntries(demoLedger)
-      return
-    }
-    supabase
-      .from('ledger_entries')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .then(({ data, error: e }) => {
-        if (e) setError(e.message)
-        else setEntries((data ?? []) as unknown as LedgerEntry[])
-      })
+    loadCredits(userId)
+      .then(setCredits)
+      .catch((e) => setError(e instanceof Error ? e.message : 'Could not load credits'))
   }, [userId])
 
-  const total = (entries ?? []).reduce((s, e) => s + Number(e.amount_ghs), 0)
-  const paid = (entries ?? [])
-    .filter((e) => e.status === 'paid')
-    .reduce((s, e) => s + Number(e.amount_ghs), 0)
-  const available = total - paid
+  useEffect(refresh, [refresh])
+
+  const entries = credits?.entries ?? null
+  const available = credits?.available ?? 0
+  const total = credits?.earned ?? 0
+  const paid = credits?.cashedOut ?? 0
+  const spent = credits?.redeemed ?? 0
+  const affordable = Math.floor(available / CREDITS_PER_TREE)
+
+  async function doRedeem() {
+    if (!userId) return
+    setBusy(true)
+    setError(null)
+    try {
+      const cost = await redeemForTrees(userId, PILOT_PLOT_ID, redeemTrees)
+      setRedeemed(cost)
+      setRedeeming(false)
+      refresh()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not redeem')
+    } finally {
+      setBusy(false)
+    }
+  }
 
   return (
     <div className="px-margin-mobile pt-1 pb-2">
@@ -71,7 +86,7 @@ export function Wallet() {
         Wallet
       </h1>
       <p className="mt-0.5 text-label-lg text-on-surface-variant">
-        Earned only from verified check-ins
+        Credits, earned only from verified check-ins
       </p>
 
       {error && <ErrorNote>{error}</ErrorNote>}
@@ -84,8 +99,22 @@ export function Wallet() {
       ) : (
         <HeroCard
           accent
-          label="Available balance"
-          value={`GH₵${available.toFixed(2)}`}
+          label="Credits available"
+          value={
+            <>
+              {available.toFixed(0)}
+              <span className="text-headline-lg font-semibold opacity-60">
+                {' '}
+                {available === 1 ? 'credit' : 'credits'}
+              </span>
+            </>
+          }
+          foot={
+            <span className="text-label-lg">
+              Worth GH₵{available.toFixed(2)}, or {affordable}{' '}
+              {affordable === 1 ? 'tree' : 'trees'} planted
+            </span>
+          }
         />
       )}
 
@@ -101,16 +130,30 @@ export function Wallet() {
       {/* Only once it says something the hero does not. Until a payout has
           happened, available and earned are the same number, and printing it
           twice makes the screen look like it is padding. */}
-      {paid > 0 && (
+      {(paid > 0 || spent > 0) && (
         <p className="mt-2 text-label-lg text-on-surface-variant">
           <span className="tnum font-semibold text-on-surface">
-            GH₵{total.toFixed(2)}
+            {total.toFixed(0)}
           </span>{' '}
-          earned all time ·{' '}
-          <span className="tnum font-semibold text-on-surface">
-            GH₵{paid.toFixed(2)}
-          </span>{' '}
-          paid out
+          earned all time
+          {paid > 0 && (
+            <>
+              {' · '}
+              <span className="tnum font-semibold text-on-surface">
+                {paid.toFixed(0)}
+              </span>{' '}
+              cashed out
+            </>
+          )}
+          {spent > 0 && (
+            <>
+              {' · '}
+              <span className="tnum font-semibold text-on-surface">
+                {spent.toFixed(0)}
+              </span>{' '}
+              put back into trees
+            </>
+          )}
         </p>
       )}
 
@@ -118,15 +161,103 @@ export function Wallet() {
           it used to produce an unstyled browser dialog quoting a file path in
           the repository. An inline note answers the question in the app's own
           voice, and stays on screen to be read. */}
-      <button
-        type="button"
-        className="btn btn-primary btn-block mt-2.5"
-        disabled={available < MIN_WITHDRAWAL_GHS}
-        onClick={() => setPayoutNote(true)}
-      >
-        <Icon name="wallet" size={19} />
-        Withdraw to Mobile Money
-      </button>
+      {/*
+        TWO DOORS, AND THE ORDER IS THE ARGUMENT.
+
+        Putting trees first is not decoration. Cashing out is a leak - the money
+        leaves and the grove is no bigger. Redeeming recirculates it, and the
+        person choosing is the one who already knows which land needs planting.
+        Both are offered plainly; the default is the one that compounds.
+      */}
+      <div className="mt-2.5 grid gap-2.5">
+        <button
+          type="button"
+          className="btn btn-primary btn-block"
+          disabled={affordable < 1}
+          onClick={() => {
+            setRedeemed(null)
+            setRedeeming((r) => !r)
+          }}
+        >
+          <Icon name="tree" size={19} />
+          Put credits back into trees
+        </button>
+
+        <button
+          type="button"
+          className="btn btn-secondary btn-block"
+          disabled={available < MIN_WITHDRAWAL}
+          onClick={() => setPayoutNote(true)}
+        >
+          <Icon name="wallet" size={19} />
+          Cash out to Mobile Money
+        </button>
+      </div>
+
+      {redeeming && (
+        <div className="card mt-2.5">
+          <p className="font-headline text-headline-md font-bold text-on-surface">
+            How many trees?
+          </p>
+          <p className="mt-0.5 text-label-lg text-on-surface-variant">
+            {CREDITS_PER_TREE} credits funds one tree for a year of monitoring.
+          </p>
+
+          <div className="mt-3 flex items-center gap-3">
+            <button
+              type="button"
+              aria-label="Fewer trees"
+              className="btn btn-secondary size-11 px-0"
+              onClick={() => setRedeemTrees((n) => Math.max(1, n - 1))}
+            >
+              <Icon name="x" size={16} />
+            </button>
+            <span className="tnum flex-1 text-center font-headline text-display-md font-bold text-on-surface">
+              {redeemTrees}
+            </span>
+            <button
+              type="button"
+              aria-label="More trees"
+              className="btn btn-secondary size-11 px-0"
+              disabled={redeemTrees >= affordable}
+              onClick={() => setRedeemTrees((n) => Math.min(affordable, n + 1))}
+            >
+              <Icon name="plus" size={16} />
+            </button>
+          </div>
+
+          <div className="mt-3 flex items-baseline justify-between border-t border-outline-variant pt-3">
+            <span className="font-semibold text-on-surface">Costs</span>
+            <span className="tnum font-headline text-headline-lg font-bold text-accent">
+              {redeemTrees * CREDITS_PER_TREE} credits
+            </span>
+          </div>
+
+          <button
+            type="button"
+            className="btn btn-primary btn-block mt-3"
+            disabled={busy}
+            onClick={() => void doRedeem()}
+          >
+            {busy
+              ? 'Redeeming...'
+              : `Plant ${redeemTrees} ${redeemTrees === 1 ? 'tree' : 'trees'}`}
+          </button>
+        </div>
+      )}
+
+      {redeemed !== null && (
+        <div className="note-good mt-2.5">
+          <p className="flex items-center gap-2 font-semibold">
+            <Icon name="check-circle" size={16} />
+            {redeemed} credits are now funding trees
+          </p>
+          <p className="mt-1.5 text-label-lg">
+            They pay a planter only as each tree passes verification, on exactly
+            the terms a sponsor's money does. Nothing is released up front.
+          </p>
+        </div>
+      )}
 
       {payoutNote && (
         <div className="note-warn mt-2.5">
@@ -141,9 +272,11 @@ export function Wallet() {
         </div>
       )}
 
-      {available < MIN_WITHDRAWAL_GHS && (
+      {available < MIN_WITHDRAWAL && (
         <p className="mt-2.5 text-center text-label-lg text-on-surface-variant">
-          Minimum withdrawal GH₵{MIN_WITHDRAWAL_GHS.toFixed(2)}
+          {affordable >= 1
+            ? `Cashing out needs ${MIN_WITHDRAWAL} credits. You can still put yours into trees.`
+            : `Earn ${CREDITS_PER_TREE} credits to fund a tree, or ${MIN_WITHDRAWAL} to cash out.`}
         </p>
       )}
 
@@ -163,7 +296,7 @@ export function Wallet() {
         </div>
       </details>
 
-      <h2 className="section-h">Earnings</h2>
+      <h2 className="section-h">Credits earned</h2>
 
       {entries === null && !error && (
         <div className="flex flex-col gap-2.5">
@@ -204,7 +337,7 @@ export function Wallet() {
               </p>
             </div>
             <p className="tnum shrink-0 font-headline text-headline-md font-bold text-[var(--color-verified)]">
-              +GH₵{Number(e.amount_ghs).toFixed(2)}
+              +{Number(e.amount_ghs).toFixed(0)}
             </p>
           </li>
         ))}

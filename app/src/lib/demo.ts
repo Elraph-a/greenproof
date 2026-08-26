@@ -284,10 +284,19 @@ export function demoVerdict(): Checkin {
  * Mutable in demo mode so "fund a grove" can be walked through and the
  * portfolio updates. Never persisted.
  */
+/*
+ * Owned by the SPONSOR, not the planter.
+ *
+ * It was seeded against demoUserId, and once credits arrived the planter's
+ * wallet read that GH₵88 sponsor pledge as the planter's own redemption -
+ * "88 put back into trees" for something a sponsor had pledged. Redemptions
+ * are identified by author (see lib/credits.ts), so the fixture has to belong
+ * to whoever actually made it.
+ */
 export const demoSponsorships: Sponsorship[] = [
   {
     id: 'demo-sp-1',
-    sponsor_id: demoUserId,
+    sponsor_id: demoSponsorProfile.id,
     plot_id: '00000000-0000-4000-9000-000000000001',
     trees_committed: 8,
     amount_ghs: 88,
