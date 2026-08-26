@@ -4,11 +4,13 @@ The ONE new surface in the stack. Everything else is Supabase called directly
 from the browser; this exists because a client-computed verification result is
 forgeable, so scoring has to happen somewhere the user cannot reach.
 
-Runs on Hugging Face Spaces (Docker SDK, free tier, 16 GB).
+Runs on Hugging Face Spaces (Docker SDK). Host-agnostic: the same container
+runs on a laptop, Cloud Run, or anywhere else that can run Docker.
 
     GET  /              service metadata
     GET  /health        liveness + whether the model is loaded
     POST /score         score one check-in by id
+    POST /advise        species + care advice for one check-in (advisory only)
     POST /backfill      score every pending check-in (used after T0)
 """
 
@@ -16,9 +18,10 @@ from __future__ import annotations
 
 import logging
 import os
+import secrets
 import threading
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
@@ -129,8 +132,27 @@ def score(req: ScoreRequest) -> ScoreResponse:
     )
 
 
+# Optional shared secret for /advise. Unset means the endpoint is open.
+#
+# WHY THIS EXISTS, AND WHY ONLY ON THIS ENDPOINT.
+#
+# /score is safe to leave open: it takes an id, re-reads every input from the
+# database, and costs us nothing but a few seconds of our own CPU. /advise is
+# different in one specific way - IT SPENDS MONEY. Each call is about 3 cents of
+# Anthropic usage.
+#
+# On a Cloudflare quick tunnel that barely mattered: the hostname rotated and the
+# service was up for minutes at a time. A permanent public Space URL is a
+# different proposition, and an endpoint that bills the operator per request is
+# worth a lock even when the realistic risk is low.
+#
+# Unset by default so local runs and `uvicorn app:app` need no configuration.
+# Set it in the Space's secrets and in .env, and tools/advise_pilot.py sends it.
+ADVISE_TOKEN = os.environ.get("ADVISE_TOKEN", "").strip()
+
+
 @app.post("/advise")
-def advise(req: ScoreRequest) -> dict:
+def advise(req: ScoreRequest, x_advise_token: str = Header(default="")) -> dict:
     """Species identification and care advice for one check-in.
 
     SEPARATE FROM /score ON PURPOSE, and the separation is the design.
@@ -148,6 +170,10 @@ def advise(req: ScoreRequest) -> dict:
     Note it does NOT require the DINOv2 model to be loaded - the two paths have
     no components in common, so a cold model should not block advice.
     """
+    # compare_digest, not ==, so a wrong token cannot be recovered by timing.
+    if ADVISE_TOKEN and not secrets.compare_digest(x_advise_token, ADVISE_TOKEN):
+        raise HTTPException(401, "Missing or invalid X-Advise-Token")
+
     from greenproof_ml import advisor
 
     try:

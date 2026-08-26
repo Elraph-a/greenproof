@@ -31,8 +31,15 @@ can never influence what the score is.
 |---|---|---|
 | GET | `/health` | liveness, model-loaded, config present |
 | POST | `/score` | score one check-in — `{"checkin_id": "..."}` |
+| POST | `/advise` | species + care advice — **advisory, never a verdict** |
 | POST | `/backfill?limit=50` | score everything still `pending` |
 | GET | `/docs` | interactive OpenAPI |
+
+`/advise` is the only endpoint that is not verification. It writes
+`species_guess` and `advice` and cannot touch `confidence`, `verdict` or
+`signals` — enforced by column grants, and by `pipeline.py` never importing the
+advisor. It is also the only endpoint that **spends money** (~3 cents a call),
+which is why it can be locked behind `ADVISE_TOKEN`.
 
 ## How a check-in is judged
 
@@ -79,9 +86,21 @@ Space → Settings → Variables and secrets:
 |---|---|---|
 | `SUPABASE_URL` | variable | your project URL |
 | `SUPABASE_SERVICE_KEY` | **secret** | the `service_role` key |
+| `ANTHROPIC_API_KEY` | **secret** | for `/advise` only — omit and advice is simply disabled |
+| `ADVISE_TOKEN` | **secret** | any random string; required in `X-Advise-Token` on `/advise` |
 | `ALLOWED_ORIGINS` | variable | your Vercel URL |
 
-**The service key must never appear in the frontend.**
+**The service key must never appear in the frontend.** It can write any verdict
+for any tree, and it is the value the whole security model rests on.
+
+**`ANTHROPIC_API_KEY` is billable.** A leak is someone else's spending. Omitting
+it is a supported state, not a failure: `/score` is unaffected and `/advise`
+returns `{"written": false}` — the advisory layer fails soft by design so it can
+never take verification down with it.
+
+**`ADVISE_TOKEN` matters on a public Space.** Without it, anyone who finds this
+URL and a valid check-in id can spend your Anthropic credit three cents at a
+time. `/score` needs no such lock: it costs only our own CPU.
 
 ## Local run
 

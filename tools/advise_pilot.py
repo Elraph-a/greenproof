@@ -25,6 +25,11 @@ answer out, at Opus 5 rates). The 9-check-in pilot costs about 26 cents. The
 CREDENTIALS. Needs SUPABASE_URL, SUPABASE_SERVICE_KEY and ANTHROPIC_API_KEY,
 from the environment or a .env at the repo root or in ml/.
 
+This calls the pipeline IN-PROCESS rather than over HTTP, so it needs no
+ADVISE_TOKEN and works whether or not the service is deployed anywhere. That is
+the same property score_pilot.py has, and for the same reason: the photos are in
+Supabase, so any machine with the keys can do this work.
+
     A Claude Pro subscription is NOT API access. Pro is the claude.ai chat
     product; the API bills separately. Buy credits and create a key at
     console.anthropic.com -> Billing.
