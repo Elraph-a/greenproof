@@ -216,22 +216,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           )
         }
 
-        // The 0004 trigger creates the profile row in the same transaction
-        // as the auth user, so this normally takes the update path; upsert
-        // also covers the insert path if the trigger is ever removed. Uses
-        // data.session.user.id directly — the userId in React state has not
-        // re-rendered yet at this point.
+        // UPDATE, NOT UPSERT, AND THIS BROKE SIGN-UP FOR EVERY NEW ACCOUNT.
+        //
+        // Migration 0009 revoked the table-wide insert/update on `profiles` so
+        // a client could not set its own `role` to 'reviewer' and then decide
+        // verdicts, granting back only the safe columns. Those column grants
+        // are correct and plain updates work. But PostgREST's upsert emits
+        // INSERT ... ON CONFLICT DO UPDATE, which needs the TABLE-level
+        // privilege the migration deliberately removed, so every sign-up died
+        // here with "permission denied for table profiles".
+        //
+        // The failure was quiet in the worst way: the account and the row both
+        // existed by then, so the user was signed in with the trigger's empty
+        // profile - no name, and role left at the 'planter' default. That is
+        // why sponsors kept landing in the planter interface. Measured against
+        // the live database: UPDATE full_name ok, UPDATE phone ok, SELECT ok,
+        // UPSERT permission denied.
+        //
+        // The 0004 trigger creates the row in the same transaction as the auth
+        // user, so UPDATE is the correct verb anyway. The insert below is the
+        // fallback for a database where that trigger is ever removed.
+        //
+        // Uses data.session.user.id directly - the userId in React state has
+        // not re-rendered yet at this point.
         const uid = data.session.user.id
         createdUid = uid
-        const { data: prof, error: profErr } = await supabase
+        const patch = {
+          full_name: details.fullName.trim(),
+          phone: details.phone.trim() || null,
+        }
+        let { data: prof, error: profErr } = await supabase
           .from('profiles')
-          .upsert({
-            id: uid,
-            full_name: details.fullName.trim(),
-            phone: details.phone.trim() || null,
-          })
+          .update(patch)
+          .eq('id', uid)
           .select('*')
           .maybeSingle()
+
+        if (!profErr && !prof) {
+          ;({ data: prof, error: profErr } = await supabase
+            .from('profiles')
+            .insert({ id: uid, ...patch })
+            .select('*')
+            .maybeSingle())
+        }
         if (profErr) throw new Error(profErr.message)
         if (prof) setProfile(prof as Profile)
 
