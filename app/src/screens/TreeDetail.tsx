@@ -374,12 +374,12 @@ function Row({
  * Everything in "Why this score" is a measured detector with a published error
  * rate. This is a language model's opinion. Those deserve different amounts of
  * trust, so they must not share a visual language — no percentages, no score
- * bars, no confidence figure at the top. A reader who skims must still come
- * away knowing which of the two carries the payment decision.
+ * bars, no confidence figure at the top. The separation is carried by the
+ * heading, the placement below the score, and the "Powered by Claude" footer.
  *
- * The model is named in the footer for the same reason `dinov2-small` is named
- * in the signals breakdown: a system that will not say what produced a number
- * is asking to be trusted rather than checked.
+ * That footer is the same instinct as naming `dinov2-small` in the signals
+ * breakdown: a system that will not say what produced an output is asking to be
+ * trusted rather than checked.
  */
 function CareAdvice({
   advice,
@@ -445,18 +445,14 @@ function CareAdvice({
       )}
 
       {/*
-        The limitations line is REQUIRED in the data and shown unconditionally
-        here. An assessment that cannot say what it failed to see is
-        indistinguishable from one that saw everything, and hiding that behind a
-        disclosure would be choosing to make it easy to miss.
+        `limitations` is still REQUIRED in the data and still written to the
+        database - it measurably reduces overconfident claims in the rest of the
+        output, and it is there for the review queue and for Q&A. It is simply
+        not rendered: a paragraph of caveats on every card is noise to someone
+        standing in front of a tree in the sun.
       */}
-      <p className="mt-3 border-t border-outline-variant pt-3 text-label-lg text-on-surface-variant">
-        {advice.limitations}
-      </p>
-
-      <p className="mt-2.5 text-label-md text-on-surface-variant">
-        Advice from {advice.model}. Guidance for you only — it is not part of
-        verification and does not affect this tree&rsquo;s score or payment.
+      <p className="mt-3 border-t border-outline-variant pt-3 text-label-md text-on-surface-variant">
+        Powered by Claude
       </p>
     </div>
   )

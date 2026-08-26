@@ -367,7 +367,8 @@ not shipping the feature.
   every re-score, and is exactly how we once destroyed our own attack provenance
 - service-role grants, identical to `confidence` and `verdict`
 - `pipeline.py` never imports `advisor.py`, so there is no code path at all
-- the UI names the model and states the boundary on screen
+- the UI keeps it under its own heading, visually unlike the score, footed
+  "Powered by Claude"
 
 **On the leaf photo being required.** It began optional, on the argument that a
 flow run forty times at T0 should not grow a mandatory tap to serve an optional
@@ -377,9 +378,11 @@ tolerant of a failed *upload*, because the planter has already done what was
 asked and an advisory photo must not cost them a payment.
 
 **Where it fails.** It is an unmeasured component and we say so out loud. It can
-be confidently wrong about a species; the `limitations` field is required so it
-must state what the photograph could not show; and it costs about 3 cents a call,
-which is why the decline-only policy exists for scale.
+be confidently wrong about a species. The `limitations` field is required and
+stored so the model must state what the photograph could not show, but it is not
+rendered on the tree page - so **that caveat is ours to say out loud**, not the
+screen's. And it costs about 3 cents a call, which is why the decline-only policy
+exists for scale.
 
 **More time.** Move species identification to **Pl@ntNet**, which is free for
 non-commercial use, purpose-built on 20,000+ species and returns ranked

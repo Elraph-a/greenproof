@@ -354,7 +354,7 @@ That is not a promise in a comment. It is enforced in four places:
 | Schema | Its own `species_guess` / `advice` columns, **not** inside `signals` — which is replaced wholesale on every re-score, and is what once destroyed our attack-row provenance |
 | Grants | Service-role only, exactly like `confidence`. The client is granted the leaf photo and nothing else |
 | Imports | `pipeline.py` never imports `advisor.py`, so no slow or wrong advisory call can reach a verdict. `grep -rn "advisor" ml/greenproof_ml/pipeline.py` must stay empty |
-| UI | A separate card that names the model and says the advice is not part of verification |
+| UI | A separate card under its own heading, visually unlike the score, footed "Powered by Claude" |
 
 **Why so much care about a helpful feature.** This project's entire claim is that
 we measure and publish our own error rate. We cannot publish one for this — there
@@ -378,9 +378,13 @@ reason is disqualifying:
 3. **We could not publish its error rate**, which is the one thing we claim.
 
 An LLM's output is hedged natural language a person reads and judges, not a
-number that authorises a payment — so it clears a much lower bar, and it says so.
-The `limitations` field is **required**, not optional: an assessment that cannot
-state what it failed to see is indistinguishable from one that saw everything.
+number that authorises a payment — so it clears a much lower bar.
+
+The `limitations` field is **required and stored**, though not shown on the tree
+page: forcing the model to state what it could not see measurably reduces
+overconfident claims in the rest of the answer, and it is there in the data for
+the review queue and for Q&A. A paragraph of caveats on every card is noise to
+someone standing in front of a tree.
 
 ### The leaf photo
 
