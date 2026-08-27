@@ -8,6 +8,7 @@ import { DemoBanner } from "./components/DemoBanner";
 import { Spinner } from "./components/ui";
 import { Landing } from "./screens/Landing";
 import { SignIn } from "./screens/SignIn";
+import { CompassCheck } from './screens/CompassCheck'
 import { CreateAccount } from "./screens/CreateAccount";
 import { ProfileSetup } from "./screens/ProfileSetup";
 import { MyGrove } from "./screens/MyGrove";
@@ -138,6 +139,14 @@ export function App() {
           screen navigates itself when the whole sign-up has finished.
         */}
         <Route path="/signup" element={<CreateAccount />} />
+
+        {/*
+          Compass diagnostic. Unlinked on purpose - typed, not navigated to.
+          It exists because the heading bug was invisible at a desk and only
+          showed up on a phone held the way the app is actually used, so
+          proving the fix needs the real device in the real posture.
+        */}
+        <Route path="/compass" element={<CompassCheck />} />
 
         {/* Full-screen flows — no bottom tab bar competing for thumb space. */}
         <Route
