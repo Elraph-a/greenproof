@@ -154,6 +154,69 @@ type PermissionCapableCtor = {
 }
 
 /**
+ * Compass heading of the direction the BACK CAMERA points, from a raw
+ * device-orientation reading.
+ *
+ * WHY THIS REPLACED `360 - alpha`, WHICH WAS WRONG IN THE FIELD.
+ *
+ * `360 - alpha` is the heading of the TOP EDGE of a phone lying FLAT. This app
+ * asks people to hold the phone UPRIGHT to photograph a tree - the capture
+ * screen literally says "Hold phone portrait (upright)". At that attitude
+ * beta is near 90 degrees, alpha and gamma become degenerate (the classic
+ * gimbal problem), and the naive formula returns a confidently wrong bearing.
+ * It only agrees with reality when the phone is flat, which is never how this
+ * app is used. Reported from the field as "misdirecting us. It was very bad".
+ *
+ * The correct calculation uses the full orientation. Build the device-to-world
+ * rotation matrix from the W3C ZXY intrinsic Euler angles, then ask where the
+ * camera axis ends up in world coordinates and take its compass bearing.
+ *
+ *   device frame   +X right, +Y top, +Z out of the screen
+ *                  the back camera therefore looks along -Z
+ *   world frame    +X east, +Y north, +Z up
+ *
+ * A useful property falls out of choosing -Z: the camera axis is fixed to the
+ * phone's BODY, so screen rotation does not affect it and no
+ * `screen.orientation.angle` correction is needed. Using the top edge (+Y)
+ * would have required one.
+ *
+ * Returns null when the camera points too near straight up or down for a
+ * bearing to mean anything - a phone laid flat on a table has no meaningful
+ * "facing", and inventing one would be the same class of bug we just removed.
+ */
+export function headingFromOrientation(
+  alpha: number,
+  beta: number,
+  gamma: number,
+): number | null {
+  const d = Math.PI / 180
+  const cA = Math.cos(alpha * d)
+  const sA = Math.sin(alpha * d)
+  const cB = Math.cos(beta * d)
+  const sB = Math.sin(beta * d)
+  const cG = Math.cos(gamma * d)
+  const sG = Math.sin(gamma * d)
+
+  // Third column of R = Rz(alpha)·Rx(beta)·Ry(gamma) - the world-frame
+  // direction of the device's +Z axis. Only this column is needed.
+  const zx = cA * sG + sA * sB * cG
+  const zy = sA * sG - cA * sB * cG
+  const zz = cB * cG
+
+  // The camera looks along -Z.
+  const east = -zx
+  const north = -zy
+  const up = -zz
+
+  // Near-vertical camera: the horizontal projection is numerically meaningless.
+  // cos(80°) ≈ 0.17, so this rejects the last 10 degrees at each extreme.
+  if (Math.hypot(east, north) < 0.17 && Math.abs(up) > 0.98) return null
+
+  const deg = Math.atan2(east, north) / d
+  return ((deg % 360) + 360) % 360
+}
+
+/**
  * True compass heading in degrees, 0 = north, increasing clockwise.
  *
  * Two incompatible platform behaviours:
@@ -182,19 +245,46 @@ export function useHeading(active = true) {
       // Only absolute readings are compass-referenced. A relative `alpha` is an
       // arbitrary offset from wherever the phone happened to be and would give
       // us a confidently wrong bearing.
-      if (e.absolute && typeof e.alpha === 'number') {
-        setHeading(((360 - e.alpha) % 360 + 360) % 360)
-        setState('ready')
+      if (
+        e.absolute &&
+        typeof e.alpha === 'number' &&
+        typeof e.beta === 'number' &&
+        typeof e.gamma === 'number'
+      ) {
+        // Full orientation, not just alpha. See headingFromOrientation: the
+        // old `360 - alpha` was the heading of a FLAT phone's top edge, and
+        // this app is used with the phone held upright.
+        const h = headingFromOrientation(e.alpha, e.beta, e.gamma)
+        // null means the camera is pointing near-vertically, where no bearing
+        // is meaningful. Keep the last good reading rather than writing a
+        // fabricated one.
+        if (h !== null) {
+          setHeading(h)
+          setState('ready')
+        }
       }
     }
 
-    window.addEventListener('deviceorientationabsolute', handle as EventListener)
-    window.addEventListener('deviceorientation', handle as EventListener)
+    // `deviceorientationabsolute` FIRST and, where it exists, ONLY.
+    //
+    // Android fires both. The plain `deviceorientation` event can arrive with
+    // absolute=true but an alpha referenced to an arbitrary starting attitude
+    // rather than to magnetic north, so listening to both let a relative
+    // reading overwrite a good absolute one a few times a second. The heading
+    // then drifted while the phone was perfectly still - which is what "it was
+    // misdirecting us" looks like from the outside.
+    const hasAbsolute = 'ondeviceorientationabsolute' in window
+    if (hasAbsolute) {
+      window.addEventListener('deviceorientationabsolute', handle as EventListener)
+    } else {
+      window.addEventListener('deviceorientation', handle as EventListener)
+    }
     return () => {
       window.removeEventListener('deviceorientationabsolute', handle as EventListener)
       window.removeEventListener('deviceorientation', handle as EventListener)
     }
   }, [])
+
 
   /** Call from a click handler — iOS ignores it otherwise. */
   const request = useCallback(async () => {
