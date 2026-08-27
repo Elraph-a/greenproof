@@ -106,6 +106,50 @@ def health() -> dict:
     }
 
 
+# Generate advice automatically whenever a check-in is scored.
+#
+# WHY THIS EXISTS: WITHOUT IT, NOTHING EVER CALLS /advise.
+#
+# The endpoint and the backfill tool were both built, and neither was ever
+# triggered by the act of checking in - so a planter completed a visit, got a
+# verdict, and saw no advice at all unless somebody ran a script by hand
+# afterwards. The feature worked and was invisible, which is the same thing as
+# not working.
+#
+# WHY HERE AND NOT IN THE PIPELINE. `pipeline.py` still does not import the
+# advisor, and must not: that import boundary is what guarantees a slow,
+# rate-limited or hallucinating model can never affect a verdict. So the trigger
+# sits HERE, in the transport layer, and only AFTER score_checkin has returned
+# and the verdict is already committed to the database.
+#
+# Three properties this deliberately preserves:
+#
+#   - /score latency is unchanged; the call returns while advice is still
+#     running, exactly as before
+#   - a failure cannot touch the verdict, because the verdict is already written
+#   - scoring stays replayable offline with no external dependency
+ADVISE_ON_SCORE = os.environ.get("ADVISE_ON_SCORE", "1").strip() not in ("0", "false", "no")
+
+
+def _advise_in_background(checkin_id: str) -> None:
+    """Fire and forget. Never raises, never blocks the caller."""
+    if not ADVISE_ON_SCORE:
+        return
+
+    def run() -> None:
+        try:
+            from greenproof_ml import advisor
+
+            result = advisor.advise_checkin(checkin_id)
+            log.info(
+                "advice for %s: %s", checkin_id, "written" if result else "nothing written"
+            )
+        except Exception:  # noqa: BLE001 - advisory only, never fatal
+            log.exception("background advice failed for %s", checkin_id)
+
+    threading.Thread(target=run, daemon=True).start()
+
+
 @app.post("/score", response_model=ScoreResponse)
 def score(req: ScoreRequest) -> ScoreResponse:
     """Score one check-in.
@@ -123,6 +167,9 @@ def score(req: ScoreRequest) -> ScoreResponse:
     except Exception as e:  # noqa: BLE001
         log.exception("scoring failed for %s", req.checkin_id)
         raise HTTPException(500, f"Scoring failed: {e}") from e
+
+    # Advice is generated AFTER the verdict is written, in a background thread.
+    _advise_in_background(req.checkin_id)
 
     return ScoreResponse(
         checkin_id=req.checkin_id,
@@ -209,6 +256,7 @@ def backfill(limit: int = 50) -> dict:
     for row in rows:
         try:
             result = score_checkin(row["id"])
+            _advise_in_background(row["id"])
             done.append({"id": row["id"], "verdict": result.verdict, "confidence": result.confidence})
         except Exception as e:  # noqa: BLE001
             log.exception("backfill failed for %s", row["id"])

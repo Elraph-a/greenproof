@@ -63,6 +63,7 @@ import base64
 import io
 import logging
 import os
+import time
 from typing import Literal
 
 from PIL import Image
@@ -580,13 +581,32 @@ def advise_checkin(checkin_id: str, strict: bool = False) -> dict | None:
             log.warning("could not download %s", path, exc_info=True)
             return None
 
-    assessment = assess(
+    photos = dict(
         wide=_photo(row.get("wide_photo")),
         close=_photo(row.get("close_photo")),
         leaf=_photo(row.get("leaf_photo")),
         recorded_species=(tree or {}).get("species"),
-        strict=strict,
     )
+
+    # ONE RETRY, because a lost assessment is silent.
+    #
+    # assess() already walks the model fallback chain on a quota error, but a
+    # 504 DEADLINE_EXCEEDED is different: the model simply took too long on that
+    # attempt, and the same model usually answers on the next one. Without this
+    # the visit keeps its verdict and quietly carries no advice, which is exactly
+    # the failure the planter reported - the feature working and being invisible.
+    #
+    # Two attempts, not more: this runs in a background thread per check-in, and
+    # a model that fails twice is not going to succeed on the fifth try.
+    assessment = None
+    for attempt in (1, 2):
+        assessment = assess(**photos, strict=strict and attempt == 2)
+        if assessment is not None:
+            break
+        if attempt == 1:
+            log.warning("advice attempt 1 failed for %s, retrying once", checkin_id)
+            time.sleep(2)
+
     if assessment is None:
         return None
 
