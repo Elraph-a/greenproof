@@ -1,13 +1,40 @@
 {
-  "reference": "ours",
-  "negative_dataset": "sayakpaul/coco-30-val-2014",
-  "n_reference": 37,
-  "n_held_out": 37,
-  "n_non_plants": 300,
-  "threshold": 0.5192264914512634,
-  "false_reject_rate": 0.08108108108108109,
-  "false_accept_rate": 0.0,
-  "auc": 0.9997297297297297,
-  "cross_domain_flag_rate": 0.9833333333333333,
-  "cross_domain_set": "PlantNet close-ups"
+  "_comment": [
+    "Two runs are recorded here on purpose. The first looked perfect and was",
+    "misleading; the second is the one we ship and the one we quote. Deleting",
+    "the first would remove the evidence for one of the project's central",
+    "claims - that an AUC of 1.000 is a warning, not a result."
+  ],
+
+  "shipped": {
+    "status": "CURRENT - this is the measurement we quote",
+    "threshold": 0.30,
+    "auc": 0.966,
+    "negatives": "300 photographs from sayakpaul/coco-30-val-2014",
+    "positives": "real pilot check-in photographs, trees unseen during setup",
+    "checkins_flagged": "1 in 9",
+    "non_plants_rejected": "about 99%",
+    "note": "Measured against genuinely unseen trees. Provisional: the reference set is still small, and it improves on its own as the system runs, because every verified check-in is another known-good plant photograph."
+  },
+
+  "superseded": {
+    "status": "SUPERSEDED - kept as evidence, do NOT quote this",
+    "threshold": 0.5192264914512634,
+    "auc": 0.9997297297297297,
+    "n_reference": 37,
+    "n_held_out": 37,
+    "n_non_plants": 300,
+    "false_reject_rate": 0.08108108108108109,
+    "false_accept_rate": 0.0,
+    "cross_domain_flag_rate": 0.9833333333333333,
+    "cross_domain_set": "PlantNet close-ups",
+    "why_it_was_wrong": [
+      "The held-out photographs were other angles of the SAME plants from the",
+      "SAME shoot, so this measured 'was this taken at that shoot', not 'is",
+      "this a plant'. Applied to nine real pilot check-ins, the 0.519 threshold",
+      "flagged FIVE of them as not-a-plant. The reference images were cropped",
+      "specimens; ours are wide shots with sky and buildings in frame. It had",
+      "learned photo STYLE, not subject."
+    ]
+  }
 }

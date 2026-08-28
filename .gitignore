@@ -77,3 +77,28 @@ GreenProof_Technical_Reference.md
 arch-system.png
 arch-path.png
 arch-scoring.png
+
+# ---------------------------------------------------------------------------
+# Internal material - deliberately NOT on GitHub
+# ---------------------------------------------------------------------------
+# The repository should carry what is needed to run and deploy the app, and
+# nothing else. Strategy notes, pitch material and the Q&A answers are working
+# documents for the team; they are not part of the product and they are not
+# improved by being public.
+#
+# These files still exist locally. They were untracked with `git rm --cached`,
+# never deleted.
+CLAUDE.md
+TEAM_BRIEF.md
+GreenProof_CONTEXT.md
+docs/ROADMAP.md
+docs/THE_STORY.md
+docs/JUDGE_QA.md
+docs/PILOT_NUMBERS.md
+docs/DEMO_RUNBOOK.md
+docs/STITCH_PROMPT.md
+docs/DEFEND.md
+docs/HOW_IT_WORKS.md
+docs/design/
+spike/FINDINGS.md
+*.docx
